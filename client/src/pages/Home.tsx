@@ -8,7 +8,6 @@ import {
   Users, 
   Stethoscope, 
   Activity, 
-  Brain,
   Check,
   ArrowRight,
   Star,
@@ -165,7 +164,7 @@ export default function Home() {
                 linkText: "Learn About RPM/RTM"
               },
               {
-                icon: Brain,
+                icon: Heart,
                 title: "Behavioral Health Integration",
                 description: "Compassionate behavioral health support for seniors, addressing mental health needs with dignity and reducing stigma.",
                 features: [

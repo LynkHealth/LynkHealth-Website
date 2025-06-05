@@ -2,13 +2,13 @@ import { Link } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Brain, Users, Shield, Heart, CheckCircle, Clock, Phone, TrendingUp } from "lucide-react";
+import { Users, Shield, Heart, CheckCircle, Clock, Phone, TrendingUp, Smile } from "lucide-react";
 import bhiIllustration from "@/assets/graphics/bhi-illustration.svg";
 
 export default function BHI() {
   const services = [
     {
-      icon: <Brain className="h-6 w-6" />,
+      icon: <Smile className="h-6 w-6" />,
       title: "Depression Screening",
       description: "Systematic assessment using validated tools like PHQ-9 and GAD-7"
     },
@@ -278,7 +278,7 @@ export default function BHI() {
             
             <div className="bg-gradient-to-br from-primary via-primary/95 to-secondary rounded-3xl p-8 text-white">
               <div className="mb-6">
-                <Brain className="h-12 w-12 text-white/80 mb-4" />
+                <Heart className="h-12 w-12 text-white/80 mb-4" />
                 <h3 className="text-2xl font-bold mb-2">Holistic Care Approach</h3>
                 <p className="text-white/90">
                   Our integrated model addresses both physical and mental health needs, 
