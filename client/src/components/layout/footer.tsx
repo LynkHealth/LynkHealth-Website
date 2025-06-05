@@ -36,23 +36,23 @@ export default function Footer() {
             <h4 className="text-lg font-semibold mb-4">Services</h4>
             <ul className="space-y-2 text-slate-400">
               <li>
-                <Link href="/services/ccm">
-                  <a className="hover:text-white transition-colors">Chronic Care Management</a>
+                <Link href="/services/ccm" className="hover:text-white transition-colors">
+                  Chronic Care Management
                 </Link>
               </li>
               <li>
-                <Link href="/services/monitoring">
-                  <a className="hover:text-white transition-colors">In-Home Monitoring</a>
+                <Link href="/services/monitoring" className="hover:text-white transition-colors">
+                  In-Home Monitoring
                 </Link>
               </li>
               <li>
-                <Link href="/services/bhi">
-                  <a className="hover:text-white transition-colors">Behavioral Health Integration</a>
+                <Link href="/services/bhi" className="hover:text-white transition-colors">
+                  Behavioral Health Integration
                 </Link>
               </li>
               <li>
-                <Link href="/how-it-works">
-                  <a className="hover:text-white transition-colors">How It Works</a>
+                <Link href="/how-it-works" className="hover:text-white transition-colors">
+                  How It Works
                 </Link>
               </li>
             </ul>
@@ -63,23 +63,23 @@ export default function Footer() {
             <h4 className="text-lg font-semibold mb-4">Company</h4>
             <ul className="space-y-2 text-slate-400">
               <li>
-                <Link href="/about">
-                  <a className="hover:text-white transition-colors">About Us</a>
+                <Link href="/about" className="hover:text-white transition-colors">
+                  About Us
                 </Link>
               </li>
               <li>
-                <Link href="/resources">
-                  <a className="hover:text-white transition-colors">Resources</a>
+                <Link href="/resources" className="hover:text-white transition-colors">
+                  Resources
                 </Link>
               </li>
               <li>
-                <Link href="/contact">
-                  <a className="hover:text-white transition-colors">Contact</a>
+                <Link href="/contact" className="hover:text-white transition-colors">
+                  Contact
                 </Link>
               </li>
               <li>
-                <Link href="/privacy">
-                  <a className="hover:text-white transition-colors">Privacy Policy</a>
+                <Link href="/privacy" className="hover:text-white transition-colors">
+                  Privacy Policy
                 </Link>
               </li>
             </ul>
