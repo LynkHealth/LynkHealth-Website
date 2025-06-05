@@ -8,8 +8,12 @@ export default function Footer() {
           {/* Company Info */}
           <div>
             <div className="flex items-center mb-4">
-              <i className="fas fa-heartbeat text-healthcare-primary text-2xl mr-2"></i>
-              <span className="text-xl font-bold">Lynk Health</span>
+              <img 
+                src="/src/assets/lynk-health-logo.jpg" 
+                alt="Lynk Health Logo" 
+                className="h-8 w-auto"
+                style={{filter: 'brightness(0) invert(1)'}}
+              />
             </div>
             <p className="text-slate-400 mb-4 leading-relaxed">
               Professional nurse-led care coordination services for Medicare patients with chronic conditions.
