@@ -170,8 +170,13 @@ export default function HomePage() {
               
               {/* BHI Program Card */}
               <div className="bg-white rounded-2xl p-8 shadow-lg hover:shadow-xl transition-shadow">
-                <div className="w-12 h-12 bg-accent/10 rounded-lg flex items-center justify-center mb-6">
-                  <i className="fas fa-brain text-accent text-xl"></i>
+                <div className="relative w-full h-32 mb-6 rounded-lg overflow-hidden">
+                  <img 
+                    src="https://images.unsplash.com/photo-1582750433449-648ed127bb54?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&h=200"
+                    alt="Elderly patient in bright, comfortable healthcare setting receiving compassionate care"
+                    className="w-full h-full object-cover"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-white/20 to-transparent"></div>
                 </div>
                 <h3 className="text-2xl font-bold text-slate-900 mb-4">Behavioral Health Integration</h3>
                 <p className="text-slate-600 mb-6">

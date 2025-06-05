@@ -1,7 +1,7 @@
 import { Link } from "wouter";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Stethoscope, Activity, Brain, ArrowRight, Check } from "lucide-react";
+import { Stethoscope, Activity, Heart, ArrowRight, Check } from "lucide-react";
 
 export default function ServicesSection() {
   const services = [
@@ -32,7 +32,7 @@ export default function ServicesSection() {
       cta: "Learn About RPM/RTM"
     },
     {
-      icon: <Brain className="h-8 w-8" />,
+      icon: <Heart className="h-8 w-8" />,
       title: "Behavioral Health Integration",
       description: "Compassionate mental health support for seniors with behavioral conditions, using a low-stigma approach to improve engagement and outcomes.",
       features: [
