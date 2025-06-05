@@ -25,7 +25,7 @@ export default function Header() {
               <img 
                 src="/src/assets/lynk-health-logo.jpg" 
                 alt="Lynk Health Logo" 
-                className="h-10 w-auto"
+                className="h-16 w-auto"
               />
             </div>
           </Link>
