@@ -16,30 +16,30 @@ export default function Header() {
   const isActive = (path: string) => location === path;
 
   return (
-    <header className="sticky top-0 z-50 bg-white/95 backdrop-blur-sm border-b border-gray-100 shadow-sm">
+    <header className="sticky top-0 z-50 bg-white/98 backdrop-blur-lg border-b border-slate-200 shadow-sm">
       <nav className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex justify-between items-center h-16">
+        <div className="flex justify-between items-center h-20">
           {/* Logo */}
           <Link href="/">
             <div className="flex items-center cursor-pointer">
               <img 
                 src="/src/assets/lynk-health-logo.jpg" 
                 alt="Lynk Health Logo" 
-                className="h-8 w-auto"
+                className="h-10 w-auto"
               />
             </div>
           </Link>
 
           {/* Desktop Navigation */}
-          <div className="hidden md:flex items-center space-x-8">
-            <Link href="/" className={`text-sm font-medium transition-colors hover:text-healthcare-primary ${
-                isActive("/") ? "text-healthcare-primary" : "text-muted-foreground"
+          <div className="hidden lg:flex items-center space-x-10">
+            <Link href="/" className={`text-sm font-semibold tracking-wide transition-colors hover:text-primary ${
+                isActive("/") ? "text-primary" : "text-foreground"
               }`}>
                 Home
             </Link>
             
-            <Link href="/about" className={`text-sm font-medium transition-colors hover:text-healthcare-primary ${
-                isActive("/about") ? "text-healthcare-primary" : "text-muted-foreground"
+            <Link href="/about" className={`text-sm font-semibold tracking-wide transition-colors hover:text-primary ${
+                isActive("/about") ? "text-primary" : "text-foreground"
               }`}>
                 About
             </Link>
@@ -83,29 +83,29 @@ export default function Header() {
               </NavigationMenuList>
             </NavigationMenu>
 
-            <Link href="/how-it-works" className={`text-sm font-medium transition-colors hover:text-healthcare-primary ${
-                isActive("/how-it-works") ? "text-healthcare-primary" : "text-muted-foreground"
+            <Link href="/how-it-works" className={`text-sm font-semibold tracking-wide transition-colors hover:text-primary ${
+                isActive("/how-it-works") ? "text-primary" : "text-foreground"
               }`}>
                 How It Works
             </Link>
             
-            <Link href="/resources" className={`text-sm font-medium transition-colors hover:text-healthcare-primary ${
-                isActive("/resources") ? "text-healthcare-primary" : "text-muted-foreground"
+            <Link href="/resources" className={`text-sm font-semibold tracking-wide transition-colors hover:text-primary ${
+                isActive("/resources") ? "text-primary" : "text-foreground"
               }`}>
                 Resources
             </Link>
             
-            <Link href="/contact" className={`text-sm font-medium transition-colors hover:text-healthcare-primary ${
-                isActive("/contact") ? "text-healthcare-primary" : "text-muted-foreground"
+            <Link href="/contact" className={`text-sm font-semibold tracking-wide transition-colors hover:text-primary ${
+                isActive("/contact") ? "text-primary" : "text-foreground"
               }`}>
                 Contact
             </Link>
           </div>
 
           {/* CTA Button */}
-          <div className="hidden md:flex items-center">
+          <div className="hidden lg:flex items-center">
             <Link href="/contact">
-              <Button className="bg-healthcare-accent hover:bg-red-700 text-white">
+              <Button className="bg-primary hover:bg-primary/90 text-primary-foreground font-semibold px-8 py-2.5 rounded-lg shadow-lg hover:shadow-xl transition-all">
                 Partner With Us
               </Button>
             </Link>
