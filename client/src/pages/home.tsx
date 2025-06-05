@@ -94,10 +94,8 @@ export default function Home() {
                   Provider communication
                 </li>
               </ul>
-              <Link href="/services/ccm">
-                <a className="inline-flex items-center text-healthcare-primary font-semibold hover:text-blue-700">
-                  Learn More <i className="fas fa-arrow-right ml-2"></i>
-                </a>
+              <Link href="/services/ccm" className="inline-flex items-center text-healthcare-primary font-semibold hover:text-blue-700">
+                Learn More <i className="fas fa-arrow-right ml-2"></i>
               </Link>
             </div>
             
@@ -128,10 +126,8 @@ export default function Home() {
                   Patient education
                 </li>
               </ul>
-              <Link href="/services/monitoring">
-                <a className="inline-flex items-center text-healthcare-primary font-semibold hover:text-blue-700">
-                  Learn More <i className="fas fa-arrow-right ml-2"></i>
-                </a>
+              <Link href="/services/monitoring" className="inline-flex items-center text-healthcare-primary font-semibold hover:text-blue-700">
+                Learn More <i className="fas fa-arrow-right ml-2"></i>
               </Link>
             </div>
             
@@ -162,10 +158,8 @@ export default function Home() {
                   Care team coordination
                 </li>
               </ul>
-              <Link href="/services/bhi">
-                <a className="inline-flex items-center text-healthcare-primary font-semibold hover:text-blue-700">
-                  Learn More <i className="fas fa-arrow-right ml-2"></i>
-                </a>
+              <Link href="/services/bhi" className="inline-flex items-center text-healthcare-primary font-semibold hover:text-blue-700">
+                Learn More <i className="fas fa-arrow-right ml-2"></i>
               </Link>
             </div>
           </div>
