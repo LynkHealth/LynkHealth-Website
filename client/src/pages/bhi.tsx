@@ -116,12 +116,27 @@ export default function BHI() {
             </div>
             
             <div className="relative">
-              <div className="bg-gradient-to-br from-primary/10 via-secondary/10 to-accent/10 rounded-3xl p-8 backdrop-blur-sm border border-white/20 shadow-2xl">
+              <div className="relative rounded-3xl overflow-hidden shadow-2xl">
                 <img
-                  src={bhiIllustration}
-                  alt="Behavioral Health Integration workflow illustration"
-                  className="w-full h-auto"
+                  src="https://images.unsplash.com/photo-1576091160550-2173dba999ef?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&h=600"
+                  alt="Healthcare professional providing behavioral health support to elderly patient"
+                  className="w-full h-[400px] object-cover"
                 />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent"></div>
+                
+                {/* Overlay Content */}
+                <div className="absolute bottom-6 left-6 right-6">
+                  <div className="bg-white/95 backdrop-blur-sm rounded-2xl p-6 shadow-lg">
+                    <h3 className="text-lg font-bold text-foreground mb-2">Behavioral Health Integration</h3>
+                    <p className="text-sm text-muted-foreground mb-4">
+                      Licensed professionals provide mental health screening and support using a low-stigma, integrated approach within primary care.
+                    </p>
+                    <div className="flex items-center gap-4 text-xs">
+                      <span className="bg-primary/10 text-primary px-3 py-1 rounded-full">Low Stigma</span>
+                      <span className="bg-secondary/10 text-secondary px-3 py-1 rounded-full">Integrated Care</span>
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>
           </div>

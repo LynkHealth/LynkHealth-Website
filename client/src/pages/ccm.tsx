@@ -94,12 +94,27 @@ export default function CCM() {
             </div>
             
             <div className="relative">
-              <div className="bg-gradient-to-br from-primary/10 via-secondary/10 to-accent/10 rounded-3xl p-8 backdrop-blur-sm border border-white/20 shadow-2xl">
+              <div className="relative rounded-3xl overflow-hidden shadow-2xl">
                 <img
-                  src={ccmIllustration}
-                  alt="Chronic Care Management workflow illustration"
-                  className="w-full h-auto"
+                  src="https://images.unsplash.com/photo-1576091160399-112ba8d25d1f?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&h=600"
+                  alt="Nurse providing chronic care management to elderly patient"
+                  className="w-full h-[400px] object-cover"
                 />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent"></div>
+                
+                {/* Overlay Content */}
+                <div className="absolute bottom-6 left-6 right-6">
+                  <div className="bg-white/95 backdrop-blur-sm rounded-2xl p-6 shadow-lg">
+                    <h3 className="text-lg font-bold text-foreground mb-2">Comprehensive Care Coordination</h3>
+                    <p className="text-sm text-muted-foreground mb-4">
+                      Our registered nurses provide monthly care plan reviews and ongoing support for Medicare patients with chronic conditions.
+                    </p>
+                    <div className="flex items-center gap-4 text-xs">
+                      <span className="bg-primary/10 text-primary px-3 py-1 rounded-full">RN Led</span>
+                      <span className="bg-secondary/10 text-secondary px-3 py-1 rounded-full">24/7 Support</span>
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>
           </div>

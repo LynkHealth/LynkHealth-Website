@@ -53,33 +53,47 @@ export default function Hero() {
 
           {/* Hero Visual */}
           <div className="relative">
-            <div className="bg-gradient-to-br from-primary/20 via-secondary/20 to-accent/20 rounded-3xl p-12 backdrop-blur-sm border border-white/20 shadow-2xl">
-              <div className="grid grid-cols-2 gap-8">
-                {/* Metric Cards */}
-                <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-6 shadow-lg">
-                  <div className="text-3xl font-bold text-primary mb-2">98%</div>
-                  <div className="text-sm text-muted-foreground">Patient Satisfaction</div>
-                </div>
-                <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-6 shadow-lg">
-                  <div className="text-3xl font-bold text-secondary mb-2">24/7</div>
-                  <div className="text-sm text-muted-foreground">Care Support</div>
-                </div>
-                <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-6 shadow-lg">
-                  <div className="text-3xl font-bold text-accent mb-2">CMS</div>
-                  <div className="text-sm text-muted-foreground">Compliant</div>
-                </div>
-                <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-6 shadow-lg">
-                  <div className="text-3xl font-bold text-primary mb-2">RN</div>
-                  <div className="text-sm text-muted-foreground">Led Care</div>
+            <div className="relative rounded-3xl overflow-hidden shadow-2xl">
+              <img
+                src="https://images.unsplash.com/photo-1559757175-0eb30cd8c063?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&h=600"
+                alt="Healthcare professional providing care to elderly patient at home"
+                className="w-full h-[500px] object-cover"
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent"></div>
+              
+              {/* Overlay Stats */}
+              <div className="absolute bottom-6 left-6 right-6">
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="bg-white/90 backdrop-blur-sm rounded-xl p-4 shadow-lg">
+                    <div className="text-2xl font-bold text-primary mb-1">98%</div>
+                    <div className="text-sm text-muted-foreground">Patient Satisfaction</div>
+                  </div>
+                  <div className="bg-white/90 backdrop-blur-sm rounded-xl p-4 shadow-lg">
+                    <div className="text-2xl font-bold text-secondary mb-1">24/7</div>
+                    <div className="text-sm text-muted-foreground">Care Support</div>
+                  </div>
                 </div>
               </div>
-              
-              {/* Central Healthcare Icon */}
-              <div className="absolute inset-0 flex items-center justify-center">
-                <div className="w-20 h-20 bg-primary/10 rounded-full flex items-center justify-center backdrop-blur-sm">
-                  <svg className="w-10 h-10 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+            </div>
+            
+            {/* Video Placeholder */}
+            <div className="mt-6 relative rounded-2xl overflow-hidden shadow-xl">
+              <img
+                src="https://images.unsplash.com/photo-1584515933487-779824d29309?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&h=300"
+                alt="Elderly patient using remote monitoring device at home"
+                className="w-full h-48 object-cover"
+              />
+              <div className="absolute inset-0 bg-black/30 flex items-center justify-center">
+                <div className="w-16 h-16 bg-white/90 rounded-full flex items-center justify-center shadow-lg">
+                  <svg className="w-8 h-8 text-primary ml-1" fill="currentColor" viewBox="0 0 24 24">
+                    <path d="M8 5v14l11-7z"/>
                   </svg>
+                </div>
+              </div>
+              <div className="absolute bottom-4 left-4 right-4">
+                <div className="bg-white/90 backdrop-blur-sm rounded-lg p-3">
+                  <div className="text-sm font-semibold text-foreground">See Our Care in Action</div>
+                  <div className="text-xs text-muted-foreground">Real patients, real results</div>
                 </div>
               </div>
             </div>
