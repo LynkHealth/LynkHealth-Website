@@ -47,39 +47,50 @@ export default function ServicesSection() {
   ];
 
   return (
-    <section className="py-20 bg-slate-50">
-      <div className="container">
-        <div className="text-center mb-16">
-          <h2 className="text-3xl lg:text-4xl font-bold text-slate-900 mb-6">Our Programs</h2>
-          <p className="text-xl text-slate-600 max-w-3xl mx-auto">
-            Comprehensive care coordination services designed to improve patient outcomes and provider efficiency.
+    <section className="py-24 bg-slate-50/50">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="text-center mb-20">
+          <div className="mb-4">
+            <span className="inline-block px-4 py-2 bg-primary/10 text-primary font-semibold text-sm rounded-full">
+              Healthcare Solutions
+            </span>
+          </div>
+          <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold text-foreground mb-6">
+            Comprehensive Care Programs
+          </h2>
+          <p className="text-xl text-muted-foreground max-w-3xl mx-auto leading-relaxed">
+            White-labeled, nurse-led programs that integrate seamlessly with your practice to deliver 
+            exceptional patient care while maximizing Medicare reimbursement opportunities.
           </p>
         </div>
         
         <div className="grid lg:grid-cols-3 gap-8">
           {services.map((service, index) => (
-            <Card key={index} className="hover:shadow-xl transition-shadow bg-white">
-              <CardHeader>
-                <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center mb-6 text-blue-600">
+            <Card key={index} className="group hover:shadow-2xl transition-all duration-300 bg-white border-0 shadow-lg hover:-translate-y-1">
+              <CardHeader className="pb-6">
+                <div className="w-16 h-16 bg-gradient-to-br from-primary/20 to-secondary/20 rounded-2xl flex items-center justify-center mb-6 text-primary group-hover:scale-105 transition-transform">
                   {service.icon}
                 </div>
-                <CardTitle className="text-2xl text-slate-900">{service.title}</CardTitle>
-                <CardDescription className="text-slate-600 leading-relaxed">
+                <CardTitle className="text-2xl font-bold text-foreground mb-3">{service.title}</CardTitle>
+                <CardDescription className="text-muted-foreground leading-relaxed text-base">
                   {service.description}
                 </CardDescription>
               </CardHeader>
-              <CardContent>
-                <ul className="space-y-2 mb-6">
+              <CardContent className="pt-0">
+                <ul className="space-y-3 mb-8">
                   {service.features.map((feature, featureIndex) => (
-                    <li key={featureIndex} className="flex items-center text-slate-600">
-                      <Check className="h-4 w-4 text-emerald-600 mr-3 flex-shrink-0" />
+                    <li key={featureIndex} className="flex items-center text-muted-foreground">
+                      <div className="w-5 h-5 bg-secondary/20 rounded-full flex items-center justify-center mr-3 flex-shrink-0">
+                        <Check className="h-3 w-3 text-secondary" />
+                      </div>
                       {feature}
                     </li>
                   ))}
                 </ul>
                 <Link href={service.link}>
-                  <Button variant="link" className="p-0 text-blue-600 hover:text-blue-700">
-                    {service.cta} <ArrowRight className="h-4 w-4 ml-2" />
+                  <Button className="w-full bg-primary hover:bg-primary/90 text-primary-foreground group font-semibold py-3 rounded-lg shadow-lg hover:shadow-xl transition-all">
+                    {service.cta}
+                    <ArrowRight className="ml-2 h-4 w-4 group-hover:translate-x-1 transition-transform" />
                   </Button>
                 </Link>
               </CardContent>
