@@ -1,0 +1,55 @@
+<svg viewBox="0 0 400 300" xmlns="http://www.w3.org/2000/svg">
+  <!-- Background -->
+  <rect width="400" height="300" fill="#f8fafc"/>
+  
+  <!-- Remote Monitoring Setup -->
+  <g transform="translate(50, 40)">
+    <!-- Home Environment -->
+    <rect x="0" y="0" width="300" height="200" rx="12" fill="#f0f9ff" stroke="#bfdbfe" stroke-width="2"/>
+    <text x="150" y="25" text-anchor="middle" font-family="Arial" font-size="14" font-weight="bold" fill="#1e40af">In-Home Monitoring</text>
+    
+    <!-- Patient -->
+    <circle cx="80" cy="100" r="25" fill="#10b981"/>
+    <text x="80" y="105" text-anchor="middle" font-family="Arial" font-size="12" fill="white">PT</text>
+    <text x="80" y="140" text-anchor="middle" font-family="Arial" font-size="10" fill="#374151">Patient at Home</text>
+    
+    <!-- Medical Devices -->
+    <rect x="150" y="80" width="40" height="25" rx="4" fill="#3b82f6"/>
+    <text x="170" y="95" text-anchor="middle" font-family="Arial" font-size="8" fill="white">BP Monitor</text>
+    
+    <rect x="200" y="80" width="40" height="25" rx="4" fill="#f59e0b"/>
+    <text x="220" y="95" text-anchor="middle" font-family="Arial" font-size="8" fill="white">Glucose</text>
+    
+    <rect x="150" y="115" width="40" height="25" rx="4" fill="#8b5cf6"/>
+    <text x="170" y="130" text-anchor="middle" font-family="Arial" font-size="8" fill="white">Scale</text>
+    
+    <rect x="200" y="115" width="40" height="25" rx="4" fill="#ef4444"/>
+    <text x="220" y="130" text-anchor="middle" font-family="Arial" font-size="8" fill="white">Pulse Ox</text>
+    
+    <!-- Data Transmission Lines -->
+    <path d="M 105 100 Q 130 90 150 95" stroke="#6b7280" stroke-width="2" fill="none" marker-end="url(#arrowhead)"/>
+    <path d="M 105 100 Q 130 105 150 125" stroke="#6b7280" stroke-width="2" fill="none" marker-end="url(#arrowhead)"/>
+    <path d="M 105 100 Q 180 70 200 95" stroke="#6b7280" stroke-width="2" fill="none" marker-end="url(#arrowhead)"/>
+    <path d="M 105 100 Q 180 140 200 125" stroke="#6b7280" stroke-width="2" fill="none" marker-end="url(#arrowhead)"/>
+    
+    <!-- Cloud/Data Center -->
+    <ellipse cx="270" cy="60" rx="25" ry="15" fill="#e5e7eb"/>
+    <text x="270" y="65" text-anchor="middle" font-family="Arial" font-size="9" fill="#374151">Cloud</text>
+    
+    <!-- Real-time Data Flow -->
+    <path d="M 245 95 Q 255 75 265 65" stroke="#10b981" stroke-width="2" fill="none" stroke-dasharray="4,2"/>
+    <text x="255" y="110" text-anchor="middle" font-family="Arial" font-size="8" fill="#059669">Real-time Data</text>
+    
+    <!-- Alert System -->
+    <rect x="20" y="160" width="260" height="30" rx="6" fill="#fef3c7" stroke="#fde68a"/>
+    <circle cx="35" cy="175" r="5" fill="#f59e0b"/>
+    <text x="50" y="180" font-family="Arial" font-size="10" fill="#92400e">Automated Alerts for Abnormal Readings</text>
+  </g>
+  
+  <!-- Arrow marker definition -->
+  <defs>
+    <marker id="arrowhead" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#6b7280"/>
+    </marker>
+  </defs>
+</svg>

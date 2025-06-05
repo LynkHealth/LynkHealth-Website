@@ -1,296 +1,290 @@
 import { Link } from "wouter";
 import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Activity, Smartphone, Wifi, TrendingUp, CheckCircle, Monitor, Heart, AlertTriangle } from "lucide-react";
+import monitoringIllustration from "@/assets/graphics/monitoring-illustration.svg";
 
 export default function Monitoring() {
+  const devices = [
+    {
+      icon: <Heart className="h-6 w-6" />,
+      name: "Blood Pressure Monitor",
+      description: "Automatic cuff with Bluetooth connectivity for daily readings"
+    },
+    {
+      icon: <Activity className="h-6 w-6" />,
+      name: "Pulse Oximeter",
+      description: "Fingertip device measuring oxygen saturation and pulse rate"
+    },
+    {
+      icon: <Monitor className="h-6 w-6" />,
+      name: "Digital Scale",
+      description: "Smart scale tracking weight trends and body composition"
+    },
+    {
+      icon: <TrendingUp className="h-6 w-6" />,
+      name: "Glucose Monitor",
+      description: "Continuous glucose monitoring for diabetic patients"
+    }
+  ];
+
+  const benefits = [
+    {
+      icon: <Wifi className="h-6 w-6" />,
+      title: "Real-Time Data",
+      description: "Continuous monitoring with automatic data transmission to care teams"
+    },
+    {
+      icon: <AlertTriangle className="h-6 w-6" />,
+      title: "Early Detection",
+      description: "Immediate alerts for abnormal readings preventing health crises"
+    },
+    {
+      icon: <Smartphone className="h-6 w-6" />,
+      title: "Patient Engagement",
+      description: "User-friendly devices that encourage daily health monitoring"
+    },
+    {
+      icon: <TrendingUp className="h-6 w-6" />,
+      title: "Improved Outcomes",
+      description: "Data-driven care adjustments leading to better health results"
+    }
+  ];
+
+  const rpmFeatures = [
+    "FDA-approved medical devices",
+    "16+ days of monitoring per month",
+    "Real-time data transmission",
+    "Automated alert systems",
+    "Clinical staff interpretation",
+    "Provider notifications",
+    "Patient education and engagement",
+    "Medicare billing compliance"
+  ];
+
   return (
-    <div className="pt-20">
+    <div className="min-h-screen bg-gradient-to-b from-slate-50 to-white">
       {/* Hero Section */}
-      <section className="py-20 bg-gradient-to-br from-healthcare-secondary/5 to-healthcare-secondary/10">
+      <section className="pt-32 pb-20">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center">
-            <div className="w-20 h-20 bg-healthcare-secondary/20 rounded-full flex items-center justify-center mx-auto mb-6">
-              <i className="fas fa-heartbeat text-healthcare-secondary text-3xl"></i>
+          <div className="grid lg:grid-cols-2 gap-16 items-center">
+            <div className="max-w-xl">
+              <div className="mb-6">
+                <Badge className="mb-4 bg-primary/10 text-primary font-semibold px-4 py-2 rounded-full">
+                  Remote Patient Monitoring
+                </Badge>
+              </div>
+              <h1 className="text-4xl md:text-5xl xl:text-6xl font-bold text-foreground leading-[1.1] mb-6">
+                In-Home Patient 
+                <span className="text-primary"> Monitoring</span>
+              </h1>
+              <p className="text-xl text-muted-foreground mb-8 leading-relaxed">
+                Advanced remote patient monitoring (RPM) and remote therapeutic monitoring (RTM) services 
+                that enable continuous health tracking from the comfort of home using FDA-approved devices.
+              </p>
+              <div className="flex flex-col sm:flex-row gap-4 mb-8">
+                <Link href="/contact">
+                  <Button size="lg" className="bg-primary hover:bg-primary/90 text-primary-foreground font-semibold px-8 py-4 rounded-lg shadow-lg hover:shadow-xl transition-all">
+                    Start RPM Program
+                  </Button>
+                </Link>
+                <Button size="lg" variant="outline" className="border-2 border-primary text-primary hover:bg-primary hover:text-primary-foreground font-semibold px-8 py-4 rounded-lg transition-all">
+                  View Devices
+                </Button>
+              </div>
+              
+              {/* Key Metrics */}
+              <div className="grid grid-cols-2 gap-4 text-sm">
+                <div className="flex items-center gap-2">
+                  <div className="w-2 h-2 bg-secondary rounded-full"></div>
+                  <span className="text-muted-foreground">$58+ per patient/month</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <div className="w-2 h-2 bg-secondary rounded-full"></div>
+                  <span className="text-muted-foreground">16+ monitoring days</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <div className="w-2 h-2 bg-secondary rounded-full"></div>
+                  <span className="text-muted-foreground">Real-time alerts</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <div className="w-2 h-2 bg-secondary rounded-full"></div>
+                  <span className="text-muted-foreground">FDA-approved devices</span>
+                </div>
+              </div>
             </div>
-            <h1 className="text-4xl lg:text-5xl font-bold text-foreground mb-6">In-Home Patient Monitoring</h1>
-            <p className="text-xl text-muted-foreground max-w-3xl mx-auto">
-              Remote Patient Monitoring (RPM) and Remote Therapeutic Monitoring (RTM) services that keep patients healthy at home while generating additional revenue.
-            </p>
+            
+            <div className="relative">
+              <div className="bg-gradient-to-br from-primary/10 via-secondary/10 to-accent/10 rounded-3xl p-8 backdrop-blur-sm border border-white/20 shadow-2xl">
+                <img
+                  src={monitoringIllustration}
+                  alt="Remote patient monitoring setup illustration"
+                  className="w-full h-auto"
+                />
+              </div>
+            </div>
           </div>
         </div>
       </section>
 
-      {/* Overview Section */}
-      <section className="py-20 bg-white">
+      {/* What is RPM Section */}
+      <section className="py-24 bg-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="grid lg:grid-cols-2 gap-12 items-center">
+          <div className="grid lg:grid-cols-2 gap-16 items-center">
             <div>
-              <h2 className="text-3xl font-bold text-foreground mb-6">Overview of RPM and RTM</h2>
+              <div className="mb-4">
+                <span className="inline-block px-4 py-2 bg-primary/10 text-primary font-semibold text-sm rounded-full">
+                  Medicare Coverage
+                </span>
+              </div>
+              <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-6">
+                Remote Patient Monitoring (RPM)
+              </h2>
               <p className="text-lg text-muted-foreground mb-6 leading-relaxed">
-                Remote Patient Monitoring (RPM) allows continuous tracking of vital signs and health metrics using FDA-approved devices. Remote Therapeutic Monitoring (RTM) focuses on non-physiologic data such as medication adherence and therapy compliance.
+                Remote Patient Monitoring uses digital technologies to collect medical and health data from patients 
+                in their homes and securely transmit this information to healthcare providers for assessment and recommendations.
               </p>
               <p className="text-lg text-muted-foreground mb-8 leading-relaxed">
-                Our comprehensive monitoring program combines both RPM and RTM services to provide complete oversight of patient health between clinical visits, enabling early intervention and preventing complications.
+                Our RPM program includes FDA-approved devices, 24/7 monitoring, clinical staff interpretation, 
+                and seamless integration with your practice's workflow while ensuring Medicare billing compliance.
               </p>
-              <div className="grid md:grid-cols-2 gap-6">
-                <div className="bg-slate-50 rounded-lg p-4">
-                  <h4 className="font-semibold text-foreground mb-2">RPM Services</h4>
-                  <ul className="text-sm text-muted-foreground space-y-1">
-                    <li>• Blood pressure monitoring</li>
-                    <li>• Weight tracking</li>
-                    <li>• Glucose monitoring</li>
-                    <li>• Pulse oximetry</li>
-                  </ul>
-                </div>
-                <div className="bg-slate-50 rounded-lg p-4">
-                  <h4 className="font-semibold text-foreground mb-2">RTM Services</h4>
-                  <ul className="text-sm text-muted-foreground space-y-1">
-                    <li>• Medication adherence</li>
-                    <li>• Physical therapy compliance</li>
-                    <li>• Respiratory therapy</li>
-                    <li>• Cognitive therapy</li>
-                  </ul>
-                </div>
-              </div>
-            </div>
-            <div>
-              <img
-                src="https://images.unsplash.com/photo-1605684954998-685c79d6a018?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=800&h=600"
-                alt="Senior patient using remote monitoring device at home"
-                className="rounded-2xl shadow-xl"
-              />
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Hardware and Conditions Section */}
-      <section className="py-20 bg-slate-50">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-16">
-            <h2 className="text-3xl font-bold text-foreground mb-6">Hardware Used and Conditions Tracked</h2>
-            <p className="text-xl text-muted-foreground max-w-3xl mx-auto">
-              We use only FDA-approved devices to ensure accuracy and reliability in patient monitoring.
-            </p>
-          </div>
-          
-          <div className="grid lg:grid-cols-2 gap-12">
-            {/* Hardware */}
-            <div className="bg-white rounded-2xl p-8 shadow-lg">
-              <h3 className="text-2xl font-bold text-foreground mb-6 flex items-center">
-                <i className="fas fa-devices text-healthcare-secondary mr-3"></i>
-                Monitoring Devices
-              </h3>
-              <div className="space-y-6">
-                <div className="flex items-start">
-                  <div className="w-12 h-12 bg-healthcare-secondary/10 rounded-lg flex items-center justify-center mr-4 flex-shrink-0">
-                    <i className="fas fa-heartbeat text-healthcare-secondary"></i>
-                  </div>
-                  <div>
-                    <h4 className="font-semibold text-foreground mb-1">Blood Pressure Monitors</h4>
-                    <p className="text-muted-foreground text-sm">Automatic cuffs with wireless transmission capabilities</p>
-                  </div>
-                </div>
-                
-                <div className="flex items-start">
-                  <div className="w-12 h-12 bg-healthcare-secondary/10 rounded-lg flex items-center justify-center mr-4 flex-shrink-0">
-                    <i className="fas fa-weight text-healthcare-secondary"></i>
-                  </div>
-                  <div>
-                    <h4 className="font-semibold text-foreground mb-1">Digital Scales</h4>
-                    <p className="text-muted-foreground text-sm">Cellular-enabled scales for daily weight monitoring</p>
-                  </div>
-                </div>
-                
-                <div className="flex items-start">
-                  <div className="w-12 h-12 bg-healthcare-secondary/10 rounded-lg flex items-center justify-center mr-4 flex-shrink-0">
-                    <i className="fas fa-tint text-healthcare-secondary"></i>
-                  </div>
-                  <div>
-                    <h4 className="font-semibold text-foreground mb-1">Glucose Meters</h4>
-                    <p className="text-muted-foreground text-sm">Connected glucometers for diabetes management</p>
-                  </div>
-                </div>
-                
-                <div className="flex items-start">
-                  <div className="w-12 h-12 bg-healthcare-secondary/10 rounded-lg flex items-center justify-center mr-4 flex-shrink-0">
-                    <i className="fas fa-lungs text-healthcare-secondary"></i>
-                  </div>
-                  <div>
-                    <h4 className="font-semibold text-foreground mb-1">Pulse Oximeters</h4>
-                    <p className="text-muted-foreground text-sm">Oxygen saturation and pulse rate monitoring</p>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* Conditions */}
-            <div className="bg-white rounded-2xl p-8 shadow-lg">
-              <h3 className="text-2xl font-bold text-foreground mb-6 flex items-center">
-                <i className="fas fa-clipboard-list text-healthcare-primary mr-3"></i>
-                Conditions We Monitor
-              </h3>
-              <div className="grid md:grid-cols-2 gap-4">
-                <ul className="space-y-3">
-                  <li className="flex items-center text-muted-foreground">
-                    <i className="fas fa-check text-healthcare-secondary mr-3"></i>
-                    Congestive Heart Failure
+              
+              {/* CMS Requirements */}
+              <div className="bg-slate-50 rounded-2xl p-6 border border-slate-200">
+                <h3 className="text-lg font-semibold text-foreground mb-4">CMS Requirements</h3>
+                <ul className="space-y-2">
+                  <li className="flex items-center gap-3">
+                    <CheckCircle className="h-5 w-5 text-secondary flex-shrink-0" />
+                    <span className="text-muted-foreground">FDA-approved medical devices</span>
                   </li>
-                  <li className="flex items-center text-muted-foreground">
-                    <i className="fas fa-check text-healthcare-secondary mr-3"></i>
-                    Hypertension
+                  <li className="flex items-center gap-3">
+                    <CheckCircle className="h-5 w-5 text-secondary flex-shrink-0" />
+                    <span className="text-muted-foreground">16+ days of monitoring per month</span>
                   </li>
-                  <li className="flex items-center text-muted-foreground">
-                    <i className="fas fa-check text-healthcare-secondary mr-3"></i>
-                    Diabetes
+                  <li className="flex items-center gap-3">
+                    <CheckCircle className="h-5 w-5 text-secondary flex-shrink-0" />
+                    <span className="text-muted-foreground">Clinical staff data interpretation</span>
                   </li>
-                  <li className="flex items-center text-muted-foreground">
-                    <i className="fas fa-check text-healthcare-secondary mr-3"></i>
-                    COPD
-                  </li>
-                  <li className="flex items-center text-muted-foreground">
-                    <i className="fas fa-check text-healthcare-secondary mr-3"></i>
-                    Chronic Kidney Disease
-                  </li>
-                </ul>
-                <ul className="space-y-3">
-                  <li className="flex items-center text-muted-foreground">
-                    <i className="fas fa-check text-healthcare-secondary mr-3"></i>
-                    Atrial Fibrillation
-                  </li>
-                  <li className="flex items-center text-muted-foreground">
-                    <i className="fas fa-check text-healthcare-secondary mr-3"></i>
-                    Coronary Artery Disease
-                  </li>
-                  <li className="flex items-center text-muted-foreground">
-                    <i className="fas fa-check text-healthcare-secondary mr-3"></i>
-                    Sleep Apnea
-                  </li>
-                  <li className="flex items-center text-muted-foreground">
-                    <i className="fas fa-check text-healthcare-secondary mr-3"></i>
-                    Stroke Recovery
-                  </li>
-                  <li className="flex items-center text-muted-foreground">
-                    <i className="fas fa-check text-healthcare-secondary mr-3"></i>
-                    Post-Surgical Care
+                  <li className="flex items-center gap-3">
+                    <CheckCircle className="h-5 w-5 text-secondary flex-shrink-0" />
+                    <span className="text-muted-foreground">Patient education and engagement</span>
                   </li>
                 </ul>
               </div>
+            </div>
+            
+            <div className="grid grid-cols-2 gap-6">
+              {devices.map((device, index) => (
+                <Card key={index} className="group hover:shadow-xl transition-all duration-300 bg-white border border-slate-200">
+                  <CardHeader className="pb-4">
+                    <div className="w-12 h-12 bg-gradient-to-br from-primary/20 to-secondary/20 rounded-xl flex items-center justify-center mb-3 text-primary group-hover:scale-105 transition-transform">
+                      {device.icon}
+                    </div>
+                    <CardTitle className="text-lg font-bold text-foreground">{device.name}</CardTitle>
+                  </CardHeader>
+                  <CardContent className="pt-0">
+                    <p className="text-sm text-muted-foreground leading-relaxed">{device.description}</p>
+                  </CardContent>
+                </Card>
+              ))}
             </div>
           </div>
         </div>
       </section>
 
       {/* Benefits Section */}
-      <section className="py-20 bg-white">
+      <section className="py-24 bg-slate-50/50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16">
-            <h2 className="text-3xl font-bold text-foreground mb-6">Benefits for Seniors with Chronic Disease</h2>
-            <p className="text-xl text-muted-foreground max-w-3xl mx-auto">
-              Remote monitoring empowers patients to take control of their health while providing peace of mind for families and providers.
+            <div className="mb-4">
+              <span className="inline-block px-4 py-2 bg-primary/10 text-primary font-semibold text-sm rounded-full">
+                Program Benefits
+              </span>
+            </div>
+            <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold text-foreground mb-6">
+              Why Choose Remote Monitoring?
+            </h2>
+            <p className="text-xl text-muted-foreground max-w-3xl mx-auto leading-relaxed">
+              Transform patient care with continuous monitoring that provides early intervention opportunities 
+              and improved health outcomes while generating sustainable revenue.
             </p>
           </div>
-          
-          <div className="grid md:grid-cols-3 gap-8">
-            <div className="text-center p-6 bg-slate-50 rounded-2xl">
-              <div className="w-16 h-16 bg-healthcare-primary/10 rounded-full flex items-center justify-center mx-auto mb-4">
-                <i className="fas fa-home text-healthcare-primary text-2xl"></i>
-              </div>
-              <h3 className="text-xl font-semibold text-foreground mb-3">Age in Place</h3>
-              <p className="text-muted-foreground">
-                Stay safely at home while receiving professional monitoring and support for chronic conditions.
-              </p>
-            </div>
-            
-            <div className="text-center p-6 bg-slate-50 rounded-2xl">
-              <div className="w-16 h-16 bg-healthcare-secondary/10 rounded-full flex items-center justify-center mx-auto mb-4">
-                <i className="fas fa-bell text-healthcare-secondary text-2xl"></i>
-              </div>
-              <h3 className="text-xl font-semibold text-foreground mb-3">Early Detection</h3>
-              <p className="text-muted-foreground">
-                Catch health changes early before they become serious complications requiring hospitalization.
-              </p>
-            </div>
-            
-            <div className="text-center p-6 bg-slate-50 rounded-2xl">
-              <div className="w-16 h-16 bg-healthcare-accent/10 rounded-full flex items-center justify-center mx-auto mb-4">
-                <i className="fas fa-graduation-cap text-healthcare-accent text-2xl"></i>
-              </div>
-              <h3 className="text-xl font-semibold text-foreground mb-3">Health Education</h3>
-              <p className="text-muted-foreground">
-                Learn to better understand and manage your health with guidance from our clinical team.
-              </p>
-            </div>
+
+          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
+            {benefits.map((benefit, index) => (
+              <Card key={index} className="group hover:shadow-2xl transition-all duration-300 bg-white border-0 shadow-lg hover:-translate-y-1">
+                <CardHeader className="pb-4">
+                  <div className="w-12 h-12 bg-gradient-to-br from-primary/20 to-secondary/20 rounded-xl flex items-center justify-center mb-4 text-primary group-hover:scale-105 transition-transform">
+                    {benefit.icon}
+                  </div>
+                  <CardTitle className="text-xl font-bold text-foreground">{benefit.title}</CardTitle>
+                </CardHeader>
+                <CardContent className="pt-0">
+                  <p className="text-muted-foreground leading-relaxed">{benefit.description}</p>
+                </CardContent>
+              </Card>
+            ))}
           </div>
         </div>
       </section>
 
-      {/* Compliance and Data Section */}
-      <section className="py-20 bg-slate-50">
+      {/* Features Section */}
+      <section className="py-24 bg-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-16">
-            <h2 className="text-3xl font-bold text-foreground mb-6">Compliance and Data Transmission</h2>
-            <p className="text-xl text-muted-foreground max-w-3xl mx-auto">
-              Our monitoring platform meets the highest standards for healthcare data security and regulatory compliance.
-            </p>
-          </div>
-          
-          <div className="grid lg:grid-cols-2 gap-12 items-center">
+          <div className="grid lg:grid-cols-2 gap-16 items-center">
             <div>
-              <img
-                src="https://images.unsplash.com/photo-1551076805-e1869033e561?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=800&h=600"
-                alt="Healthcare data security and compliance dashboard"
-                className="rounded-2xl shadow-xl"
-              />
+              <div className="mb-4">
+                <span className="inline-block px-4 py-2 bg-primary/10 text-primary font-semibold text-sm rounded-full">
+                  Complete Solution
+                </span>
+              </div>
+              <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-6">
+                Comprehensive RPM Services
+              </h2>
+              <p className="text-lg text-muted-foreground mb-8 leading-relaxed">
+                Our end-to-end RPM solution includes device provisioning, patient onboarding, clinical monitoring, 
+                data analysis, and provider communication to ensure seamless care coordination.
+              </p>
+              
+              <div className="grid gap-4">
+                {rpmFeatures.map((feature, index) => (
+                  <div key={index} className="flex items-center gap-3">
+                    <div className="w-5 h-5 bg-secondary/20 rounded-full flex items-center justify-center flex-shrink-0">
+                      <CheckCircle className="h-3 w-3 text-secondary" />
+                    </div>
+                    <span className="text-muted-foreground">{feature}</span>
+                  </div>
+                ))}
+              </div>
             </div>
-            <div>
-              <h3 className="text-2xl font-bold text-foreground mb-6">Security & Compliance Features</h3>
-              <div className="space-y-6">
-                <div className="flex items-start">
-                  <div className="w-12 h-12 bg-healthcare-primary/10 rounded-lg flex items-center justify-center mr-4 flex-shrink-0">
-                    <i className="fas fa-shield-alt text-healthcare-primary"></i>
-                  </div>
-                  <div>
-                    <h4 className="font-semibold text-foreground mb-2">HIPAA Compliant</h4>
-                    <p className="text-muted-foreground">
-                      All data transmission and storage meets HIPAA security requirements with end-to-end encryption.
-                    </p>
-                  </div>
+            
+            <div className="bg-gradient-to-br from-primary via-primary/95 to-secondary rounded-3xl p-8 text-white">
+              <div className="mb-6">
+                <Activity className="h-12 w-12 text-white/80 mb-4" />
+                <h3 className="text-2xl font-bold mb-2">Continuous Care</h3>
+                <p className="text-white/90">
+                  24/7 monitoring provides unprecedented visibility into patient health status, 
+                  enabling proactive interventions and improved clinical outcomes.
+                </p>
+              </div>
+              
+              <div className="grid grid-cols-2 gap-6 mt-8">
+                <div className="text-center">
+                  <div className="text-3xl font-bold mb-1">40%</div>
+                  <div className="text-white/80 text-sm">Fewer Readmissions</div>
                 </div>
-                
-                <div className="flex items-start">
-                  <div className="w-12 h-12 bg-healthcare-secondary/10 rounded-lg flex items-center justify-center mr-4 flex-shrink-0">
-                    <i className="fas fa-wifi text-healthcare-secondary"></i>
-                  </div>
-                  <div>
-                    <h4 className="font-semibold text-foreground mb-2">Real-Time Transmission</h4>
-                    <p className="text-muted-foreground">
-                      Data is transmitted automatically via cellular networks, no internet required from patients.
-                    </p>
-                  </div>
+                <div className="text-center">
+                  <div className="text-3xl font-bold mb-1">85%</div>
+                  <div className="text-white/80 text-sm">Patient Compliance</div>
                 </div>
-                
-                <div className="flex items-start">
-                  <div className="w-12 h-12 bg-healthcare-accent/10 rounded-lg flex items-center justify-center mr-4 flex-shrink-0">
-                    <i className="fas fa-chart-line text-healthcare-accent"></i>
-                  </div>
-                  <div>
-                    <h4 className="font-semibold text-foreground mb-2">Clinical Dashboard</h4>
-                    <p className="text-muted-foreground">
-                      Provider access to real-time patient data with customizable alerts and reporting.
-                    </p>
-                  </div>
+                <div className="text-center">
+                  <div className="text-3xl font-bold mb-1">24/7</div>
+                  <div className="text-white/80 text-sm">Monitoring</div>
                 </div>
-                
-                <div className="flex items-start">
-                  <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center mr-4 flex-shrink-0">
-                    <i className="fas fa-award text-blue-600"></i>
-                  </div>
-                  <div>
-                    <h4 className="font-semibold text-foreground mb-2">CMS Approved</h4>
-                    <p className="text-muted-foreground">
-                      All devices and protocols meet CMS requirements for reimbursement under RPM and RTM codes.
-                    </p>
-                  </div>
+                <div className="text-center">
+                  <div className="text-3xl font-bold mb-1">16+</div>
+                  <div className="text-white/80 text-sm">Days/Month</div>
                 </div>
               </div>
             </div>
@@ -299,23 +293,29 @@ export default function Monitoring() {
       </section>
 
       {/* CTA Section */}
-      <section className="py-20 bg-healthcare-secondary text-white">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <h2 className="text-3xl font-bold mb-6">Start Remote Monitoring Today</h2>
-          <p className="text-xl text-green-100 mb-8 max-w-3xl mx-auto">
-            Enhance patient care and generate additional revenue with our comprehensive remote monitoring solutions.
+      <section className="py-24 bg-gradient-to-br from-primary/5 to-secondary/5">
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+          <div className="mb-4">
+            <span className="inline-block px-4 py-2 bg-primary/10 text-primary font-semibold text-sm rounded-full">
+              Start Monitoring Today
+            </span>
+          </div>
+          <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold text-foreground mb-6">
+            Ready to Transform Patient Care?
+          </h2>
+          <p className="text-xl text-muted-foreground mb-8 leading-relaxed">
+            Implement remote patient monitoring to provide continuous care, improve outcomes, 
+            and generate sustainable revenue with our comprehensive RPM program.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Link href="/contact">
-              <Button size="lg" className="bg-white text-healthcare-secondary hover:bg-slate-100">
-                Get Started
+              <Button size="lg" className="bg-primary hover:bg-primary/90 text-primary-foreground font-semibold px-8 py-4 rounded-lg shadow-lg hover:shadow-xl transition-all">
+                Start Partnership
               </Button>
             </Link>
-            <Link href="/how-it-works">
-              <Button size="lg" variant="outline" className="border-white text-white hover:bg-white hover:text-healthcare-secondary">
-                Learn More
-              </Button>
-            </Link>
+            <Button size="lg" variant="outline" className="border-2 border-primary text-primary hover:bg-primary hover:text-primary-foreground font-semibold px-8 py-4 rounded-lg transition-all">
+              Schedule Demo
+            </Button>
           </div>
         </div>
       </section>
