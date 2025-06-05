@@ -1,243 +1,323 @@
 import { Link } from "wouter";
 import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Brain, Users, Shield, Heart, CheckCircle, Clock, Phone, TrendingUp } from "lucide-react";
+import bhiIllustration from "@/assets/graphics/bhi-illustration.svg";
 
 export default function BHI() {
+  const services = [
+    {
+      icon: <Brain className="h-6 w-6" />,
+      title: "Depression Screening",
+      description: "Systematic assessment using validated tools like PHQ-9 and GAD-7"
+    },
+    {
+      icon: <Heart className="h-6 w-6" />,
+      title: "Anxiety Management",
+      description: "Evidence-based interventions for anxiety disorders and panic symptoms"
+    },
+    {
+      icon: <Shield className="h-6 w-6" />,
+      title: "Crisis Intervention",
+      description: "24/7 emergency support for behavioral health crises and safety planning"
+    },
+    {
+      icon: <Users className="h-6 w-6" />,
+      title: "Care Coordination",
+      description: "Seamless integration between primary care and behavioral health providers"
+    }
+  ];
+
+  const benefits = [
+    {
+      icon: <TrendingUp className="h-6 w-6" />,
+      title: "Improved Outcomes",
+      description: "Integrated care leads to better mental health and medical outcomes"
+    },
+    {
+      icon: <Clock className="h-6 w-6" />,
+      title: "Early Intervention",
+      description: "Proactive identification and treatment of behavioral health issues"
+    },
+    {
+      icon: <Shield className="h-6 w-6" />,
+      title: "Reduced Stigma",
+      description: "Low-stigma approach encourages patient engagement and participation"
+    },
+    {
+      icon: <Phone className="h-6 w-6" />,
+      title: "Continuous Support",
+      description: "Ongoing behavioral health coordination between medical visits"
+    }
+  ];
+
+  const bhiFeatures = [
+    "Comprehensive behavioral health assessments",
+    "Evidence-based screening tools (PHQ-9, GAD-7)",
+    "Crisis intervention and safety planning",
+    "Medication adherence support",
+    "Care team communication and coordination",
+    "Provider consultation and recommendations",
+    "Patient education and self-management",
+    "Medicare billing compliance and documentation"
+  ];
+
   return (
-    <div className="pt-20">
+    <div className="min-h-screen bg-gradient-to-b from-slate-50 to-white">
       {/* Hero Section */}
-      <section className="py-20 bg-gradient-to-br from-healthcare-accent/5 to-healthcare-accent/10">
+      <section className="pt-32 pb-20">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center">
-            <div className="w-20 h-20 bg-healthcare-accent/20 rounded-full flex items-center justify-center mx-auto mb-6">
-              <i className="fas fa-brain text-healthcare-accent text-3xl"></i>
+          <div className="grid lg:grid-cols-2 gap-16 items-center">
+            <div className="max-w-xl">
+              <div className="mb-6">
+                <Badge className="mb-4 bg-primary/10 text-primary font-semibold px-4 py-2 rounded-full">
+                  Behavioral Health Integration
+                </Badge>
+              </div>
+              <h1 className="text-4xl md:text-5xl xl:text-6xl font-bold text-foreground leading-[1.1] mb-6">
+                Behavioral Health 
+                <span className="text-primary"> Integration (BHI)</span>
+              </h1>
+              <p className="text-xl text-muted-foreground mb-8 leading-relaxed">
+                Comprehensive behavioral health support integrated into primary care settings. 
+                Our licensed professionals provide mental health screening, intervention, and ongoing support using a low-stigma, collaborative approach.
+              </p>
+              <div className="flex flex-col sm:flex-row gap-4 mb-8">
+                <Link href="/contact">
+                  <Button size="lg" className="bg-primary hover:bg-primary/90 text-primary-foreground font-semibold px-8 py-4 rounded-lg shadow-lg hover:shadow-xl transition-all">
+                    Launch BHI Program
+                  </Button>
+                </Link>
+                <Button size="lg" variant="outline" className="border-2 border-primary text-primary hover:bg-primary hover:text-primary-foreground font-semibold px-8 py-4 rounded-lg transition-all">
+                  Learn More
+                </Button>
+              </div>
+              
+              {/* Key Benefits */}
+              <div className="grid grid-cols-2 gap-4 text-sm">
+                <div className="flex items-center gap-2">
+                  <div className="w-2 h-2 bg-secondary rounded-full"></div>
+                  <span className="text-muted-foreground">Integrated care model</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <div className="w-2 h-2 bg-secondary rounded-full"></div>
+                  <span className="text-muted-foreground">Licensed professionals</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <div className="w-2 h-2 bg-secondary rounded-full"></div>
+                  <span className="text-muted-foreground">Low-stigma approach</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <div className="w-2 h-2 bg-secondary rounded-full"></div>
+                  <span className="text-muted-foreground">24/7 crisis support</span>
+                </div>
+              </div>
             </div>
-            <h1 className="text-4xl lg:text-5xl font-bold text-foreground mb-6">Behavioral Health Integration</h1>
-            <p className="text-xl text-muted-foreground max-w-3xl mx-auto">
-              Compassionate mental health support for seniors with behavioral conditions, using our low-stigma approach to improve engagement and outcomes.
-            </p>
+            
+            <div className="relative">
+              <div className="bg-gradient-to-br from-primary/10 via-secondary/10 to-accent/10 rounded-3xl p-8 backdrop-blur-sm border border-white/20 shadow-2xl">
+                <img
+                  src={bhiIllustration}
+                  alt="Behavioral Health Integration workflow illustration"
+                  className="w-full h-auto"
+                />
+              </div>
+            </div>
           </div>
         </div>
       </section>
 
-      {/* How BHI Supports Seniors Section */}
-      <section className="py-20 bg-white">
+      {/* What is BHI Section */}
+      <section className="py-24 bg-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="grid lg:grid-cols-2 gap-12 items-center">
+          <div className="grid lg:grid-cols-2 gap-16 items-center">
             <div>
-              <h2 className="text-3xl font-bold text-foreground mb-6">How BHI Supports Seniors on Behavioral Medications</h2>
+              <div className="mb-4">
+                <span className="inline-block px-4 py-2 bg-primary/10 text-primary font-semibold text-sm rounded-full">
+                  Integrated Care
+                </span>
+              </div>
+              <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-6">
+                Behavioral Health Integration
+              </h2>
               <p className="text-lg text-muted-foreground mb-6 leading-relaxed">
-                Behavioral Health Integration (BHI) provides specialized support for Medicare patients taking behavioral health medications. Our program addresses the unique challenges seniors face with mental health treatment, including medication adherence, side effect management, and social isolation.
+                Behavioral Health Integration combines medical and behavioral health care in primary care settings. 
+                This collaborative approach addresses mental health conditions alongside physical health issues, 
+                providing comprehensive patient care that improves outcomes and reduces stigma.
               </p>
               <p className="text-lg text-muted-foreground mb-8 leading-relaxed">
-                Our clinical team works closely with patients and their providers to ensure optimal medication management, monitor for adverse effects, and provide ongoing psychosocial support that improves treatment outcomes.
-              </p>
-              <div className="space-y-4">
-                <div className="flex items-start">
-                  <div className="w-6 h-6 bg-healthcare-accent/20 rounded-full flex items-center justify-center mr-3 mt-0.5 flex-shrink-0">
-                    <i className="fas fa-heart text-healthcare-accent text-sm"></i>
-                  </div>
-                  <div>
-                    <h4 className="font-semibold text-foreground mb-1">Medication Adherence Support</h4>
-                    <p className="text-muted-foreground text-sm">Regular check-ins to ensure proper medication compliance and identify barriers to adherence.</p>
-                  </div>
-                </div>
-                
-                <div className="flex items-start">
-                  <div className="w-6 h-6 bg-healthcare-accent/20 rounded-full flex items-center justify-center mr-3 mt-0.5 flex-shrink-0">
-                    <i className="fas fa-shield-alt text-healthcare-accent text-sm"></i>
-                  </div>
-                  <div>
-                    <h4 className="font-semibold text-foreground mb-1">Side Effect Monitoring</h4>
-                    <p className="text-muted-foreground text-sm">Proactive monitoring for medication side effects and coordination with prescribing providers.</p>
-                  </div>
-                </div>
-                
-                <div className="flex items-start">
-                  <div className="w-6 h-6 bg-healthcare-accent/20 rounded-full flex items-center justify-center mr-3 mt-0.5 flex-shrink-0">
-                    <i className="fas fa-users text-healthcare-accent text-sm"></i>
-                  </div>
-                  <div>
-                    <h4 className="font-semibold text-foreground mb-1">Social Support</h4>
-                    <p className="text-muted-foreground text-sm">Addressing social isolation and connecting patients with community resources.</p>
-                  </div>
-                </div>
-              </div>
-            </div>
-            <div>
-              <img
-                src="https://images.unsplash.com/photo-1576091160550-2173dba999ef?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=800&h=600"
-                alt="Healthcare professional providing compassionate behavioral health support"
-                className="rounded-2xl shadow-xl"
-              />
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Low-Stigma Approach Section */}
-      <section className="py-20 bg-slate-50">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-16">
-            <h2 className="text-3xl font-bold text-foreground mb-6">Our Low-Stigma Approach to Engagement</h2>
-            <p className="text-xl text-muted-foreground max-w-3xl mx-auto">
-              We understand that mental health discussions can be challenging for seniors. Our approach prioritizes dignity, privacy, and compassionate care.
-            </p>
-          </div>
-          
-          <div className="grid lg:grid-cols-3 gap-8">
-            <div className="bg-white rounded-2xl p-8 shadow-lg text-center">
-              <div className="w-16 h-16 bg-healthcare-primary/10 rounded-full flex items-center justify-center mx-auto mb-6">
-                <i className="fas fa-comments text-healthcare-primary text-2xl"></i>
-              </div>
-              <h3 className="text-xl font-bold text-foreground mb-4">Respectful Communication</h3>
-              <p className="text-muted-foreground leading-relaxed">
-                Our team uses person-first language and approaches mental health discussions with sensitivity and respect for individual experiences.
-              </p>
-            </div>
-            
-            <div className="bg-white rounded-2xl p-8 shadow-lg text-center">
-              <div className="w-16 h-16 bg-healthcare-secondary/10 rounded-full flex items-center justify-center mx-auto mb-6">
-                <i className="fas fa-user-shield text-healthcare-secondary text-2xl"></i>
-              </div>
-              <h3 className="text-xl font-bold text-foreground mb-4">Privacy Protection</h3>
-              <p className="text-muted-foreground leading-relaxed">
-                All conversations are confidential and conducted in private settings, ensuring patients feel safe to discuss their mental health openly.
-              </p>
-            </div>
-            
-            <div className="bg-white rounded-2xl p-8 shadow-lg text-center">
-              <div className="w-16 h-16 bg-healthcare-accent/10 rounded-full flex items-center justify-center mx-auto mb-6">
-                <i className="fas fa-graduation-cap text-healthcare-accent text-2xl"></i>
-              </div>
-              <h3 className="text-xl font-bold text-foreground mb-4">Education & Empowerment</h3>
-              <p className="text-muted-foreground leading-relaxed">
-                We provide education about mental health conditions and treatment options, empowering patients to be active participants in their care.
-              </p>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Reimbursement and Dual Enrollment Section */}
-      <section className="py-20 bg-white">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="grid lg:grid-cols-2 gap-12 items-center">
-            <div>
-              <img
-                src="https://images.unsplash.com/photo-1559757175-0eb30cd8c063?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=800&h=600"
-                alt="Healthcare billing and reimbursement documentation"
-                className="rounded-2xl shadow-xl"
-              />
-            </div>
-            <div>
-              <h2 className="text-3xl font-bold text-foreground mb-6">Reimbursement and Dual-Enrollment with CCM</h2>
-              <p className="text-lg text-muted-foreground mb-6 leading-relaxed">
-                BHI services are reimbursable through Medicare and can be provided alongside Chronic Care Management (CCM) services for eligible patients, maximizing revenue opportunities while providing comprehensive care.
+                Our BHI program includes licensed behavioral health coordinators who work directly with your care team 
+                to provide screening, brief interventions, care coordination, and ongoing support for patients with 
+                behavioral health needs.
               </p>
               
-              <div className="space-y-6">
-                <div className="bg-slate-50 rounded-lg p-6">
-                  <h3 className="text-xl font-bold text-foreground mb-3">Dual Enrollment Benefits</h3>
-                  <ul className="space-y-2 text-muted-foreground">
-                    <li className="flex items-center">
-                      <i className="fas fa-check text-healthcare-secondary mr-3"></i>
-                      Patients can receive both CCM and BHI services simultaneously
-                    </li>
-                    <li className="flex items-center">
-                      <i className="fas fa-check text-healthcare-secondary mr-3"></i>
-                      Comprehensive approach to physical and mental health
-                    </li>
-                    <li className="flex items-center">
-                      <i className="fas fa-check text-healthcare-secondary mr-3"></i>
-                      Increased revenue per patient through dual billing
-                    </li>
-                    <li className="flex items-center">
-                      <i className="fas fa-check text-healthcare-secondary mr-3"></i>
-                      Better patient outcomes through integrated care
-                    </li>
-                  </ul>
-                </div>
-                
-                <div className="grid md:grid-cols-2 gap-4">
-                  <div className="text-center p-4 bg-healthcare-primary/5 rounded-lg">
-                    <div className="text-2xl font-bold text-healthcare-primary mb-1">$150-250</div>
-                    <div className="text-sm text-muted-foreground">Monthly BHI Reimbursement</div>
-                  </div>
-                  <div className="text-center p-4 bg-healthcare-secondary/5 rounded-lg">
-                    <div className="text-2xl font-bold text-healthcare-secondary mb-1">100%</div>
-                    <div className="text-sm text-muted-foreground">Medicare Coverage</div>
-                  </div>
-                </div>
+              {/* Evidence Base */}
+              <div className="bg-slate-50 rounded-2xl p-6 border border-slate-200">
+                <h3 className="text-lg font-semibold text-foreground mb-4">Evidence-Based Approach</h3>
+                <ul className="space-y-2">
+                  <li className="flex items-center gap-3">
+                    <CheckCircle className="h-5 w-5 text-secondary flex-shrink-0" />
+                    <span className="text-muted-foreground">50% improvement in depression outcomes</span>
+                  </li>
+                  <li className="flex items-center gap-3">
+                    <CheckCircle className="h-5 w-5 text-secondary flex-shrink-0" />
+                    <span className="text-muted-foreground">Reduced healthcare costs and utilization</span>
+                  </li>
+                  <li className="flex items-center gap-3">
+                    <CheckCircle className="h-5 w-5 text-secondary flex-shrink-0" />
+                    <span className="text-muted-foreground">Higher patient satisfaction scores</span>
+                  </li>
+                  <li className="flex items-center gap-3">
+                    <CheckCircle className="h-5 w-5 text-secondary flex-shrink-0" />
+                    <span className="text-muted-foreground">Improved medication adherence</span>
+                  </li>
+                </ul>
               </div>
+            </div>
+            
+            <div className="grid grid-cols-2 gap-6">
+              {services.map((service, index) => (
+                <Card key={index} className="group hover:shadow-xl transition-all duration-300 bg-white border border-slate-200">
+                  <CardHeader className="pb-4">
+                    <div className="w-12 h-12 bg-gradient-to-br from-primary/20 to-secondary/20 rounded-xl flex items-center justify-center mb-3 text-primary group-hover:scale-105 transition-transform">
+                      {service.icon}
+                    </div>
+                    <CardTitle className="text-lg font-bold text-foreground">{service.title}</CardTitle>
+                  </CardHeader>
+                  <CardContent className="pt-0">
+                    <p className="text-sm text-muted-foreground leading-relaxed">{service.description}</p>
+                  </CardContent>
+                </Card>
+              ))}
             </div>
           </div>
         </div>
       </section>
 
-      {/* Services Overview */}
-      <section className="py-20 bg-slate-50">
+      {/* Benefits Section */}
+      <section className="py-24 bg-slate-50/50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16">
-            <h2 className="text-3xl font-bold text-foreground mb-6">Comprehensive BHI Services</h2>
-            <p className="text-xl text-muted-foreground max-w-3xl mx-auto">
-              Our behavioral health integration program provides a full spectrum of support services for seniors with mental health needs.
+            <div className="mb-4">
+              <span className="inline-block px-4 py-2 bg-primary/10 text-primary font-semibold text-sm rounded-full">
+                Program Benefits
+              </span>
+            </div>
+            <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold text-foreground mb-6">
+              Why Integrate Behavioral Health?
+            </h2>
+            <p className="text-xl text-muted-foreground max-w-3xl mx-auto leading-relaxed">
+              Address the growing mental health needs of your patients while improving overall health outcomes 
+              and practice efficiency through our integrated behavioral health program.
             </p>
           </div>
-          
+
           <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
-            <div className="bg-white rounded-xl p-6 shadow-lg text-center">
-              <div className="w-12 h-12 bg-healthcare-primary/10 rounded-full flex items-center justify-center mx-auto mb-4">
-                <i className="fas fa-clipboard-check text-healthcare-primary"></i>
+            {benefits.map((benefit, index) => (
+              <Card key={index} className="group hover:shadow-2xl transition-all duration-300 bg-white border-0 shadow-lg hover:-translate-y-1">
+                <CardHeader className="pb-4">
+                  <div className="w-12 h-12 bg-gradient-to-br from-primary/20 to-secondary/20 rounded-xl flex items-center justify-center mb-4 text-primary group-hover:scale-105 transition-transform">
+                    {benefit.icon}
+                  </div>
+                  <CardTitle className="text-xl font-bold text-foreground">{benefit.title}</CardTitle>
+                </CardHeader>
+                <CardContent className="pt-0">
+                  <p className="text-muted-foreground leading-relaxed">{benefit.description}</p>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Features Section */}
+      <section className="py-24 bg-white">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="grid lg:grid-cols-2 gap-16 items-center">
+            <div>
+              <div className="mb-4">
+                <span className="inline-block px-4 py-2 bg-primary/10 text-primary font-semibold text-sm rounded-full">
+                  Comprehensive Support
+                </span>
               </div>
-              <h3 className="font-bold text-foreground mb-2">Depression Screening</h3>
-              <p className="text-muted-foreground text-sm">Regular PHQ-9 assessments and mood monitoring</p>
+              <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-6">
+                Complete BHI Services
+              </h2>
+              <p className="text-lg text-muted-foreground mb-8 leading-relaxed">
+                Our behavioral health integration program provides comprehensive support for patients with mental health conditions, 
+                substance use disorders, and behavioral health challenges within the primary care setting.
+              </p>
+              
+              <div className="grid gap-4">
+                {bhiFeatures.map((feature, index) => (
+                  <div key={index} className="flex items-center gap-3">
+                    <div className="w-5 h-5 bg-secondary/20 rounded-full flex items-center justify-center flex-shrink-0">
+                      <CheckCircle className="h-3 w-3 text-secondary" />
+                    </div>
+                    <span className="text-muted-foreground">{feature}</span>
+                  </div>
+                ))}
+              </div>
             </div>
             
-            <div className="bg-white rounded-xl p-6 shadow-lg text-center">
-              <div className="w-12 h-12 bg-healthcare-secondary/10 rounded-full flex items-center justify-center mx-auto mb-4">
-                <i className="fas fa-pills text-healthcare-secondary"></i>
+            <div className="bg-gradient-to-br from-primary via-primary/95 to-secondary rounded-3xl p-8 text-white">
+              <div className="mb-6">
+                <Brain className="h-12 w-12 text-white/80 mb-4" />
+                <h3 className="text-2xl font-bold mb-2">Holistic Care Approach</h3>
+                <p className="text-white/90">
+                  Our integrated model addresses both physical and mental health needs, 
+                  creating a comprehensive care experience that improves patient outcomes and satisfaction.
+                </p>
               </div>
-              <h3 className="font-bold text-foreground mb-2">Medication Management</h3>
-              <p className="text-muted-foreground text-sm">Adherence support and side effect monitoring</p>
-            </div>
-            
-            <div className="bg-white rounded-xl p-6 shadow-lg text-center">
-              <div className="w-12 h-12 bg-healthcare-accent/10 rounded-full flex items-center justify-center mx-auto mb-4">
-                <i className="fas fa-exclamation-triangle text-healthcare-accent"></i>
+              
+              <div className="grid grid-cols-2 gap-6 mt-8">
+                <div className="text-center">
+                  <div className="text-3xl font-bold mb-1">75%</div>
+                  <div className="text-white/80 text-sm">Improved Screening</div>
+                </div>
+                <div className="text-center">
+                  <div className="text-3xl font-bold mb-1">60%</div>
+                  <div className="text-white/80 text-sm">Better Adherence</div>
+                </div>
+                <div className="text-center">
+                  <div className="text-3xl font-bold mb-1">45%</div>
+                  <div className="text-white/80 text-sm">Reduced Symptoms</div>
+                </div>
+                <div className="text-center">
+                  <div className="text-3xl font-bold mb-1">24/7</div>
+                  <div className="text-white/80 text-sm">Crisis Support</div>
+                </div>
               </div>
-              <h3 className="font-bold text-foreground mb-2">Crisis Intervention</h3>
-              <p className="text-muted-foreground text-sm">24/7 support for mental health emergencies</p>
-            </div>
-            
-            <div className="bg-white rounded-xl p-6 shadow-lg text-center">
-              <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                <i className="fas fa-network-wired text-blue-600"></i>
-              </div>
-              <h3 className="font-bold text-foreground mb-2">Care Coordination</h3>
-              <p className="text-muted-foreground text-sm">Integration with primary care and specialists</p>
             </div>
           </div>
         </div>
       </section>
 
       {/* CTA Section */}
-      <section className="py-20 bg-healthcare-accent text-white">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <h2 className="text-3xl font-bold mb-6">Start Behavioral Health Integration</h2>
-          <p className="text-xl text-red-100 mb-8 max-w-3xl mx-auto">
-            Provide compassionate mental health support for your patients while generating additional revenue through our BHI program.
+      <section className="py-24 bg-gradient-to-br from-primary/5 to-secondary/5">
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+          <div className="mb-4">
+            <span className="inline-block px-4 py-2 bg-primary/10 text-primary font-semibold text-sm rounded-full">
+              Integrated Care Solutions
+            </span>
+          </div>
+          <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold text-foreground mb-6">
+            Ready to Integrate Behavioral Health?
+          </h2>
+          <p className="text-xl text-muted-foreground mb-8 leading-relaxed">
+            Transform your practice with integrated behavioral health services that address the complete spectrum 
+            of patient needs while improving outcomes and generating sustainable revenue.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Link href="/contact">
-              <Button size="lg" className="bg-white text-healthcare-accent hover:bg-slate-100">
-                Get Started Today
+              <Button size="lg" className="bg-primary hover:bg-primary/90 text-primary-foreground font-semibold px-8 py-4 rounded-lg shadow-lg hover:shadow-xl transition-all">
+                Start Partnership
               </Button>
             </Link>
-            <Link href="/how-it-works">
-              <Button size="lg" variant="outline" className="border-white text-white hover:bg-white hover:text-healthcare-accent">
-                Learn How It Works
-              </Button>
-            </Link>
+            <Button size="lg" variant="outline" className="border-2 border-primary text-primary hover:bg-primary hover:text-primary-foreground font-semibold px-8 py-4 rounded-lg transition-all">
+              Schedule Consultation
+            </Button>
           </div>
         </div>
       </section>
