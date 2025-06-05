@@ -1,0 +1,91 @@
+Great — here's a comprehensive **Replit Ghostwriter AI prompt** that will generate a full marketing website for **Lynk Health**, including service-specific pages and supporting content. This will give you a fast, clean, and scalable deployment. The prompt is structured for **maximum buildout in the first AI pass**:
+
+---
+
+### ✅ REPLIT GHOSTWRITER AI PROMPT
+
+> You are a full-stack web developer building a clean, professional, mobile-responsive marketing website for **Lynk Health**, a healthcare company providing white-labeled, nurse-led care coordination services for Medicare patients. Use modern HTML, CSS (Tailwind if possible), and lightweight JavaScript to create the following website structure. It should load fast, be SEO-optimized, and be easy to maintain (static site with no backend or database required). Deploy-ready.
+
+---
+
+#### 📁 SITE STRUCTURE
+
+1. **Homepage (`index.html`)**
+
+   * Hero section: “Care Coordination That Clicks.”
+   * Subtext: “Helping patients stay healthy and independent through Chronic Care Management, In-Home Monitoring, and Behavioral Health Integration.”
+   * CTA button: “Partner With Us” → links to Contact page.
+   * Sections: Who We Serve, Our Programs, Patient Impact Stats, Testimonials, Partner Logos.
+
+2. **About Us (`about.html`)**
+
+   * Mission statement: Helping seniors stay out of hospitals and age in place.
+   * Team section: Leave space for future headshots or bios.
+   * Vision: Preventive care through better nurse-led engagement.
+
+3. **Services (dropdown menu under navigation bar)**
+
+   * **Chronic Care Management (`ccm.html`)**
+
+     * Description of CCM
+     * How it helps providers and patients
+     * Reimbursement details
+     * CTA: “Start a CCM Program”
+
+   * **In-Home Patient Monitoring (`monitoring.html`)**
+
+     * Overview of Remote Patient Monitoring (RPM) and RTM
+     * Hardware used, conditions tracked
+     * Benefits for seniors with chronic disease
+     * Compliance and data transmission info
+
+   * **Behavioral Health Integration (`bhi.html`)**
+
+     * How BHI supports seniors on behavioral meds
+     * Our low-stigma approach to engagement
+     * Reimbursement and dual-enrollment with CCM
+
+4. **How It Works (`how-it-works.html`)**
+
+   * Simple 3-step process: Identify patients → Engage → Bill
+   * Clinic onboarding explained
+   * Sample timeline
+
+5. **Resources (`resources.html`)**
+
+   * Placeholder for blog posts, downloads, whitepapers
+   * Include two sample blog cards as starter content
+
+6. **Contact Us (`contact.html`)**
+
+   * Clinic inquiry form (Name, Email, Phone, Message)
+   * Embedded Google Map for headquarters (placeholder)
+   * Clinic partner interest dropdown: “Hospital,” “Clinic,” “FQHC,” etc.
+
+7. **Privacy Policy (`privacy.html`)**
+
+   * Simple placeholder policy with HIPAA and CMS language reference
+
+---
+
+#### 🎨 DESIGN & TECH SPECS
+
+* Use **HTML + Tailwind CSS**
+* Keep styling lightweight and mobile-first
+* Clean nav bar with dropdown under Services
+* Sticky header with logo + “Partner With Us” CTA button
+* Smooth scrolling between anchor sections
+* Social meta tags and SEO best practices (title, description for each page)
+* Include FontAwesome or similar for icons
+
+---
+
+#### 🔗 Footer
+
+* Links: About, Services, How It Works, Resources, Contact
+* Disclaimer: “Lynk Health is not a provider. We partner with licensed medical professionals to deliver CMS-covered care coordination services.”
+* Social icons (placeholder)
+
+---
+
+Would you like me to generate a GitHub-compatible repo structure or Markdown-based CMS later so blog posts can be added without code changes? Or should we keep this as static for now?
