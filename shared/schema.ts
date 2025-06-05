@@ -21,6 +21,7 @@ export const insertContactInquirySchema = createInsertSchema(contactInquiries).o
 export type InsertContactInquiry = z.infer<typeof insertContactInquirySchema>;
 export type ContactInquiry = typeof contactInquiries.$inferSelect;
 
+// Keep existing users table for compatibility
 export const users = pgTable("users", {
   id: serial("id").primaryKey(),
   username: text("username").notNull().unique(),

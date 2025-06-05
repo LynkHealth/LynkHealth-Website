@@ -1,264 +1,238 @@
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
 import { Link } from "wouter";
-import { Stethoscope, Clock, DollarSign, Users, Check, ArrowRight } from "lucide-react";
+import { Button } from "@/components/ui/button";
 
 export default function CCM() {
   return (
-    <div className="py-20">
+    <div className="pt-20">
       {/* Hero Section */}
-      <section className="bg-gradient-to-br from-blue-600 to-blue-800 text-white">
-        <div className="container py-16">
+      <section className="py-20 bg-gradient-to-br from-healthcare-primary/5 to-healthcare-primary/10">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center">
+            <div className="w-20 h-20 bg-healthcare-primary/20 rounded-full flex items-center justify-center mx-auto mb-6">
+              <i className="fas fa-stethoscope text-healthcare-primary text-3xl"></i>
+            </div>
+            <h1 className="text-4xl lg:text-5xl font-bold text-foreground mb-6">Chronic Care Management</h1>
+            <p className="text-xl text-muted-foreground max-w-3xl mx-auto">
+              Comprehensive, nurse-led care coordination for Medicare patients with multiple chronic conditions. Generate revenue while improving patient outcomes.
+            </p>
+          </div>
+        </div>
+      </section>
+
+      {/* Description Section */}
+      <section className="py-20 bg-white">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid lg:grid-cols-2 gap-12 items-center">
             <div>
-              <h1 className="text-4xl lg:text-5xl font-bold mb-6">Chronic Care Management</h1>
-              <p className="text-xl text-blue-100 mb-8 leading-relaxed">
-                CMS-covered monthly care coordination for patients with multiple chronic conditions. Our registered nurses provide comprehensive health monitoring and care plan management.
+              <h2 className="text-3xl font-bold text-foreground mb-6">What is Chronic Care Management?</h2>
+              <p className="text-lg text-muted-foreground mb-6 leading-relaxed">
+                Chronic Care Management (CCM) is a CMS-covered service that provides ongoing care coordination for patients with multiple chronic conditions. Our registered nurses work directly with your patients to manage their health between visits, ensuring better outcomes and reducing hospitalizations.
               </p>
-              <div className="flex flex-col sm:flex-row gap-4">
-                <Link href="/contact">
-                  <Button size="lg" className="bg-red-600 hover:bg-red-700">
-                    Start a CCM Program
-                  </Button>
-                </Link>
-                <Link href="/how-it-works">
-                  <Button size="lg" variant="outline" className="border-white text-white hover:bg-white hover:text-blue-600">
-                    Learn How It Works
-                  </Button>
-                </Link>
-              </div>
+              <p className="text-lg text-muted-foreground mb-8 leading-relaxed">
+                CCM services include comprehensive care planning, medication management, health education, and 24/7 access to our clinical team. All services are fully reimbursed by Medicare and most commercial insurers.
+              </p>
+              <ul className="space-y-3 text-muted-foreground">
+                <li className="flex items-center">
+                  <i className="fas fa-check text-healthcare-secondary mr-3"></i>
+                  20+ minutes of clinical staff time per month
+                </li>
+                <li className="flex items-center">
+                  <i className="fas fa-check text-healthcare-secondary mr-3"></i>
+                  Comprehensive care plan development and updates
+                </li>
+                <li className="flex items-center">
+                  <i className="fas fa-check text-healthcare-secondary mr-3"></i>
+                  24/7 access to care team
+                </li>
+                <li className="flex items-center">
+                  <i className="fas fa-check text-healthcare-secondary mr-3"></i>
+                  Medication adherence monitoring
+                </li>
+              </ul>
             </div>
             <div>
-              <img 
-                src="https://images.unsplash.com/photo-1576091160399-112ba8d25d1f?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=800&h=600" 
-                alt="Nurse providing chronic care management consultation"
-                className="rounded-2xl shadow-2xl w-full h-auto"
+              <img
+                src="https://images.unsplash.com/photo-1576091160399-112ba8d25d1f?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=800&h=600"
+                alt="Nurse providing chronic care management services"
+                className="rounded-2xl shadow-xl"
               />
             </div>
           </div>
         </div>
       </section>
 
-      {/* Description of CCM */}
-      <section className="bg-white py-16">
-        <div className="container">
-          <div className="max-w-4xl mx-auto">
-            <h2 className="text-3xl font-bold text-slate-900 mb-8 text-center">What is Chronic Care Management?</h2>
-            <div className="prose prose-lg mx-auto text-slate-600 mb-12">
-              <p>
-                Chronic Care Management (CCM) is a Medicare-covered service that provides non-face-to-face care coordination for patients with multiple chronic conditions. Our program focuses on comprehensive care plan development, medication management, and continuous health monitoring to help patients better manage their conditions and avoid complications.
-              </p>
-              <p>
-                CCM services are designed for patients who have two or more chronic conditions expected to last at least 12 months, or until the death of the patient, and which place the patient at significant risk of death, acute exacerbation/decompensation, or functional decline.
-              </p>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* How CCM Helps */}
-      <section className="bg-slate-50 py-16">
-        <div className="container">
-          <div className="text-center mb-12">
-            <h2 className="text-3xl font-bold text-slate-900 mb-6">How CCM Helps Providers and Patients</h2>
-            <p className="text-lg text-slate-600 max-w-3xl mx-auto">
-              Our CCM program delivers measurable benefits for both healthcare providers and their patients.
+      {/* Benefits Section */}
+      <section className="py-20 bg-slate-50">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-16">
+            <h2 className="text-3xl font-bold text-foreground mb-6">How CCM Helps Providers and Patients</h2>
+            <p className="text-xl text-muted-foreground max-w-3xl mx-auto">
+              Our CCM program delivers measurable benefits for healthcare providers and their patients.
             </p>
           </div>
-
+          
           <div className="grid lg:grid-cols-2 gap-12">
-            {/* Benefits for Providers */}
-            <Card className="bg-white shadow-lg border-none">
-              <CardHeader>
-                <CardTitle className="flex items-center text-2xl text-slate-900">
-                  <Stethoscope className="h-6 w-6 mr-3 text-blue-600" />
-                  Benefits for Providers
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <ul className="space-y-4">
-                  <li className="flex items-start">
-                    <Check className="h-5 w-5 text-emerald-600 mr-3 mt-1 flex-shrink-0" />
-                    <div>
-                      <div className="font-semibold text-slate-900">Additional Revenue Stream</div>
-                      <div className="text-slate-600">Generate $40-60 per patient per month through CMS reimbursement</div>
-                    </div>
-                  </li>
-                  <li className="flex items-start">
-                    <Check className="h-5 w-5 text-emerald-600 mr-3 mt-1 flex-shrink-0" />
-                    <div>
-                      <div className="font-semibold text-slate-900">Reduced Readmissions</div>
-                      <div className="text-slate-600">Lower 30-day readmission rates through proactive monitoring</div>
-                    </div>
-                  </li>
-                  <li className="flex items-start">
-                    <Check className="h-5 w-5 text-emerald-600 mr-3 mt-1 flex-shrink-0" />
-                    <div>
-                      <div className="font-semibold text-slate-900">Enhanced Patient Satisfaction</div>
-                      <div className="text-slate-600">Improve CAHPS scores with better care coordination</div>
-                    </div>
-                  </li>
-                  <li className="flex items-start">
-                    <Check className="h-5 w-5 text-emerald-600 mr-3 mt-1 flex-shrink-0" />
-                    <div>
-                      <div className="font-semibold text-slate-900">Practice Efficiency</div>
-                      <div className="text-slate-600">Reduce urgent care visits and unscheduled appointments</div>
-                    </div>
-                  </li>
-                </ul>
-              </CardContent>
-            </Card>
+            {/* Provider Benefits */}
+            <div className="bg-white rounded-2xl p-8 shadow-lg">
+              <h3 className="text-2xl font-bold text-foreground mb-6 flex items-center">
+                <i className="fas fa-hospital text-healthcare-primary mr-3"></i>
+                Provider Benefits
+              </h3>
+              <ul className="space-y-4">
+                <li className="flex items-start">
+                  <i className="fas fa-dollar-sign text-healthcare-secondary mr-3 mt-1"></i>
+                  <div>
+                    <div className="font-semibold text-foreground">Generate Additional Revenue</div>
+                    <div className="text-muted-foreground text-sm">Average $200-300 per patient per month through CMS reimbursement</div>
+                  </div>
+                </li>
+                <li className="flex items-start">
+                  <i className="fas fa-chart-line text-healthcare-secondary mr-3 mt-1"></i>
+                  <div>
+                    <div className="font-semibold text-foreground">Improve Quality Metrics</div>
+                    <div className="text-muted-foreground text-sm">Better HEDIS scores and quality reporting outcomes</div>
+                  </div>
+                </li>
+                <li className="flex items-start">
+                  <i className="fas fa-user-shield text-healthcare-secondary mr-3 mt-1"></i>
+                  <div>
+                    <div className="font-semibold text-foreground">Reduce Provider Burden</div>
+                    <div className="text-muted-foreground text-sm">Our team handles all documentation and billing requirements</div>
+                  </div>
+                </li>
+                <li className="flex items-start">
+                  <i className="fas fa-handshake text-healthcare-secondary mr-3 mt-1"></i>
+                  <div>
+                    <div className="font-semibold text-foreground">Strengthen Patient Relationships</div>
+                    <div className="text-muted-foreground text-sm">Improved patient satisfaction and engagement</div>
+                  </div>
+                </li>
+              </ul>
+            </div>
 
-            {/* Benefits for Patients */}
-            <Card className="bg-white shadow-lg border-none">
-              <CardHeader>
-                <CardTitle className="flex items-center text-2xl text-slate-900">
-                  <Users className="h-6 w-6 mr-3 text-emerald-600" />
-                  Benefits for Patients
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <ul className="space-y-4">
-                  <li className="flex items-start">
-                    <Check className="h-5 w-5 text-emerald-600 mr-3 mt-1 flex-shrink-0" />
-                    <div>
-                      <div className="font-semibold text-slate-900">24/7 Care Team Access</div>
-                      <div className="text-slate-600">Direct access to registered nurses for health questions and concerns</div>
-                    </div>
-                  </li>
-                  <li className="flex items-start">
-                    <Check className="h-5 w-5 text-emerald-600 mr-3 mt-1 flex-shrink-0" />
-                    <div>
-                      <div className="font-semibold text-slate-900">Medication Management</div>
-                      <div className="text-slate-600">Support with medication adherence and side effect monitoring</div>
-                    </div>
-                  </li>
-                  <li className="flex items-start">
-                    <Check className="h-5 w-5 text-emerald-600 mr-3 mt-1 flex-shrink-0" />
-                    <div>
-                      <div className="font-semibold text-slate-900">Health Education</div>
-                      <div className="text-slate-600">Personalized education about managing chronic conditions</div>
-                    </div>
-                  </li>
-                  <li className="flex items-start">
-                    <Check className="h-5 w-5 text-emerald-600 mr-3 mt-1 flex-shrink-0" />
-                    <div>
-                      <div className="font-semibold text-slate-900">Coordinated Care</div>
-                      <div className="text-slate-600">Seamless communication between all members of their care team</div>
-                    </div>
-                  </li>
-                </ul>
-              </CardContent>
-            </Card>
-          </div>
-        </div>
-      </section>
-
-      {/* Reimbursement Details */}
-      <section className="bg-white py-16">
-        <div className="container">
-          <div className="text-center mb-12">
-            <h2 className="text-3xl font-bold text-slate-900 mb-6">CCM Reimbursement Details</h2>
-            <p className="text-lg text-slate-600 max-w-3xl mx-auto">
-              Understanding the financial benefits and requirements of CMS-covered CCM services.
-            </p>
-          </div>
-
-          <div className="grid lg:grid-cols-3 gap-8">
-            <Card className="text-center bg-slate-50 border-none">
-              <CardContent className="p-8">
-                <DollarSign className="h-12 w-12 text-green-600 mx-auto mb-4" />
-                <h3 className="text-xl font-semibold text-slate-900 mb-3">Monthly Reimbursement</h3>
-                <div className="text-3xl font-bold text-green-600 mb-2">$40-60</div>
-                <p className="text-slate-600">Per patient per month from CMS for qualifying CCM services</p>
-              </CardContent>
-            </Card>
-
-            <Card className="text-center bg-slate-50 border-none">
-              <CardContent className="p-8">
-                <Clock className="h-12 w-12 text-blue-600 mx-auto mb-4" />
-                <h3 className="text-xl font-semibold text-slate-900 mb-3">Time Requirements</h3>
-                <div className="text-3xl font-bold text-blue-600 mb-2">20+ min</div>
-                <p className="text-slate-600">Minimum monthly clinical staff time per patient for reimbursement</p>
-              </CardContent>
-            </Card>
-
-            <Card className="text-center bg-slate-50 border-none">
-              <CardContent className="p-8">
-                <Users className="h-12 w-12 text-purple-600 mx-auto mb-4" />
-                <h3 className="text-xl font-semibold text-slate-900 mb-3">Patient Eligibility</h3>
-                <div className="text-3xl font-bold text-purple-600 mb-2">2+</div>
-                <p className="text-slate-600">Chronic conditions required for Medicare CCM eligibility</p>
-              </CardContent>
-            </Card>
-          </div>
-
-          <div className="mt-12 bg-blue-50 rounded-2xl p-8">
-            <h3 className="text-2xl font-bold text-slate-900 mb-6">CCM Billing Requirements</h3>
-            <div className="grid md:grid-cols-2 gap-8">
-              <div>
-                <h4 className="font-semibold text-slate-900 mb-4">Documentation Requirements</h4>
-                <ul className="space-y-2 text-slate-600">
-                  <li className="flex items-center">
-                    <Check className="h-4 w-4 text-emerald-600 mr-2" />
-                    Comprehensive care plan development
-                  </li>
-                  <li className="flex items-center">
-                    <Check className="h-4 w-4 text-emerald-600 mr-2" />
-                    Monthly patient contact documentation
-                  </li>
-                  <li className="flex items-center">
-                    <Check className="h-4 w-4 text-emerald-600 mr-2" />
-                    Time tracking for clinical staff activities
-                  </li>
-                  <li className="flex items-center">
-                    <Check className="h-4 w-4 text-emerald-600 mr-2" />
-                    Patient consent for CCM services
-                  </li>
-                </ul>
-              </div>
-              <div>
-                <h4 className="font-semibold text-slate-900 mb-4">We Handle</h4>
-                <ul className="space-y-2 text-slate-600">
-                  <li className="flex items-center">
-                    <Check className="h-4 w-4 text-emerald-600 mr-2" />
-                    All CMS billing and documentation
-                  </li>
-                  <li className="flex items-center">
-                    <Check className="h-4 w-4 text-emerald-600 mr-2" />
-                    Patient enrollment and consent process
-                  </li>
-                  <li className="flex items-center">
-                    <Check className="h-4 w-4 text-emerald-600 mr-2" />
-                    Compliance monitoring and reporting
-                  </li>
-                  <li className="flex items-center">
-                    <Check className="h-4 w-4 text-emerald-600 mr-2" />
-                    Revenue cycle management
-                  </li>
-                </ul>
-              </div>
+            {/* Patient Benefits */}
+            <div className="bg-white rounded-2xl p-8 shadow-lg">
+              <h3 className="text-2xl font-bold text-foreground mb-6 flex items-center">
+                <i className="fas fa-heart text-healthcare-accent mr-3"></i>
+                Patient Benefits
+              </h3>
+              <ul className="space-y-4">
+                <li className="flex items-start">
+                  <i className="fas fa-phone text-healthcare-secondary mr-3 mt-1"></i>
+                  <div>
+                    <div className="font-semibold text-foreground">24/7 Access to Care Team</div>
+                    <div className="text-muted-foreground text-sm">Immediate support when health questions arise</div>
+                  </div>
+                </li>
+                <li className="flex items-start">
+                  <i className="fas fa-pills text-healthcare-secondary mr-3 mt-1"></i>
+                  <div>
+                    <div className="font-semibold text-foreground">Better Medication Management</div>
+                    <div className="text-muted-foreground text-sm">Improved adherence and fewer medication errors</div>
+                  </div>
+                </li>
+                <li className="flex items-start">
+                  <i className="fas fa-home text-healthcare-secondary mr-3 mt-1"></i>
+                  <div>
+                    <div className="font-semibold text-foreground">Stay Healthy at Home</div>
+                    <div className="text-muted-foreground text-sm">Prevent complications that lead to hospitalizations</div>
+                  </div>
+                </li>
+                <li className="flex items-start">
+                  <i className="fas fa-graduation-cap text-healthcare-secondary mr-3 mt-1"></i>
+                  <div>
+                    <div className="font-semibold text-foreground">Health Education & Support</div>
+                    <div className="text-muted-foreground text-sm">Learn to better manage chronic conditions</div>
+                  </div>
+                </li>
+              </ul>
             </div>
           </div>
         </div>
       </section>
 
-      {/* Call to Action */}
-      <section className="bg-gradient-to-r from-blue-600 to-emerald-600 text-white py-16">
-        <div className="container text-center">
-          <h2 className="text-3xl font-bold mb-6">Ready to Start Your CCM Program?</h2>
-          <p className="text-xl text-blue-100 mb-8 max-w-2xl mx-auto">
-            Join hundreds of healthcare providers who are improving patient outcomes and generating additional revenue with our CCM services.
+      {/* Reimbursement Section */}
+      <section className="py-20 bg-white">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-16">
+            <h2 className="text-3xl font-bold text-foreground mb-6">Reimbursement Details</h2>
+            <p className="text-xl text-muted-foreground max-w-3xl mx-auto">
+              CCM services are fully covered by Medicare and most commercial insurance plans.
+            </p>
+          </div>
+          
+          <div className="grid md:grid-cols-3 gap-8">
+            <div className="text-center p-6 bg-slate-50 rounded-2xl">
+              <div className="text-3xl font-bold text-healthcare-primary mb-2">$200-300</div>
+              <div className="font-semibold text-foreground mb-2">Per Patient Per Month</div>
+              <div className="text-muted-foreground text-sm">Average reimbursement for CCM services</div>
+            </div>
+            
+            <div className="text-center p-6 bg-slate-50 rounded-2xl">
+              <div className="text-3xl font-bold text-healthcare-secondary mb-2">100%</div>
+              <div className="font-semibold text-foreground mb-2">Medicare Coverage</div>
+              <div className="text-muted-foreground text-sm">No patient copay required for CCM services</div>
+            </div>
+            
+            <div className="text-center p-6 bg-slate-50 rounded-2xl">
+              <div className="text-3xl font-bold text-healthcare-accent mb-2">0%</div>
+              <div className="font-semibold text-foreground mb-2">Provider Risk</div>
+              <div className="text-muted-foreground text-sm">We handle all billing and compliance</div>
+            </div>
+          </div>
+          
+          <div className="mt-12 bg-healthcare-primary/5 rounded-2xl p-8">
+            <h3 className="text-2xl font-bold text-foreground mb-4">Billing Requirements We Handle</h3>
+            <div className="grid md:grid-cols-2 gap-6">
+              <ul className="space-y-3">
+                <li className="flex items-center text-muted-foreground">
+                  <i className="fas fa-check text-healthcare-secondary mr-3"></i>
+                  Patient consent documentation
+                </li>
+                <li className="flex items-center text-muted-foreground">
+                  <i className="fas fa-check text-healthcare-secondary mr-3"></i>
+                  Comprehensive care plan creation
+                </li>
+                <li className="flex items-center text-muted-foreground">
+                  <i className="fas fa-check text-healthcare-secondary mr-3"></i>
+                  Monthly time tracking and documentation
+                </li>
+              </ul>
+              <ul className="space-y-3">
+                <li className="flex items-center text-muted-foreground">
+                  <i className="fas fa-check text-healthcare-secondary mr-3"></i>
+                  CMS billing and claims submission
+                </li>
+                <li className="flex items-center text-muted-foreground">
+                  <i className="fas fa-check text-healthcare-secondary mr-3"></i>
+                  Quality reporting and metrics
+                </li>
+                <li className="flex items-center text-muted-foreground">
+                  <i className="fas fa-check text-healthcare-secondary mr-3"></i>
+                  Audit preparation and support
+                </li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* CTA Section */}
+      <section className="py-20 bg-healthcare-primary text-white">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+          <h2 className="text-3xl font-bold mb-6">Start a CCM Program</h2>
+          <p className="text-xl text-blue-100 mb-8 max-w-3xl mx-auto">
+            Ready to improve patient outcomes while generating additional revenue? Our team will help you launch a successful CCM program in your practice.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Link href="/contact">
-              <Button size="lg" className="bg-white text-blue-600 hover:bg-slate-100">
-                Schedule a Consultation
+              <Button size="lg" className="bg-white text-healthcare-primary hover:bg-slate-100">
+                Get Started Today
               </Button>
             </Link>
             <Link href="/how-it-works">
-              <Button size="lg" variant="outline" className="border-white text-white hover:bg-white hover:text-blue-600">
-                Learn More <ArrowRight className="h-4 w-4 ml-2" />
+              <Button size="lg" variant="outline" className="border-white text-white hover:bg-white hover:text-healthcare-primary">
+                Learn How It Works
               </Button>
             </Link>
           </div>

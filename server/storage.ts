@@ -1,4 +1,4 @@
-import { contactInquiries, users, type User, type InsertUser, type ContactInquiry, type InsertContactInquiry } from "@shared/schema";
+import { users, contactInquiries, type User, type InsertUser, type ContactInquiry, type InsertContactInquiry } from "@shared/schema";
 
 export interface IStorage {
   getUser(id: number): Promise<User | undefined>;
@@ -40,10 +40,10 @@ export class MemStorage implements IStorage {
 
   async createContactInquiry(insertInquiry: InsertContactInquiry): Promise<ContactInquiry> {
     const id = this.currentInquiryId++;
-    const inquiry: ContactInquiry = {
-      ...insertInquiry,
+    const inquiry: ContactInquiry = { 
+      ...insertInquiry, 
       id,
-      createdAt: new Date(),
+      createdAt: new Date()
     };
     this.contactInquiries.set(id, inquiry);
     return inquiry;

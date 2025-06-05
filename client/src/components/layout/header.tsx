@@ -5,12 +5,9 @@ import {
   NavigationMenu,
   NavigationMenuContent,
   NavigationMenuItem,
-  NavigationMenuLink,
   NavigationMenuList,
   NavigationMenuTrigger,
 } from "@/components/ui/navigation-menu";
-import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
-import { Menu, Heart } from "lucide-react";
 
 export default function Header() {
   const [location] = useLocation();
@@ -18,163 +15,185 @@ export default function Header() {
 
   const isActive = (path: string) => location === path;
 
-  const services = [
-    {
-      title: "Chronic Care Management",
-      href: "/ccm",
-      description: "CMS-covered care coordination for chronic conditions",
-    },
-    {
-      title: "In-Home Patient Monitoring",
-      href: "/monitoring", 
-      description: "Remote monitoring and RTM services",
-    },
-    {
-      title: "Behavioral Health Integration",
-      href: "/bhi",
-      description: "Mental health support services",
-    },
-  ];
-
   return (
-    <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-      <div className="container flex h-16 items-center justify-between">
-        {/* Logo */}
-        <Link href="/" className="flex items-center space-x-2">
-          <Heart className="h-6 w-6 text-blue-600" />
-          <span className="text-xl font-bold">Lynk Health</span>
-        </Link>
-
-        {/* Desktop Navigation */}
-        <NavigationMenu className="hidden lg:flex">
-          <NavigationMenuList>
-            <NavigationMenuItem>
-              <Link href="/">
-                <NavigationMenuLink className={`group inline-flex h-10 w-max items-center justify-center rounded-md bg-background px-4 py-2 text-sm font-medium transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground focus:outline-none disabled:pointer-events-none disabled:opacity-50 ${isActive('/') ? 'text-blue-600' : ''}`}>
-                  Home
-                </NavigationMenuLink>
-              </Link>
-            </NavigationMenuItem>
-            
-            <NavigationMenuItem>
-              <Link href="/about">
-                <NavigationMenuLink className={`group inline-flex h-10 w-max items-center justify-center rounded-md bg-background px-4 py-2 text-sm font-medium transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground focus:outline-none disabled:pointer-events-none disabled:opacity-50 ${isActive('/about') ? 'text-blue-600' : ''}`}>
-                  About
-                </NavigationMenuLink>
-              </Link>
-            </NavigationMenuItem>
-
-            <NavigationMenuItem>
-              <NavigationMenuTrigger>Services</NavigationMenuTrigger>
-              <NavigationMenuContent>
-                <ul className="grid w-[400px] gap-3 p-4 md:w-[500px] md:grid-cols-1 lg:w-[600px]">
-                  {services.map((service) => (
-                    <li key={service.title}>
-                      <Link href={service.href}>
-                        <NavigationMenuLink className="block select-none space-y-1 rounded-md p-3 leading-none no-underline outline-none transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground">
-                          <div className="text-sm font-medium leading-none">{service.title}</div>
-                          <p className="line-clamp-2 text-sm leading-snug text-muted-foreground">
-                            {service.description}
-                          </p>
-                        </NavigationMenuLink>
-                      </Link>
-                    </li>
-                  ))}
-                </ul>
-              </NavigationMenuContent>
-            </NavigationMenuItem>
-
-            <NavigationMenuItem>
-              <Link href="/how-it-works">
-                <NavigationMenuLink className={`group inline-flex h-10 w-max items-center justify-center rounded-md bg-background px-4 py-2 text-sm font-medium transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground focus:outline-none disabled:pointer-events-none disabled:opacity-50 ${isActive('/how-it-works') ? 'text-blue-600' : ''}`}>
-                  How It Works
-                </NavigationMenuLink>
-              </Link>
-            </NavigationMenuItem>
-
-            <NavigationMenuItem>
-              <Link href="/resources">
-                <NavigationMenuLink className={`group inline-flex h-10 w-max items-center justify-center rounded-md bg-background px-4 py-2 text-sm font-medium transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground focus:outline-none disabled:pointer-events-none disabled:opacity-50 ${isActive('/resources') ? 'text-blue-600' : ''}`}>
-                  Resources
-                </NavigationMenuLink>
-              </Link>
-            </NavigationMenuItem>
-
-            <NavigationMenuItem>
-              <Link href="/contact">
-                <NavigationMenuLink className={`group inline-flex h-10 w-max items-center justify-center rounded-md bg-background px-4 py-2 text-sm font-medium transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground focus:outline-none disabled:pointer-events-none disabled:opacity-50 ${isActive('/contact') ? 'text-blue-600' : ''}`}>
-                  Contact
-                </NavigationMenuLink>
-              </Link>
-            </NavigationMenuItem>
-          </NavigationMenuList>
-        </NavigationMenu>
-
-        {/* CTA Button */}
-        <div className="hidden md:flex">
-          <Link href="/contact">
-            <Button className="bg-red-600 hover:bg-red-700">
-              Partner With Us
-            </Button>
+    <header className="sticky top-0 z-50 bg-white/95 backdrop-blur-sm border-b border-gray-100 shadow-sm">
+      <nav className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="flex justify-between items-center h-16">
+          {/* Logo */}
+          <Link href="/">
+            <div className="flex items-center cursor-pointer">
+              <i className="fas fa-heartbeat text-healthcare-primary text-2xl mr-2"></i>
+              <span className="text-xl font-bold text-foreground">Lynk Health</span>
+            </div>
           </Link>
+
+          {/* Desktop Navigation */}
+          <div className="hidden md:flex items-center space-x-8">
+            <Link href="/">
+              <a className={`text-sm font-medium transition-colors hover:text-healthcare-primary ${
+                isActive("/") ? "text-healthcare-primary" : "text-muted-foreground"
+              }`}>
+                Home
+              </a>
+            </Link>
+            
+            <Link href="/about">
+              <a className={`text-sm font-medium transition-colors hover:text-healthcare-primary ${
+                isActive("/about") ? "text-healthcare-primary" : "text-muted-foreground"
+              }`}>
+                About
+              </a>
+            </Link>
+
+            {/* Services Dropdown */}
+            <NavigationMenu>
+              <NavigationMenuList>
+                <NavigationMenuItem>
+                  <NavigationMenuTrigger className="text-sm font-medium">
+                    Services
+                  </NavigationMenuTrigger>
+                  <NavigationMenuContent>
+                    <div className="w-72 p-2">
+                      <Link href="/services/ccm">
+                        <div className="block px-4 py-3 text-sm hover:bg-gray-50 rounded-md cursor-pointer">
+                          <div className="font-medium">Chronic Care Management</div>
+                          <div className="text-xs text-muted-foreground mt-1">
+                            CMS-covered care coordination
+                          </div>
+                        </div>
+                      </Link>
+                      <Link href="/services/monitoring">
+                        <div className="block px-4 py-3 text-sm hover:bg-gray-50 rounded-md cursor-pointer">
+                          <div className="font-medium">In-Home Patient Monitoring</div>
+                          <div className="text-xs text-muted-foreground mt-1">
+                            Remote monitoring and RTM services
+                          </div>
+                        </div>
+                      </Link>
+                      <Link href="/services/bhi">
+                        <div className="block px-4 py-3 text-sm hover:bg-gray-50 rounded-md cursor-pointer">
+                          <div className="font-medium">Behavioral Health Integration</div>
+                          <div className="text-xs text-muted-foreground mt-1">
+                            Mental health support services
+                          </div>
+                        </div>
+                      </Link>
+                    </div>
+                  </NavigationMenuContent>
+                </NavigationMenuItem>
+              </NavigationMenuList>
+            </NavigationMenu>
+
+            <Link href="/how-it-works">
+              <a className={`text-sm font-medium transition-colors hover:text-healthcare-primary ${
+                isActive("/how-it-works") ? "text-healthcare-primary" : "text-muted-foreground"
+              }`}>
+                How It Works
+              </a>
+            </Link>
+            
+            <Link href="/resources">
+              <a className={`text-sm font-medium transition-colors hover:text-healthcare-primary ${
+                isActive("/resources") ? "text-healthcare-primary" : "text-muted-foreground"
+              }`}>
+                Resources
+              </a>
+            </Link>
+            
+            <Link href="/contact">
+              <a className={`text-sm font-medium transition-colors hover:text-healthcare-primary ${
+                isActive("/contact") ? "text-healthcare-primary" : "text-muted-foreground"
+              }`}>
+                Contact
+              </a>
+            </Link>
+          </div>
+
+          {/* CTA Button */}
+          <div className="hidden md:flex items-center">
+            <Link href="/contact">
+              <Button className="bg-healthcare-accent hover:bg-red-700 text-white">
+                Partner With Us
+              </Button>
+            </Link>
+          </div>
+
+          {/* Mobile menu button */}
+          <div className="md:hidden">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+            >
+              <i className="fas fa-bars text-xl"></i>
+            </Button>
+          </div>
         </div>
 
-        {/* Mobile Menu */}
-        <Sheet open={mobileMenuOpen} onOpenChange={setMobileMenuOpen}>
-          <SheetTrigger asChild className="lg:hidden">
-            <Button variant="ghost" size="sm">
-              <Menu className="h-5 w-5" />
-            </Button>
-          </SheetTrigger>
-          <SheetContent side="right" className="w-80">
-            <nav className="flex flex-col space-y-4 mt-8">
-              <Link href="/" onClick={() => setMobileMenuOpen(false)}>
-                <Button variant="ghost" className="w-full justify-start">
+        {/* Mobile Navigation Menu */}
+        {mobileMenuOpen && (
+          <div className="md:hidden bg-white border-t border-gray-100">
+            <div className="px-2 pt-2 pb-3 space-y-1">
+              <Link href="/">
+                <a className="block px-3 py-2 text-base font-medium text-muted-foreground hover:text-healthcare-primary"
+                   onClick={() => setMobileMenuOpen(false)}>
                   Home
-                </Button>
+                </a>
               </Link>
-              <Link href="/about" onClick={() => setMobileMenuOpen(false)}>
-                <Button variant="ghost" className="w-full justify-start">
+              <Link href="/about">
+                <a className="block px-3 py-2 text-base font-medium text-muted-foreground hover:text-healthcare-primary"
+                   onClick={() => setMobileMenuOpen(false)}>
                   About
-                </Button>
+                </a>
               </Link>
-              
-              <div className="space-y-2">
-                <div className="px-3 py-2 text-sm font-semibold">Services</div>
-                {services.map((service) => (
-                  <Link key={service.title} href={service.href} onClick={() => setMobileMenuOpen(false)}>
-                    <Button variant="ghost" className="w-full justify-start pl-6 text-sm">
-                      {service.title}
-                    </Button>
-                  </Link>
-                ))}
-              </div>
-              
-              <Link href="/how-it-works" onClick={() => setMobileMenuOpen(false)}>
-                <Button variant="ghost" className="w-full justify-start">
+              <Link href="/services/ccm">
+                <a className="block px-3 py-2 pl-6 text-sm font-medium text-muted-foreground hover:text-healthcare-primary"
+                   onClick={() => setMobileMenuOpen(false)}>
+                  Chronic Care Management
+                </a>
+              </Link>
+              <Link href="/services/monitoring">
+                <a className="block px-3 py-2 pl-6 text-sm font-medium text-muted-foreground hover:text-healthcare-primary"
+                   onClick={() => setMobileMenuOpen(false)}>
+                  In-Home Monitoring
+                </a>
+              </Link>
+              <Link href="/services/bhi">
+                <a className="block px-3 py-2 pl-6 text-sm font-medium text-muted-foreground hover:text-healthcare-primary"
+                   onClick={() => setMobileMenuOpen(false)}>
+                  Behavioral Health
+                </a>
+              </Link>
+              <Link href="/how-it-works">
+                <a className="block px-3 py-2 text-base font-medium text-muted-foreground hover:text-healthcare-primary"
+                   onClick={() => setMobileMenuOpen(false)}>
                   How It Works
-                </Button>
+                </a>
               </Link>
-              <Link href="/resources" onClick={() => setMobileMenuOpen(false)}>
-                <Button variant="ghost" className="w-full justify-start">
+              <Link href="/resources">
+                <a className="block px-3 py-2 text-base font-medium text-muted-foreground hover:text-healthcare-primary"
+                   onClick={() => setMobileMenuOpen(false)}>
                   Resources
-                </Button>
+                </a>
               </Link>
-              <Link href="/contact" onClick={() => setMobileMenuOpen(false)}>
-                <Button variant="ghost" className="w-full justify-start">
+              <Link href="/contact">
+                <a className="block px-3 py-2 text-base font-medium text-muted-foreground hover:text-healthcare-primary"
+                   onClick={() => setMobileMenuOpen(false)}>
                   Contact
-                </Button>
+                </a>
               </Link>
-              
-              <Link href="/contact" onClick={() => setMobileMenuOpen(false)}>
-                <Button className="w-full bg-red-600 hover:bg-red-700 mt-4">
-                  Partner With Us
-                </Button>
-              </Link>
-            </nav>
-          </SheetContent>
-        </Sheet>
-      </div>
+              <div className="px-3 py-2">
+                <Link href="/contact">
+                  <Button className="w-full bg-healthcare-accent hover:bg-red-700 text-white"
+                          onClick={() => setMobileMenuOpen(false)}>
+                    Partner With Us
+                  </Button>
+                </Link>
+              </div>
+            </div>
+          </div>
+        )}
+      </nav>
     </header>
   );
 }

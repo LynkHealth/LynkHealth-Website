@@ -4,57 +4,56 @@
 
 :root {
   --background: 0 0% 100%;
-  --foreground: 222 84% 4.9%;
-  --muted: 210 40% 98%;
-  --muted-foreground: 215 13.8% 44.1%;
+  --foreground: 240 10% 3.9%;
+  --muted: 240 4.8% 95.9%;
+  --muted-foreground: 240 3.8% 46.1%;
   --popover: 0 0% 100%;
-  --popover-foreground: 222 84% 4.9%;
+  --popover-foreground: 240 10% 3.9%;
   --card: 0 0% 100%;
-  --card-foreground: 222 84% 4.9%;
-  --border: 214 32% 91%;
-  --input: 214 32% 91%;
-  --primary: 221 83% 53%;
+  --card-foreground: 240 10% 3.9%;
+  --border: 240 5.9% 90%;
+  --input: 240 5.9% 90%;
+  --primary: 220 91% 60%; /* #2563EB */
   --primary-foreground: 210 40% 98%;
-  --secondary: 160 84% 39%;
-  --secondary-foreground: 160 84% 10%;
-  --accent: 0 84% 60%;
+  --secondary: 142 76% 36%; /* #059669 */
+  --secondary-foreground: 355.7 100% 97.3%;
+  --accent: 0 84% 60%; /* #DC2626 */
   --accent-foreground: 0 0% 98%;
-  --destructive: 0 84% 60%;
-  --destructive-foreground: 0 0% 98%;
-  --ring: 221 83% 53%;
+  --destructive: 0 84.2% 60.2%;
+  --destructive-foreground: 60 9.1% 97.8%;
+  --ring: 240 5% 64.9%;
   --radius: 0.5rem;
 }
 
 .dark {
-  --background: 222 84% 4.9%;
-  --foreground: 210 40% 98%;
-  --muted: 217 32% 17.5%;
-  --muted-foreground: 215 20.2% 65.1%;
-  --popover: 222 84% 4.9%;
-  --popover-foreground: 210 40% 98%;
-  --card: 222 84% 4.9%;
-  --card-foreground: 210 40% 98%;
-  --border: 217 32% 17.5%;
-  --input: 217 32% 17.5%;
-  --primary: 221 83% 53%;
+  --background: 240 10% 3.9%;
+  --foreground: 0 0% 98%;
+  --muted: 240 3.7% 15.9%;
+  --muted-foreground: 240 5% 64.9%;
+  --popover: 240 10% 3.9%;
+  --popover-foreground: 0 0% 98%;
+  --card: 240 10% 3.9%;
+  --card-foreground: 0 0% 98%;
+  --border: 240 3.7% 15.9%;
+  --input: 240 3.7% 15.9%;
+  --primary: 220 91% 60%;
   --primary-foreground: 210 40% 98%;
-  --secondary: 160 84% 39%;
-  --secondary-foreground: 160 84% 10%;
+  --secondary: 142 76% 36%;
+  --secondary-foreground: 355.7 100% 97.3%;
   --accent: 0 84% 60%;
   --accent-foreground: 0 0% 98%;
   --destructive: 0 62.8% 30.6%;
-  --destructive-foreground: 210 40% 98%;
-  --ring: 221 83% 53%;
+  --destructive-foreground: 0 0% 98%;
+  --ring: 240 4.9% 83.9%;
 }
 
 @layer base {
   * {
     @apply border-border;
   }
-  
+
   body {
-    @apply bg-background text-foreground font-sans antialiased;
-    font-family: 'Inter', ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+    @apply font-sans antialiased bg-background text-foreground;
   }
   
   html {
@@ -63,32 +62,71 @@
 }
 
 @layer utilities {
-  .text-balance {
-    text-wrap: balance;
+  .animate-fade-in {
+    animation: fadeIn 0.6s ease-out;
+  }
+  
+  .animate-slide-up {
+    animation: slideUp 0.8s ease-out;
+  }
+  
+  .animate-counter {
+    animation: counter 2s ease-out;
   }
 }
 
-/* Custom healthcare brand colors */
+@keyframes fadeIn {
+  from { 
+    opacity: 0; 
+  }
+  to { 
+    opacity: 1; 
+  }
+}
+
+@keyframes slideUp {
+  from { 
+    opacity: 0; 
+    transform: translateY(30px); 
+  }
+  to { 
+    opacity: 1; 
+    transform: translateY(0); 
+  }
+}
+
+@keyframes counter {
+  from { 
+    transform: scale(0.8); 
+    opacity: 0; 
+  }
+  to { 
+    transform: scale(1); 
+    opacity: 1; 
+  }
+}
+
+/* Custom healthcare color scheme */
 .bg-healthcare-primary {
-  background-color: hsl(221 83% 53%);
+  background-color: hsl(var(--primary));
 }
 
 .bg-healthcare-secondary {
-  background-color: hsl(160 84% 39%);
+  background-color: hsl(var(--secondary));
 }
 
 .bg-healthcare-accent {
-  background-color: hsl(0 84% 60%);
+  background-color: hsl(var(--accent));
 }
 
 .text-healthcare-primary {
-  color: hsl(221 83% 53%);
+  color: hsl(var(--primary));
 }
 
 .text-healthcare-secondary {
-  color: hsl(160 84% 39%);
+  color: hsl(var(--secondary));
 }
 
 .text-healthcare-accent {
-  color: hsl(0 84% 60%);
+  color: hsl(var(--accent));
 }

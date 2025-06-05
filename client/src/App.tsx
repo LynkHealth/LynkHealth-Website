@@ -3,7 +3,8 @@ import { queryClient } from "./lib/queryClient";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
-import NotFound from "@/pages/not-found";
+import Header from "@/components/layout/header";
+import Footer from "@/components/layout/footer";
 import Home from "@/pages/home";
 import About from "@/pages/about";
 import CCM from "@/pages/ccm";
@@ -13,8 +14,7 @@ import HowItWorks from "@/pages/how-it-works";
 import Resources from "@/pages/resources";
 import Contact from "@/pages/contact";
 import Privacy from "@/pages/privacy";
-import Header from "@/components/layout/header";
-import Footer from "@/components/layout/footer";
+import NotFound from "@/pages/not-found";
 
 function Router() {
   return (
@@ -24,9 +24,9 @@ function Router() {
         <Switch>
           <Route path="/" component={Home} />
           <Route path="/about" component={About} />
-          <Route path="/ccm" component={CCM} />
-          <Route path="/monitoring" component={Monitoring} />
-          <Route path="/bhi" component={BHI} />
+          <Route path="/services/ccm" component={CCM} />
+          <Route path="/services/monitoring" component={Monitoring} />
+          <Route path="/services/bhi" component={BHI} />
           <Route path="/how-it-works" component={HowItWorks} />
           <Route path="/resources" component={Resources} />
           <Route path="/contact" component={Contact} />
