@@ -57,7 +57,7 @@ export default function Hero() {
           <div className="relative">
             <div className="relative rounded-3xl overflow-hidden shadow-2xl">
               <img
-                src={elderlyHeroImage}
+                src="https://lynk.health/wp-content/uploads/2023/09/AdobeStock_610198709-scaled.jpeg"
                 alt="Healthcare professional providing care to elderly patient at home"
                 className="w-full h-[500px] object-cover"
               />
@@ -81,7 +81,7 @@ export default function Hero() {
             {/* Video Placeholder */}
             <div className="mt-6 relative rounded-2xl overflow-hidden shadow-xl">
               <img
-                src={elderlyMonitoring}
+                src="https://lynk.health/wp-content/uploads/2022/12/AdobeStock_39976543-1024x683.jpeg"
                 alt="Elderly patient using remote monitoring device at home"
                 className="w-full h-48 object-cover"
               />

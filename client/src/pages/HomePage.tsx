@@ -172,7 +172,7 @@ export default function HomePage() {
               <div className="bg-white rounded-2xl p-8 shadow-lg hover:shadow-xl transition-shadow">
                 <div className="relative w-full h-32 mb-6 rounded-lg overflow-hidden">
                   <img 
-                    src="https://images.unsplash.com/photo-1582750433449-648ed127bb54?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&h=200"
+                    src="https://lynk.health/wp-content/uploads/2022/12/AdobeStock_483359255-scaled.jpeg"
                     alt="Elderly patient in bright, comfortable healthcare setting receiving compassionate care"
                     className="w-full h-full object-cover"
                   />
