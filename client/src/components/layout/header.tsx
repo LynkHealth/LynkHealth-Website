@@ -8,6 +8,7 @@ import {
   NavigationMenuList,
   NavigationMenuTrigger,
 } from "@/components/ui/navigation-menu";
+import lynkHealthLogo from "@assets/LOGO-Lynk_Health_1749182161866.png";
 
 export default function Header() {
   const [location] = useLocation();
@@ -23,7 +24,7 @@ export default function Header() {
           <Link href="/">
             <div className="flex items-center cursor-pointer">
               <img 
-                src="/src/assets/lynk-health-logo.jpg" 
+                src={lynkHealthLogo} 
                 alt="Lynk Health Logo" 
                 className="h-16 w-auto"
               />
