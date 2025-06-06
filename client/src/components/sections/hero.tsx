@@ -1,5 +1,7 @@
 import { Link } from "wouter";
 import { Button } from "@/components/ui/button";
+import elderlyHeroImage from "@assets/elderly-hero-image.jpeg";
+import elderlyMonitoring from "@assets/elderly-monitoring.jpeg";
 
 export default function Hero() {
   return (
@@ -55,7 +57,7 @@ export default function Hero() {
           <div className="relative">
             <div className="relative rounded-3xl overflow-hidden shadow-2xl">
               <img
-                src="https://images.unsplash.com/photo-1559757175-0eb30cd8c063?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&h=600"
+                src={elderlyHeroImage}
                 alt="Healthcare professional providing care to elderly patient at home"
                 className="w-full h-[500px] object-cover"
               />
@@ -79,7 +81,7 @@ export default function Hero() {
             {/* Video Placeholder */}
             <div className="mt-6 relative rounded-2xl overflow-hidden shadow-xl">
               <img
-                src="https://images.unsplash.com/photo-1584515933487-779824d29309?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&h=300"
+                src={elderlyMonitoring}
                 alt="Elderly patient using remote monitoring device at home"
                 className="w-full h-48 object-cover"
               />

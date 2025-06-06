@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import Hero from "@/components/sections/hero";
 import Stats from "@/components/sections/stats";
 import Testimonials from "@/components/sections/testimonials";
+import elderlyBehavioralHealth from "@assets/elderly-behavioral-health.jpeg";
 
 export default function Home() {
   return (
@@ -254,7 +255,7 @@ export default function Home() {
             <div className="bg-white rounded-2xl p-8 shadow-lg hover:shadow-xl transition-shadow">
               <div className="relative w-full h-32 mb-6 rounded-lg overflow-hidden">
                 <img 
-                  src="@assets/elderly-behavioral-health.jpeg"
+                  src="https://lynk.health/wp-content/uploads/2022/12/AdobeStock_483359255-scaled.jpeg"
                   alt="Elderly patient in comfortable conversation with healthcare provider in bright, welcoming setting"
                   className="w-full h-full object-cover"
                 />
