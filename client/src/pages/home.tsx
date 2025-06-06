@@ -254,7 +254,7 @@ export default function Home() {
             <div className="bg-white rounded-2xl p-8 shadow-lg hover:shadow-xl transition-shadow">
               <div className="relative w-full h-32 mb-6 rounded-lg overflow-hidden">
                 <img 
-                  src="https://images.unsplash.com/photo-1566492031773-4f4e44671d66?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&h=200"
+                  src="@assets/elderly-behavioral-health.jpeg"
                   alt="Elderly patient in comfortable conversation with healthcare provider in bright, welcoming setting"
                   className="w-full h-full object-cover"
                 />
