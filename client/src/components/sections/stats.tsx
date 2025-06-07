@@ -1,10 +1,10 @@
 import { useEffect, useRef, useState } from "react";
 
 const stats = [
-  { number: "92%", label: "Patient Satisfaction", description: "Based on quarterly surveys" },
-  { number: "35%", label: "Reduction in ER Visits", description: "Among enrolled patients" },
-  { number: "28%", label: "Fewer Hospitalizations", description: "Year-over-year comparison" },
-  { number: "89%", label: "Medication Adherence", description: "Chronic condition management" },
+  { number: "97%", label: "Care Plan Adherence", description: "Patient compliance with treatment plans" },
+  { number: "1,750+", label: "Active Patients", description: "Currently enrolled in our programs" },
+  { number: "<5%", label: "Patient Churn", description: "Low dropout rate from programs" },
+  { number: "30%", label: "Avg Revenue Uplift", description: "For partner healthcare practices" },
 ];
 
 export default function Stats() {

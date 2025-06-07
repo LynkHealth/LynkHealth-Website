@@ -1,8 +1,8 @@
 const testimonials = [
   {
-    quote: "Lynk Health has transformed how we manage our chronic care patients. The nursing team is professional, and the results speak for themselves - our patients are healthier and more engaged.",
-    name: "Dr. Sarah Johnson",
-    title: "Chief Medical Officer, Regional Health System",
+    quote: "Lynk Health has been an incredible extension of our team. Our patients love the personal connection, and our providers love the ease.",
+    name: "Clinic Administrator",
+    title: "Mississippi",
     image: "https://images.unsplash.com/photo-1612349317150-e413f6a5b16d?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=100&h=100"
   },
   {

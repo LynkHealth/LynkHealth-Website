@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Lynk Health – Care Coordination That Clicks</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+  </head>
+  <body class="bg-white text-gray-900 font-sans">
+    <!-- Header -->
+    <header class="p-4 shadow-md flex justify-between items-center">
+      <h1 class="text-2xl font-bold text-blue-700">Lynk Health</h1>
+      <nav class="space-x-4">
+        <a href="index.html" class="hover:underline">Home</a>
+        <a href="about.html" class="hover:underline">About</a>
+        <a href="ccm.html" class="hover:underline">Services</a>
+        <a href="how-it-works.html" class="hover:underline">How It Works</a>
+        <a href="resources.html" class="hover:underline">Resources</a>
+        <a href="contact.html" class="hover:underline">Contact</a>
+      </nav>
+    </header>
+
+    <!-- Hero Section -->
+    <section class="text-center py-20 bg-blue-50">
+      <h2 class="text-4xl font-extrabold mb-4 text-blue-800">Care Coordination That Clicks.</h2>
+      <p class="text-lg max-w-2xl mx-auto text-gray-700">
+        Helping patients stay healthy and independent through Chronic Care Management,
+        In-Home Monitoring, and Behavioral Health Integration.
+      </p>
+      <a href="contact.html" class="mt-6 inline-block bg-blue-600 text-white px-6 py-2 rounded hover:bg-blue-700">
+        Partner With Us
+      </a>
+    </section>
+
+    <!-- Who We Serve -->
+    <section class="py-16 px-4 max-w-6xl mx-auto">
+      <h3 class="text-2xl font-bold mb-6">Who We Serve</h3>
+      <ul class="grid grid-cols-2 sm:grid-cols-3 gap-4 text-gray-700">
+        <li>Independent Clinics</li>
+        <li>Health Systems</li>
+        <li>FQHCs</li>
+        <li>ACOs & IPAs</li>
+        <li>Hospitals</li>
+      </ul>
+    </section>
+
+    <!-- Programs Overview -->
+    <section class="py-16 bg-gray-50 px-4">
+      <div class="max-w-6xl mx-auto">
+        <h3 class="text-2xl font-bold mb-6 text-center">Our Programs</h3>
+        <div class="grid md:grid-cols-3 gap-8">
+          <div class="bg-white shadow-md rounded p-6">
+            <h4 class="text-lg font-semibold mb-2">Chronic Care Management</h4>
+            <p class="text-gray-600">Monthly nurse-led check-ins, medication support, and care coordination for patients with multiple chronic conditions.</p>
+          </div>
+          <div class="bg-white shadow-md rounded p-6">
+            <h4 class="text-lg font-semibold mb-2">Remote Monitoring</h4>
+            <p class="text-gray-600">Track vitals and symptoms remotely to catch risks early and prevent hospitalizations.</p>
+          </div>
+          <div class="bg-white shadow-md rounded p-6">
+            <h4 class="text-lg font-semibold mb-2">Behavioral Health Integration</h4>
+            <p class="text-gray-600">Low-stigma, monthly outreach that supports mental wellness and behavioral compliance for chronic patients.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Stats Section -->
+    <section class="py-16 px-4 max-w-6xl mx-auto">
+      <h3 class="text-2xl font-bold mb-6 text-center">Real Impact</h3>
+      <div class="grid sm:grid-cols-2 md:grid-cols-4 gap-6 text-center text-blue-800">
+        <div>
+          <p class="text-3xl font-bold">97%</p>
+          <p class="text-sm">Care Plan Adherence</p>
+        </div>
+        <div>
+          <p class="text-3xl font-bold">1,750+</p>
+          <p class="text-sm">Active Patients</p>
+        </div>
+        <div>
+          <p class="text-3xl font-bold"><5%</p>
+          <p class="text-sm">Patient Churn</p>
+        </div>
+        <div>
+          <p class="text-3xl font-bold">30%</p>
+          <p class="text-sm">Avg Revenue Uplift</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- Testimonials -->
+    <section class="bg-blue-50 py-16 px-4">
+      <div class="max-w-3xl mx-auto text-center">
+        <blockquote class="italic text-gray-700">
+          “Lynk Health has been an incredible extension of our team. Our patients love the personal connection, and our providers love the ease.”
+        </blockquote>
+        <p class="mt-4 font-semibold">– Clinic Administrator, Mississippi</p>
+      </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="bg-gray-100 text-center text-sm text-gray-600 py-6 mt-10 border-t">
+      <p>&copy; 2025 Lynk Health. All rights reserved.</p>
+      <p class="text-xs mt-2">Lynk Health is not a provider. We partner with licensed medical professionals to deliver CMS-covered care coordination services.</p>
+    </footer>
+  </body>
+</html>

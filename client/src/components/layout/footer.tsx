@@ -109,10 +109,10 @@ export default function Footer() {
         <div className="border-t border-slate-800 pt-8">
           <div className="flex flex-col md:flex-row justify-between items-center">
             <div className="text-slate-400 text-sm mb-4 md:mb-0">
-              © 2024 Lynk Health. All rights reserved.
+              © 2025 Lynk Health. All rights reserved.
             </div>
-            <div className="text-slate-400 text-sm text-center md:text-right max-w-2xl">
-              <strong>Disclaimer:</strong> Lynk Health is not a provider. We partner with licensed medical professionals to deliver CMS-covered care coordination services.
+            <div className="text-slate-400 text-xs text-center md:text-right max-w-2xl">
+              Lynk Health is not a provider. We partner with licensed medical professionals to deliver CMS-covered care coordination services.
             </div>
           </div>
         </div>
