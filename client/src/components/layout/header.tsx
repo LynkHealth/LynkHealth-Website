@@ -96,6 +96,12 @@ export default function Header() {
                 Resources
             </Link>
             
+            <Link href="/calculator" className={`text-sm font-semibold tracking-wide transition-colors hover:text-primary ${
+                isActive("/calculator") ? "text-primary" : "text-foreground"
+              }`}>
+                Calculator
+            </Link>
+            
             <Link href="/contact" className={`text-sm font-semibold tracking-wide transition-colors hover:text-primary ${
                 isActive("/contact") ? "text-primary" : "text-foreground"
               }`}>
@@ -155,6 +161,10 @@ export default function Header() {
               <Link href="/resources" className="block px-3 py-2 text-base font-medium text-muted-foreground hover:text-healthcare-primary"
                    onClick={() => setMobileMenuOpen(false)}>
                   Resources
+              </Link>
+              <Link href="/calculator" className="block px-3 py-2 text-base font-medium text-muted-foreground hover:text-healthcare-primary"
+                   onClick={() => setMobileMenuOpen(false)}>
+                  Calculator
               </Link>
               <Link href="/contact" className="block px-3 py-2 text-base font-medium text-muted-foreground hover:text-healthcare-primary"
                    onClick={() => setMobileMenuOpen(false)}>
