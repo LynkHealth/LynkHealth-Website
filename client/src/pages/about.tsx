@@ -37,7 +37,7 @@ export default function About() {
             </div>
             <div>
               <img
-                src="https://images.unsplash.com/photo-1576091160399-112ba8d25d1f?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=800&h=600"
+                src="/attached_assets/AdobeStock_212104037_1751485954798.jpeg"
                 alt="Healthcare team collaborating on patient care"
                 className="rounded-2xl shadow-xl"
               />

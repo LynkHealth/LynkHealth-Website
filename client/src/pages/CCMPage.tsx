@@ -25,7 +25,7 @@ export default function CCMPage() {
                 </Link>
               </div>
               <div>
-                <img src="https://images.unsplash.com/photo-1559757148-5c350d0d3c56?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=800&h=600" alt="Nurse providing chronic care management services" className="rounded-2xl shadow-2xl" />
+                <img src="/attached_assets/AdobeStock_425213387_Preview_1751485954824.jpeg" alt="Professional nurse providing chronic care management services" className="rounded-2xl shadow-2xl" />
               </div>
             </div>
           </div>
@@ -120,7 +120,7 @@ export default function CCMPage() {
               </div>
               
               <div>
-                <img src="https://images.unsplash.com/photo-1576091160550-2173dba999ef?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=800&h=600" alt="Healthcare provider discussing chronic care management with patient" className="rounded-2xl shadow-lg" />
+                <img src="https://images.pexels.com/photos/7578815/pexels-photo-7578815.jpeg?auto=compress&cs=tinysrgb&w=800&h=600" alt="Healthcare provider discussing chronic care management with patient" className="rounded-2xl shadow-lg" />
               </div>
             </div>
           </div>

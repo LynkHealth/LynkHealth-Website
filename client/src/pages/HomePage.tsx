@@ -32,7 +32,7 @@ export default function HomePage() {
                 </div>
               </div>
               <div className="relative">
-                <img src="https://images.unsplash.com/photo-1559839734-2b71ea197ec2?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=800&h=600" alt="Healthcare professionals providing patient care" className="rounded-2xl shadow-2xl" />
+                <img src="/attached_assets/AdobeStock_39976543_1751485954824.jpeg" alt="Healthcare professionals providing comprehensive patient care" className="rounded-2xl shadow-2xl" />
                 
                 <div className="absolute -bottom-4 -left-4 bg-white text-slate-900 p-4 rounded-xl shadow-lg">
                   <div className="text-2xl font-bold text-secondary">2,500+</div>
@@ -259,7 +259,7 @@ export default function HomePage() {
                   </div>
                 </div>
                 <div className="text-center lg:text-right">
-                  <img src="https://images.unsplash.com/photo-1551076805-e1869033e561?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=600&h=400" alt="Healthcare data analytics dashboard showing positive patient outcomes" className="rounded-xl opacity-90" />
+                  <img src="https://images.pexels.com/photos/7578792/pexels-photo-7578792.jpeg?auto=compress&cs=tinysrgb&w=600&h=400" alt="Healthcare data analytics dashboard showing positive patient outcomes" className="rounded-xl opacity-90" />
                 </div>
               </div>
             </div>
@@ -291,7 +291,7 @@ export default function HomePage() {
                   "Lynk Health has transformed how we care for our chronic disease patients. The reduction in hospital readmissions has been remarkable, and our patients feel more supported than ever."
                 </blockquote>
                 <div className="flex items-center">
-                  <img src="https://images.unsplash.com/photo-1612349317150-e413f6a5b16d?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=100&h=100" alt="Dr. Sarah Johnson, Chief Medical Officer" className="w-12 h-12 rounded-full mr-4" />
+                  <img src="/attached_assets/AdobeStock_671445453 (1)_1751485954796.jpeg" alt="Dr. Sarah Johnson, Chief Medical Officer" className="w-12 h-12 rounded-full mr-4 object-cover" />
                   <div>
                     <div className="font-semibold text-slate-900">Dr. Sarah Johnson</div>
                     <div className="text-slate-600 text-sm">Chief Medical Officer, Regional Health System</div>
@@ -313,7 +313,7 @@ export default function HomePage() {
                   "The remote monitoring program has been a game-changer for our diabetes patients. We're catching issues early and preventing complications before they become serious."
                 </blockquote>
                 <div className="flex items-center">
-                  <img src="https://images.unsplash.com/photo-1582750433449-648ed127bb54?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=100&h=100" alt="Michael Chen, Practice Administrator" className="w-12 h-12 rounded-full mr-4" />
+                  <img src="/attached_assets/AdobeStock_400795942_1751485954824.jpeg" alt="Michael Chen, Practice Administrator" className="w-12 h-12 rounded-full mr-4 object-cover" />
                   <div>
                     <div className="font-semibold text-slate-900">Michael Chen</div>
                     <div className="text-slate-600 text-sm">Practice Administrator, Metro Family Clinic</div>
@@ -335,7 +335,7 @@ export default function HomePage() {
                   "Our patients love the behavioral health integration program. The compassionate approach has made a real difference in engagement and treatment adherence."
                 </blockquote>
                 <div className="flex items-center">
-                  <img src="https://images.unsplash.com/photo-1559839734-2b71ea197ec2?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=100&h=100" alt="Dr. Maria Rodriguez, Medical Director" className="w-12 h-12 rounded-full mr-4" />
+                  <img src="/attached_assets/AdobeStock_425213387_Preview_1751485954824.jpeg" alt="Dr. Maria Rodriguez, Medical Director" className="w-12 h-12 rounded-full mr-4 object-cover" />
                   <div>
                     <div className="font-semibold text-slate-900">Dr. Maria Rodriguez</div>
                     <div className="text-slate-600 text-sm">Medical Director, Community Health Center</div>

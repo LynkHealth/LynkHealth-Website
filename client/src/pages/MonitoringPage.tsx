@@ -25,7 +25,7 @@ export default function MonitoringPage() {
                 </Link>
               </div>
               <div>
-                <img src="https://images.unsplash.com/photo-1605684954998-685c79d6a018?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=800&h=600" alt="Senior patient using remote monitoring device at home" className="rounded-2xl shadow-2xl" />
+                <img src="/attached_assets/AdobeStock_39976543_1751485954824.jpeg" alt="Senior patient using remote monitoring device for health tracking" className="rounded-2xl shadow-2xl" />
               </div>
             </div>
           </div>
@@ -251,7 +251,7 @@ export default function MonitoringPage() {
               </div>
               
               <div>
-                <img src="https://images.unsplash.com/photo-1576671081837-49000212a370?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=800&h=600" alt="Healthcare data dashboard showing patient monitoring metrics" className="rounded-2xl shadow-lg" />
+                <img src="https://images.pexels.com/photos/7578826/pexels-photo-7578826.jpeg?auto=compress&cs=tinysrgb&w=800&h=600" alt="Healthcare data dashboard showing patient monitoring metrics" className="rounded-2xl shadow-lg" />
               </div>
             </div>
           </div>

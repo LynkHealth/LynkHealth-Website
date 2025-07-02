@@ -27,13 +27,13 @@ export default function Home() {
       quote: "Lynk Health has transformed how we manage our chronic care patients. The reduction in readmissions has been remarkable, and the additional revenue stream has allowed us to expand our services.",
       name: "Dr. Sarah Mitchell",
       title: "Chief Medical Officer, Regional Health Network",
-      image: "https://images.unsplash.com/photo-1612349317150-e413f6a5b16d?ixlib=rb-4.0.3&auto=format&fit=crop&w=100&h=100"
+      image: "/attached_assets/AdobeStock_671445453 (1)_1751485954796.jpeg"
     },
     {
       quote: "The white-label solution was perfect for our health system. We were able to launch care coordination services under our brand without the overhead of hiring additional staff.",
       name: "Michael Rodriguez",
       title: "Practice Administrator, City Medical Group",
-      image: "https://images.unsplash.com/photo-1582750433449-648ed127bb54?ixlib=rb-4.0.3&auto=format&fit=crop&w=100&h=100"
+      image: "/attached_assets/AdobeStock_400795942_1751485954824.jpeg"
     }
   ];
 
@@ -69,7 +69,7 @@ export default function Home() {
             </div>
             <div className="animate-fade-in">
               <img
-                src="https://images.unsplash.com/photo-1559757148-5c350d0d3c56?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&h=600"
+                src="/attached_assets/AdobeStock_425213387_Preview_1751485954824.jpeg"
                 alt="Healthcare professional providing care coordination services"
                 className="rounded-2xl shadow-2xl w-full h-auto"
               />

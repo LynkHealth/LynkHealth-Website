@@ -89,7 +89,7 @@ export default function CCM() {
             </div>
             <div>
               <img
-                src="https://images.unsplash.com/photo-1576091160399-112ba8d25d1f?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&h=600"
+                src="/attached_assets/AdobeStock_279901729_1751485954797.jpeg"
                 alt="Nurse providing chronic care management services"
                 className="rounded-2xl shadow-xl w-full h-auto"
               />
@@ -200,7 +200,7 @@ export default function CCM() {
             </div>
             <div>
               <img
-                src="https://images.unsplash.com/photo-1559757175-0eb30cd8c063?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&h=400"
+                src="https://images.pexels.com/photos/7578842/pexels-photo-7578842.jpeg?auto=compress&cs=tinysrgb&w=600&h=400"
                 alt="Healthcare team coordinating patient care"
                 className="rounded-2xl shadow-lg w-full h-auto"
               />

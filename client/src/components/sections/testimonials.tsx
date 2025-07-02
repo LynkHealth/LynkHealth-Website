@@ -3,19 +3,19 @@ const testimonials = [
     quote: "Lynk Health has been an incredible extension of our team. Our patients love the personal connection, and our providers love the ease.",
     name: "Clinic Administrator",
     title: "Mississippi",
-    image: "https://images.unsplash.com/photo-1612349317150-e413f6a5b16d?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=100&h=100"
+    image: "/attached_assets/AdobeStock_671445453 (1)_1751485954796.jpeg"
   },
   {
     quote: "The implementation was seamless, and our staff loves having the additional support. Lynk Health handles all the administrative burden while we focus on direct patient care.",
     name: "Michael Chen",
     title: "Practice Administrator, Metro Family Clinic",
-    image: "https://images.unsplash.com/photo-1582750433449-648ed127bb54?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=100&h=100"
+    image: "/attached_assets/AdobeStock_400795942_1751485954824.jpeg"
   },
   {
     quote: "Our patients love the behavioral health integration program. The compassionate approach has made a real difference in engagement and treatment adherence.",
     name: "Dr. Maria Rodriguez",
     title: "Medical Director, Community Health Center",
-    image: "https://images.unsplash.com/photo-1559839734-2b71ea197ec2?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=100&h=100"
+    image: "/attached_assets/AdobeStock_425213387_Preview_1751485954824.jpeg"
   },
 ];
 

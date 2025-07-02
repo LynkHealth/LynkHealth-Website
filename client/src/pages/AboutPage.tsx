@@ -36,7 +36,7 @@ export default function AboutPage() {
                 </p>
               </div>
               <div>
-                <img src="https://images.unsplash.com/photo-1576091160399-112ba8d25d1f?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=800&h=600" alt="Senior patient receiving care at home" className="rounded-2xl shadow-lg" />
+                <img src="/attached_assets/AdobeStock_671445453 (1)_1751485954796.jpeg" alt="Senior patient receiving comprehensive care at home" className="rounded-2xl shadow-lg" />
               </div>
             </div>
           </div>
@@ -47,7 +47,7 @@ export default function AboutPage() {
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="grid lg:grid-cols-2 gap-12 items-center">
               <div className="order-2 lg:order-1">
-                <img src="https://images.unsplash.com/photo-1559757148-5c350d0d3c56?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=800&h=600" alt="Healthcare technology enabling better patient care" className="rounded-2xl shadow-lg" />
+                <img src="/attached_assets/AdobeStock_400795942_1751485954824.jpeg" alt="Healthcare technology enabling better patient care outcomes" className="rounded-2xl shadow-lg" />
               </div>
               <div className="order-1 lg:order-2">
                 <h2 className="text-3xl font-bold text-slate-900 mb-6">Our Vision</h2>

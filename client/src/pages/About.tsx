@@ -70,7 +70,7 @@ export default function About() {
             </div>
             <div>
               <img
-                src="https://images.unsplash.com/photo-1559839734-2b71ea197ec2?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&h=600"
+                src="/attached_assets/AdobeStock_39976543_1751485954824.jpeg"
                 alt="Healthcare team collaborating on patient care"
                 className="rounded-2xl shadow-xl w-full h-auto"
               />

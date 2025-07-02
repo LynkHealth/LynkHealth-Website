@@ -112,7 +112,7 @@ export default function Monitoring() {
             </div>
             <div>
               <img
-                src="https://images.unsplash.com/photo-1605684954998-685c79d6a018?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&h=600"
+                src="/attached_assets/AdobeStock_616281932_1751485954797.jpeg"
                 alt="Senior patient using remote monitoring device at home"
                 className="rounded-2xl shadow-xl w-full h-auto"
               />
@@ -285,7 +285,7 @@ export default function Monitoring() {
             </div>
             <div>
               <img
-                src="https://images.unsplash.com/photo-1551076805-e1869033e561?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&h=400"
+                src="https://images.pexels.com/photos/7578769/pexels-photo-7578769.jpeg?auto=compress&cs=tinysrgb&w=600&h=400"
                 alt="Healthcare data analytics dashboard showing patient monitoring results"
                 className="rounded-2xl shadow-lg w-full h-auto"
               />
