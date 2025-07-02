@@ -7,14 +7,14 @@ import { FileText, Download, Calendar, Clock, Tag, BookOpen, TrendingUp, Users, 
 export default function Resources() {
   const blogPosts = [
     {
-      title: "Maximizing CMS Reimbursement for Chronic Care Management in 2025",
-      excerpt: "Learn about the latest CMS updates for CCM billing and how to optimize your reimbursement strategy with proper documentation and patient engagement.",
-      date: "December 15, 2024",
-      readTime: "12 min read",
-      category: "Billing & Reimbursement",
-      tags: ["CCM", "CMS", "Billing"],
-      author: "Dr. Sarah Johnson, MD",
-      slug: "maximizing-cms-reimbursement-ccm-2025"
+      title: "2025 Chronic Care Management CPT Codes: Complete Billing Guide",
+      excerpt: "Complete guide to 2025 CCM billing codes including 99490, 99439, 99487, and 99489. Learn CMS requirements, documentation standards, and revenue optimization strategies.",
+      date: "January 20, 2025",
+      readTime: "11 min read",
+      category: "Billing & Compliance",
+      tags: ["CCM", "CPT Codes", "Medicare"],
+      author: "Dr. Sarah Chen, MD",
+      slug: "2025-chronic-care-management-cpt-codes"
     },
     {
       title: "Remote Patient Monitoring: Proven Strategies for Better Patient Outcomes",

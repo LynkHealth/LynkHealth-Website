@@ -6,29 +6,58 @@ import { ArrowLeft, Calendar, Clock, User, Share2 } from "lucide-react";
 
 // Blog post content database
 const blogPosts = {
-  "maximizing-cms-reimbursement-ccm-2025": {
-    title: "Maximizing CMS Reimbursement for Chronic Care Management in 2025",
-    excerpt: "Learn about the latest CMS updates for CCM billing and how to optimize your reimbursement strategy with proper documentation and patient engagement.",
-    date: "December 15, 2024",
-    readTime: "12 min read",
-    category: "Billing & Reimbursement",
-    tags: ["CCM", "CMS", "Billing", "Reimbursement"],
-    author: "Dr. Sarah Johnson, MD",
-    authorBio: "Board-certified internist with 15+ years in chronic care management and Medicare billing compliance.",
+  "2025-chronic-care-management-cpt-codes": {
+    title: "2025 Chronic Care Management CPT Codes: Complete Billing Guide",
+    excerpt: "Complete guide to 2025 CCM billing codes including 99490, 99439, 99487, and 99489. Learn CMS requirements, documentation standards, and revenue optimization strategies.",
+    date: "January 20, 2025",
+    readTime: "11 min read",
+    category: "Billing & Compliance",
+    tags: ["CCM", "CPT Codes", "Medicare", "Billing"],
+    author: "Dr. Sarah Chen, MD",
+    authorBio: "Board-certified internist specializing in chronic care management and Medicare billing compliance with 12+ years of experience.",
     content: `
       <div class="prose prose-lg max-w-none">
-        <p class="lead">The Centers for Medicare & Medicaid Services (CMS) has introduced significant updates to Chronic Care Management (CCM) billing for 2025, presenting new opportunities for healthcare providers to maximize reimbursement while delivering exceptional patient care.</p>
+        <h2>What is Chronic Care Management?</h2>
+        <p>Chronic Care Management (CCM) is a preventive health program that helps patients mitigate their chronic conditions. As covered by Medicare Part B, providers should understand what CPT billing codes matter to the program and how they are used. This can help your organization avoid denied claims and enhance care.</p>
 
-        <h2>Key Changes for 2025 CCM Billing</h2>
-        
-        <h3>Updated Reimbursement Rates</h3>
-        <p>CMS has adjusted the national average payment amounts for CCM services:</p>
+        <p>CCM is covered for Medicare Part B patients with a small co-pay. This monthly engagement program offers patients the benefits of personalized care plans and assisted development of self-management behaviors.</p>
+
+        <p>CCM is reimbursable under Medicare's Physician Fee Schedule, paying various rates.</p>
+
+        <h2>Chronic Care Management CPT Codes: 99490, 99487, 99491, and More</h2>
+        <p>Different CPT billing codes reflect specific types of CCM. The crucial qualifying determinants are who provides program services, complexity of medical decision-making, and the length of time spent with the patient.</p>
+
+        <h3>CPT Codes 99490 and 99439 for Non-Complex Chronic Care Management</h3>
+        <p>Billing code assignment is based on the complexity of medical decision-making. CCM billing codes specify Complex and Non-complex chronic care services. Within these categories, codes further reflect different lengths of time spent with patients and the level of physician involvement required.</p>
+
+        <p>In some instances, Non-complex CCM can be provided by clinical staff.</p>
+
+        <p>For Non-complex CCM, the following CPT codes can be used to account for reimbursement, based on all program requirements being fulfilled:</p>
         <ul>
-          <li><strong>CPT 99490:</strong> $60.49 (up 3.2% from 2024) - First 20 minutes of clinical staff time</li>
-          <li><strong>CPT 99439:</strong> $45.93 (up 2.8% from 2024) - Each additional 20 minutes</li>
-          <li><strong>CPT 99487:</strong> $131.65 (up 4.1% from 2024) - Complex CCM, first 60 minutes</li>
-          <li><strong>CPT 99489:</strong> $70.52 (up 3.5% from 2024) - Complex CCM, each additional 30 minutes</li>
+          <li><strong>CPT code 99490:</strong> 20 minutes of billable time - $60.49</li>
+          <li><strong>CPT codes 99490 + 99439:</strong> 40 minutes of billable time</li>
+          <li><strong>CPT codes 99490 + 99439 (x2):</strong> 60 minutes of billable time</li>
         </ul>
+
+        <p>Two ICD-10s must be presented when billing for chronic care services as the requirement for CCM includes two or more present conditions.</p>
+
+        <h3>CPT Codes 99491 and 99437 for Physician-Driven, Non-Complex CCM</h3>
+        <p>The following codes are designed for non-complex chronic care in which the provider or non-physician practitioner (NPP) is heavily involved. They cannot be billed concurrently with standard CCM CPT codes.</p>
+
+        <p>The value of physicians' time is reflected in these non-complex, physician-driven codes as CCM services are not reliant on clinical staff:</p>
+        <ul>
+          <li><strong>CPT code 99491:</strong> 30 minutes of billable time</li>
+          <li><strong>CPT codes 99491 + 99437:</strong> 60 minutes of billable time</li>
+        </ul>
+
+        <h3>CPT Codes 99487 and 99489 for Complex Chronic Care</h3>
+        <p>The following billing codes apply for complex care:</p>
+        <ul>
+          <li><strong>CPT code 99487:</strong> 60 minutes of billable time - $131.65</li>
+          <li><strong>CPT codes 99487 + 99489:</strong> 90 minutes of billable time</li>
+        </ul>
+
+        <p>It is important to note the distinction between CPT code 99487, which accounts for 60 minutes of complex chronic care, versus the two CPT codes (99491 and 99437) that account for 60 minutes of physician-driven, non-complex chronic care.</p>
 
         <h3>Enhanced Documentation Requirements</h3>
         <p>CMS has strengthened documentation requirements to ensure proper billing compliance:</p>
