@@ -78,24 +78,17 @@ export default function Hero() {
               </div>
             </div>
             
-            {/* Video Placeholder */}
-            <div className="mt-6 relative rounded-2xl overflow-hidden shadow-xl">
+            {/* Care Results Showcase */}
+            <div className="mt-6 relative rounded-2xl overflow-hidden shadow-xl group">
               <img
-                src="https://lynk.health/wp-content/uploads/2022/12/AdobeStock_39976543-1024x683.jpeg"
-                alt="Elderly patient using remote monitoring device at home"
-                className="w-full h-48 object-cover"
+                src="https://lynk.health/wp-content/uploads/2023/08/elderly-monitoring.jpeg"
+                alt="Remote patient monitoring technology improving patient outcomes"
+                className="w-full h-48 object-cover group-hover:scale-105 transition-transform duration-300"
               />
-              <div className="absolute inset-0 bg-black/30 flex items-center justify-center">
-                <div className="w-16 h-16 bg-white/90 rounded-full flex items-center justify-center shadow-lg">
-                  <svg className="w-8 h-8 text-primary ml-1" fill="currentColor" viewBox="0 0 24 24">
-                    <path d="M8 5v14l11-7z"/>
-                  </svg>
-                </div>
-              </div>
               <div className="absolute bottom-4 left-4 right-4">
-                <div className="bg-white/90 backdrop-blur-sm rounded-lg p-3">
-                  <div className="text-sm font-semibold text-foreground">See Our Care in Action</div>
-                  <div className="text-xs text-muted-foreground">Real patients, real results</div>
+                <div className="bg-white/95 backdrop-blur-sm rounded-lg p-4">
+                  <div className="text-sm font-semibold text-foreground">Proven Patient Outcomes</div>
+                  <div className="text-xs text-muted-foreground">Real results from our care coordination programs</div>
                 </div>
               </div>
             </div>

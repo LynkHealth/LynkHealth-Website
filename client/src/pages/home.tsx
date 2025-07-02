@@ -57,117 +57,86 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Video Showcase Section */}
+      {/* Care Excellence Showcase Section */}
       <section className="py-20 bg-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16">
-            <h2 className="text-3xl lg:text-4xl font-bold text-foreground mb-6">See Our Care in Action</h2>
+            <h2 className="text-3xl lg:text-4xl font-bold text-foreground mb-6">Excellence in Patient Care</h2>
             <p className="text-xl text-muted-foreground max-w-3xl mx-auto">
-              Watch how our registered nurses provide compassionate, comprehensive care coordination for Medicare patients in the comfort of their homes.
+              See how our registered nurses provide compassionate, comprehensive care coordination for Medicare patients in the comfort of their homes.
             </p>
           </div>
           
           <div className="grid lg:grid-cols-2 gap-12 items-center">
-            {/* Main Video */}
+            {/* Main Care Image */}
             <div className="relative rounded-3xl overflow-hidden shadow-2xl">
               <img
-                src="https://images.unsplash.com/photo-1576091160550-2173dba999ef?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&h=500"
-                alt="Nurse providing care to elderly patient at home"
+                src="https://lynk.health/wp-content/uploads/2023/09/AdobeStock_610198709-scaled.jpeg"
+                alt="Professional nurse providing chronic care management to elderly patient"
                 className="w-full h-[400px] object-cover"
               />
-              <div className="absolute inset-0 bg-black/40 flex items-center justify-center">
-                <div className="w-20 h-20 bg-white/95 rounded-full flex items-center justify-center shadow-2xl hover:scale-105 transition-transform cursor-pointer">
-                  <svg className="w-10 h-10 text-primary ml-1" fill="currentColor" viewBox="0 0 24 24">
-                    <path d="M8 5v14l11-7z"/>
-                  </svg>
-                </div>
-              </div>
               <div className="absolute bottom-6 left-6 right-6">
                 <div className="bg-white/95 backdrop-blur-sm rounded-xl p-4">
-                  <h3 className="font-bold text-foreground mb-1">Chronic Care Management in Action</h3>
-                  <p className="text-sm text-muted-foreground">Real patients sharing their experience with our care coordination services</p>
+                  <h3 className="font-bold text-foreground mb-1">Chronic Care Management Excellence</h3>
+                  <p className="text-sm text-muted-foreground">Professional nursing care delivering measurable health outcomes for Medicare patients</p>
                 </div>
               </div>
             </div>
             
-            {/* Video Grid */}
+            {/* Care Services Grid */}
             <div className="grid grid-cols-2 gap-4">
-              <div className="relative rounded-2xl overflow-hidden shadow-lg">
+              <div className="relative rounded-2xl overflow-hidden shadow-lg group hover:shadow-xl transition-shadow">
                 <img
-                  src="https://images.unsplash.com/photo-1584515933487-779824d29309?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&h=300"
-                  alt="Remote monitoring devices in elderly patient home"
-                  className="w-full h-48 object-cover"
+                  src="https://lynk.health/wp-content/uploads/2023/08/elderly-monitoring.jpeg"
+                  alt="Remote patient monitoring devices for chronic care management"
+                  className="w-full h-48 object-cover group-hover:scale-105 transition-transform duration-300"
                 />
-                <div className="absolute inset-0 bg-black/30 flex items-center justify-center">
-                  <div className="w-12 h-12 bg-white/90 rounded-full flex items-center justify-center">
-                    <svg className="w-6 h-6 text-primary ml-0.5" fill="currentColor" viewBox="0 0 24 24">
-                      <path d="M8 5v14l11-7z"/>
-                    </svg>
-                  </div>
-                </div>
                 <div className="absolute bottom-3 left-3 right-3">
-                  <div className="bg-white/90 rounded-lg p-2">
-                    <p className="text-xs font-semibold">Remote Monitoring</p>
+                  <div className="bg-white/95 backdrop-blur-sm rounded-lg p-3">
+                    <p className="text-sm font-semibold text-foreground">Remote Patient Monitoring</p>
+                    <p className="text-xs text-muted-foreground">FDA-approved devices & 24/7 monitoring</p>
                   </div>
                 </div>
               </div>
               
-              <div className="relative rounded-2xl overflow-hidden shadow-lg">
+              <div className="relative rounded-2xl overflow-hidden shadow-lg group hover:shadow-xl transition-shadow">
                 <img
-                  src="https://images.unsplash.com/photo-1559757175-0eb30cd8c063?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&h=300"
-                  alt="Healthcare professional conducting behavioral health session"
-                  className="w-full h-48 object-cover"
+                  src="https://lynk.health/wp-content/uploads/2023/08/elderly-behavioral-health.jpeg"
+                  alt="Behavioral health support for elderly patients"
+                  className="w-full h-48 object-cover group-hover:scale-105 transition-transform duration-300"
                 />
-                <div className="absolute inset-0 bg-black/30 flex items-center justify-center">
-                  <div className="w-12 h-12 bg-white/90 rounded-full flex items-center justify-center">
-                    <svg className="w-6 h-6 text-primary ml-0.5" fill="currentColor" viewBox="0 0 24 24">
-                      <path d="M8 5v14l11-7z"/>
-                    </svg>
-                  </div>
-                </div>
                 <div className="absolute bottom-3 left-3 right-3">
-                  <div className="bg-white/90 rounded-lg p-2">
-                    <p className="text-xs font-semibold">Behavioral Health</p>
+                  <div className="bg-white/95 backdrop-blur-sm rounded-lg p-3">
+                    <p className="text-sm font-semibold text-foreground">Behavioral Health Integration</p>
+                    <p className="text-xs text-muted-foreground">Mental health support & screening</p>
                   </div>
                 </div>
               </div>
               
-              <div className="relative rounded-2xl overflow-hidden shadow-lg">
+              <div className="relative rounded-2xl overflow-hidden shadow-lg group hover:shadow-xl transition-shadow">
                 <img
-                  src="https://images.unsplash.com/photo-1576091160399-112ba8d25d1f?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&h=300"
-                  alt="Nurse reviewing care plan with elderly patient"
-                  className="w-full h-48 object-cover"
+                  src="https://lynk.health/wp-content/uploads/2023/08/elderly-patient-care.jpeg"
+                  alt="Professional nurse providing chronic care management"
+                  className="w-full h-48 object-cover group-hover:scale-105 transition-transform duration-300"
                 />
-                <div className="absolute inset-0 bg-black/30 flex items-center justify-center">
-                  <div className="w-12 h-12 bg-white/90 rounded-full flex items-center justify-center">
-                    <svg className="w-6 h-6 text-primary ml-0.5" fill="currentColor" viewBox="0 0 24 24">
-                      <path d="M8 5v14l11-7z"/>
-                    </svg>
-                  </div>
-                </div>
                 <div className="absolute bottom-3 left-3 right-3">
-                  <div className="bg-white/90 rounded-lg p-2">
-                    <p className="text-xs font-semibold">Care Planning</p>
+                  <div className="bg-white/95 backdrop-blur-sm rounded-lg p-3">
+                    <p className="text-sm font-semibold text-foreground">Chronic Care Management</p>
+                    <p className="text-xs text-muted-foreground">Licensed nurses & care coordination</p>
                   </div>
                 </div>
               </div>
               
-              <div className="relative rounded-2xl overflow-hidden shadow-lg">
+              <div className="relative rounded-2xl overflow-hidden shadow-lg group hover:shadow-xl transition-shadow">
                 <img
-                  src="https://images.unsplash.com/photo-1559757148-5c350d0d3c56?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&h=300"
-                  alt="Family caregiver with elderly patient using telehealth"
-                  className="w-full h-48 object-cover"
+                  src="https://lynk.health/wp-content/uploads/2023/09/AdobeStock_610198709-scaled.jpeg"
+                  alt="Healthcare technology integration for patient care"
+                  className="w-full h-48 object-cover group-hover:scale-105 transition-transform duration-300"
                 />
-                <div className="absolute inset-0 bg-black/30 flex items-center justify-center">
-                  <div className="w-12 h-12 bg-white/90 rounded-full flex items-center justify-center">
-                    <svg className="w-6 h-6 text-primary ml-0.5" fill="currentColor" viewBox="0 0 24 24">
-                      <path d="M8 5v14l11-7z"/>
-                    </svg>
-                  </div>
-                </div>
                 <div className="absolute bottom-3 left-3 right-3">
-                  <div className="bg-white/90 rounded-lg p-2">
-                    <p className="text-xs font-semibold">Family Support</p>
+                  <div className="bg-white/95 backdrop-blur-sm rounded-lg p-3">
+                    <p className="text-sm font-semibold text-foreground">EHR Integration</p>
+                    <p className="text-xs text-muted-foreground">Seamless workflow integration</p>
                   </div>
                 </div>
               </div>

@@ -91,7 +91,7 @@ export default function Contact() {
                     ROI Calculator Tool
                   </a>
                   <a href="#" className="flex items-center text-muted-foreground hover:text-healthcare-primary transition-colors">
-                    <i className="fas fa-video mr-3 text-healthcare-primary"></i>
+                    <i className="fas fa-calendar mr-3 text-healthcare-primary"></i>
                     Schedule a Demo
                   </a>
                   <a href="#" className="flex items-center text-muted-foreground hover:text-healthcare-primary transition-colors">
