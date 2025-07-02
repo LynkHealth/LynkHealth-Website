@@ -8,9 +8,10 @@ export default function About() {
       <section className="py-20 bg-gradient-to-br from-slate-50 to-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16">
-            <h1 className="text-4xl lg:text-5xl font-bold text-foreground mb-6">About Lynk Health</h1>
+            <h1 className="text-4xl lg:text-5xl font-bold text-foreground mb-6">Leading Chronic Care Management & Remote Patient Monitoring Provider</h1>
             <p className="text-xl text-muted-foreground max-w-3xl mx-auto">
-              We're dedicated to helping seniors stay out of hospitals and age in place through innovative, nurse-led care coordination services.
+              Helping healthcare providers deliver exceptional patient outcomes with turnkey CCM and RPM programs. 
+              Zero upfront costs, seamless EHR integration, and proven revenue generation.
             </p>
           </div>
         </div>
@@ -23,10 +24,10 @@ export default function About() {
             <div>
               <h2 className="text-3xl font-bold text-foreground mb-6">Our Mission</h2>
               <p className="text-lg text-muted-foreground mb-6 leading-relaxed">
-                At Lynk Health, we believe that every Medicare patient deserves comprehensive, compassionate care that keeps them healthy and independent. Our mission is to bridge the gap between clinical visits with continuous, professional nursing support that prevents complications and improves quality of life.
+                At Lynk Health, we provide turnkey chronic care management and remote patient monitoring solutions that generate revenue while improving patient outcomes. Our dedicated nursing team integrates seamlessly with your practice through direct EHR access.
               </p>
               <p className="text-lg text-muted-foreground mb-8 leading-relaxed">
-                We partner with healthcare providers to deliver white-labeled care coordination services that enhance patient outcomes while generating sustainable revenue through CMS-covered programs.
+                We operate directly in your EHR with no additional software required. Zero upfront costs, fast 4-6 week implementation, and proven 90%+ patient retention rates across healthcare providers nationwide.
               </p>
               <Link href="/contact">
                 <Button className="bg-healthcare-primary hover:bg-blue-700">

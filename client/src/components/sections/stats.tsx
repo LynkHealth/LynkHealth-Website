@@ -38,10 +38,10 @@ export default function Stats() {
             </span>
           </div>
           <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold text-white mb-6">
-            Measurable Patient Impact
+            Real-Time Improved Outcomes & Cost Savings
           </h2>
           <p className="text-xl text-white/90 max-w-3xl mx-auto leading-relaxed">
-            Real outcomes from our comprehensive care coordination programs across healthcare partners nationwide.
+            See real-time results from patients using Lynk Health CCM and RPM programs.
           </p>
         </div>
 

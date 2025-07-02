@@ -76,12 +76,12 @@ export default function Monitoring() {
                 </Badge>
               </div>
               <h1 className="text-4xl md:text-5xl xl:text-6xl font-bold text-foreground leading-[1.1] mb-6">
-                In-Home Patient 
-                <span className="text-primary"> Monitoring</span>
+                Remote Patient Monitoring
+                <span className="text-primary"> Solutions</span>
               </h1>
               <p className="text-xl text-muted-foreground mb-8 leading-relaxed">
-                Advanced remote patient monitoring (RPM) and remote therapeutic monitoring (RTM) services 
-                that enable continuous health tracking from the comfort of home using FDA-approved devices.
+                Turnkey RPM and RTM programs with cellular-enabled devices and 24/7 clinical monitoring. 
+                Generate $58+ per patient monthly with FDA-approved monitoring technology.
               </p>
               <div className="flex flex-col sm:flex-row gap-4 mb-8">
                 <Link href="/contact">

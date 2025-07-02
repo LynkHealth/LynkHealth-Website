@@ -54,12 +54,12 @@ export default function CCM() {
                 </Badge>
               </div>
               <h1 className="text-4xl md:text-5xl xl:text-6xl font-bold text-foreground leading-[1.1] mb-6">
-                Chronic Care Management 
-                <span className="text-primary"> (CCM)</span>
+                Medicare Chronic Care Management
+                <span className="text-primary"> That Actually Works</span>
               </h1>
               <p className="text-xl text-muted-foreground mb-8 leading-relaxed">
-                Evidence-based care coordination for Medicare patients with multiple chronic conditions. 
-                Our licensed registered nurses provide comprehensive support, medication management, and continuous health monitoring.
+                Turnkey CCM program for Medicare patients with 2+ chronic conditions. Zero upfront costs, 
+                seamless EHR integration, and dedicated nurses generating $42+ per patient monthly.
               </p>
               <div className="flex flex-col sm:flex-row gap-4 mb-8">
                 <Link href="/contact">
@@ -76,7 +76,7 @@ export default function CCM() {
               <div className="grid grid-cols-2 gap-4 text-sm">
                 <div className="flex items-center gap-2">
                   <div className="w-2 h-2 bg-secondary rounded-full"></div>
-                  <span className="text-muted-foreground">$99+ per patient/month</span>
+                  <span className="text-muted-foreground">$42+ per patient/month</span>
                 </div>
                 <div className="flex items-center gap-2">
                   <div className="w-2 h-2 bg-secondary rounded-full"></div>

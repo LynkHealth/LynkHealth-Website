@@ -7,8 +7,8 @@ export default function ServicesSection() {
   const services = [
     {
       icon: <Stethoscope className="h-8 w-8" />,
-      title: "Chronic Care Management",
-      description: "CMS-covered monthly care coordination for patients with multiple chronic conditions. Our registered nurses provide comprehensive health monitoring and care plan management.",
+      title: "Chronic Care Management (CCM)",
+      description: "Medicare-approved CCM program for patients with 2+ chronic conditions. Our licensed nurses deliver 24/7 care coordination, medication management, and seamless EHR integration.",
       features: [
         "24/7 care team availability",
         "Monthly care plan updates", 
@@ -20,8 +20,8 @@ export default function ServicesSection() {
     },
     {
       icon: <Activity className="h-8 w-8" />,
-      title: "In-Home Patient Monitoring",
-      description: "Remote Patient Monitoring (RPM) and Remote Therapeutic Monitoring (RTM) services that enable continuous health tracking from the comfort of home.",
+      title: "Remote Patient Monitoring (RPM)",
+      description: "Turnkey RPM and RTM programs with cellular-enabled devices and 24/7 clinical monitoring. Generate $58+ per patient monthly with our proven monitoring solutions.",
       features: [
         "FDA-approved devices",
         "Real-time data transmission",

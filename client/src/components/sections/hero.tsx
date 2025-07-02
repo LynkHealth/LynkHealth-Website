@@ -16,12 +16,12 @@ export default function Hero() {
               </span>
             </div>
             <h1 className="text-4xl md:text-5xl xl:text-6xl font-bold text-foreground leading-[1.1] mb-6">
-              Nurse-Led Care Coordination{" "}
-              <span className="text-primary">for Medicare Patients</span>
+              Chronic Care Management & Remote Patient Monitoring{" "}
+              <span className="text-primary">That Actually Works</span>
             </h1>
             <p className="text-xl text-muted-foreground mb-8 leading-relaxed">
-              White-labeled healthcare services that help your practice deliver comprehensive care coordination, 
-              monitoring, and behavioral health support while maximizing reimbursement opportunities.
+              Turnkey CCM and RPM programs with dedicated nurses, seamless EHR integration, and 24/7 patient support. 
+              Generate additional revenue while improving patient outcomes with zero upfront costs.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 mb-8">
               <Link href="/contact">
