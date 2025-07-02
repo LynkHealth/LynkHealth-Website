@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from "react";
 
 const stats = [
   { number: "97%", label: "Care Plan Adherence", description: "Patient compliance with treatment plans" },
-  { number: "1,750+", label: "Active Patients", description: "Currently enrolled in our programs" },
+  { number: "24/7", label: "Care Support", description: "Around-the-clock patient access" },
   { number: "<5%", label: "Patient Churn", description: "Low dropout rate from programs" },
   { number: "30%", label: "Avg Revenue Uplift", description: "For partner healthcare practices" },
 ];
