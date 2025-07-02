@@ -15,6 +15,7 @@ import Resources from "@/pages/resources";
 import Contact from "@/pages/contact";
 import Privacy from "@/pages/privacy";
 import Calculator from "@/pages/calculator";
+import BlogPost from "@/pages/blog-post";
 import NotFound from "@/pages/not-found";
 
 function Router() {
@@ -30,6 +31,7 @@ function Router() {
           <Route path="/services/bhi" component={BHI} />
           <Route path="/how-it-works" component={HowItWorks} />
           <Route path="/resources" component={Resources} />
+          <Route path="/blog/:slug" component={BlogPost} />
           <Route path="/calculator" component={Calculator} />
           <Route path="/contact" component={Contact} />
           <Route path="/privacy" component={Privacy} />

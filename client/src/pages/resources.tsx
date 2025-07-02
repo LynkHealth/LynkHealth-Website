@@ -10,19 +10,21 @@ export default function Resources() {
       title: "Maximizing CMS Reimbursement for Chronic Care Management in 2025",
       excerpt: "Learn about the latest CMS updates for CCM billing and how to optimize your reimbursement strategy with proper documentation and patient engagement.",
       date: "December 15, 2024",
-      readTime: "5 min read",
+      readTime: "12 min read",
       category: "Billing & Reimbursement",
       tags: ["CCM", "CMS", "Billing"],
-      author: "Dr. Sarah Johnson, MD"
+      author: "Dr. Sarah Johnson, MD",
+      slug: "maximizing-cms-reimbursement-ccm-2025"
     },
     {
       title: "Remote Patient Monitoring: Proven Strategies for Better Patient Outcomes",
       excerpt: "Discover how RPM programs reduce hospital readmissions and improve medication adherence for patients with chronic conditions.",
       date: "December 10, 2024",
-      readTime: "7 min read",
+      readTime: "15 min read",
       category: "Clinical Best Practices",
       tags: ["RPM", "Patient Outcomes", "Technology"],
-      author: "Michael Chen, RN"
+      author: "Michael Chen, RN",
+      slug: "rpm-patient-outcomes-strategies"
     },
     {
       title: "Behavioral Health Integration: Breaking Down Barriers for Senior Care",
@@ -66,30 +68,34 @@ export default function Resources() {
     {
       title: "CCM Implementation Guide",
       description: "Comprehensive guide to launching a successful Chronic Care Management program",
-      type: "PDF Download",
+      type: "Implementation Guide",
       icon: <FileText className="h-6 w-6" />,
-      pages: "24 pages"
+      pages: "24 pages",
+      downloadUrl: "/downloads/ccm-implementation-guide.html"
     },
     {
       title: "RPM Device Selection Checklist",
       description: "Essential criteria for choosing the right remote monitoring devices for your patients",
-      type: "Checklist",
+      type: "Device Checklist",
       icon: <Shield className="h-6 w-6" />,
-      pages: "8 pages"
+      pages: "12 pages",
+      downloadUrl: "/downloads/rpm-device-selection-checklist.html"
     },
     {
       title: "BHI Best Practices Toolkit",
       description: "Evidence-based strategies for integrating behavioral health into primary care",
-      type: "Toolkit",
+      type: "Clinical Toolkit",
       icon: <BookOpen className="h-6 w-6" />,
-      pages: "32 pages"
+      pages: "32 pages",
+      downloadUrl: "/downloads/bhi-best-practices-toolkit.html"
     },
     {
       title: "Medicare Billing Compliance Guide",
       description: "Complete reference for CMS billing requirements and documentation standards",
-      type: "Reference Guide",
+      type: "Compliance Guide",
       icon: <TrendingUp className="h-6 w-6" />,
-      pages: "45 pages"
+      pages: "28 pages",
+      downloadUrl: "/downloads/medicare-billing-compliance-guide.html"
     }
   ];
 
@@ -170,10 +176,17 @@ export default function Resources() {
                 </CardHeader>
                 <CardContent className="pt-0">
                   <p className="text-muted-foreground leading-relaxed mb-4">{resource.description}</p>
-                  <Button className="w-full bg-primary/10 text-primary hover:bg-primary hover:text-primary-foreground transition-all">
-                    <Download className="h-4 w-4 mr-2" />
-                    Download
-                  </Button>
+                  <a 
+                    href={resource.downloadUrl} 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                    className="block w-full"
+                  >
+                    <Button className="w-full bg-primary/10 text-primary hover:bg-primary hover:text-primary-foreground transition-all">
+                      <Download className="h-4 w-4 mr-2" />
+                      Download
+                    </Button>
+                  </a>
                 </CardContent>
               </Card>
             ))}
@@ -246,9 +259,11 @@ export default function Resources() {
                   </div>
                   <div className="flex items-center justify-between">
                     <span className="text-sm text-muted-foreground">{post.author}</span>
-                    <Button variant="ghost" size="sm" className="text-primary hover:bg-primary/10">
-                      Read More
-                    </Button>
+                    <Link href={`/blog/${post.slug}`}>
+                      <Button variant="ghost" size="sm" className="text-primary hover:bg-primary/10">
+                        Read More
+                      </Button>
+                    </Link>
                   </div>
                 </CardContent>
               </Card>

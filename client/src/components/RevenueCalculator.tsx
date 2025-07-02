@@ -33,7 +33,7 @@ export default function RevenueCalculator() {
   const [completedCareRate, setCompletedCareRate] = useState(97);
   const [rpmDeviceReadingsPercentage, setRPMDeviceReadingsPercentage] = useState(75);
 
-  const calculateMonthlyRevenue = useCallback((ccmPatients, rpmPatients) => {
+  const calculateMonthlyRevenue = useCallback((ccmPatients: number, rpmPatients: number) => {
     let ccmRevenue = 0;
     let rpmRevenue = 0;
 
