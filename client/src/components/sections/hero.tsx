@@ -57,7 +57,7 @@ export default function Hero() {
           <div className="relative">
             <div className="relative rounded-3xl overflow-hidden shadow-2xl">
               <img
-                src="/attached_assets/AdobeStock_616281927_1751485954823.jpeg"
+                src="/images/AdobeStock_616281927_1751485954823.jpeg"
                 alt="Professional healthcare team providing comprehensive chronic care management services"
                 className="w-full h-[500px] object-cover"
               />
@@ -81,7 +81,7 @@ export default function Hero() {
             {/* Care Results Showcase */}
             <div className="mt-6 relative rounded-2xl overflow-hidden shadow-xl group">
               <img
-                src="/attached_assets/AdobeStock_419808796_1751485954770.jpeg"
+                src="/images/AdobeStock_419808796_1751485954770.jpeg"
                 alt="Healthcare professional providing remote patient monitoring and care coordination"
                 className="w-full h-48 object-cover group-hover:scale-105 transition-transform duration-300"
               />

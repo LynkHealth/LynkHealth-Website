@@ -87,7 +87,7 @@ export default function Home() {
             <div className="grid grid-cols-2 gap-4">
               <div className="relative rounded-2xl overflow-hidden shadow-lg group hover:shadow-xl transition-shadow">
                 <img
-                  src="/attached_assets/AdobeStock_133178564_1751485954798.jpeg"
+                  src="/images/AdobeStock_133178564_1751485954798.jpeg"
                   alt="Advanced remote patient monitoring devices and technology for chronic care"
                   className="w-full h-48 object-cover group-hover:scale-105 transition-transform duration-300"
                 />
@@ -101,7 +101,7 @@ export default function Home() {
               
               <div className="relative rounded-2xl overflow-hidden shadow-lg group hover:shadow-xl transition-shadow">
                 <img
-                  src="/attached_assets/AdobeStock_400007631_1751485954795.jpeg"
+                  src="/images/AdobeStock_400007631_1751485954795.jpeg"
                   alt="Behavioral health integration and mental health support services"
                   className="w-full h-48 object-cover group-hover:scale-105 transition-transform duration-300"
                 />
@@ -115,7 +115,7 @@ export default function Home() {
               
               <div className="relative rounded-2xl overflow-hidden shadow-lg group hover:shadow-xl transition-shadow">
                 <img
-                  src="/attached_assets/AdobeStock_429992249_1751485954795.jpeg"
+                  src="/images/AdobeStock_429992249_1751485954795.jpeg"
                   alt="Professional nurse providing chronic care management services"
                   className="w-full h-48 object-cover group-hover:scale-105 transition-transform duration-300"
                 />
@@ -129,7 +129,7 @@ export default function Home() {
               
               <div className="relative rounded-2xl overflow-hidden shadow-lg group hover:shadow-xl transition-shadow">
                 <img
-                  src="/attached_assets/AdobeStock_226055713_1751485954796.jpeg"
+                  src="/images/AdobeStock_226055713_1751485954796.jpeg"
                   alt="Healthcare technology integration and EHR connectivity solutions"
                   className="w-full h-48 object-cover group-hover:scale-105 transition-transform duration-300"
                 />

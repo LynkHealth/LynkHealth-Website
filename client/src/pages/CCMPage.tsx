@@ -25,7 +25,7 @@ export default function CCMPage() {
                 </Link>
               </div>
               <div>
-                <img src="/attached_assets/AdobeStock_425213387_Preview_1751485954824.jpeg" alt="Professional nurse providing chronic care management services" className="rounded-2xl shadow-2xl" />
+                <img src="/images/AdobeStock_425213387_Preview_1751485954824.jpeg" alt="Professional nurse providing chronic care management services" className="rounded-2xl shadow-2xl" />
               </div>
             </div>
           </div>

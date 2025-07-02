@@ -25,7 +25,7 @@ export default function MonitoringPage() {
                 </Link>
               </div>
               <div>
-                <img src="/attached_assets/AdobeStock_39976543_1751485954824.jpeg" alt="Senior patient using remote monitoring device for health tracking" className="rounded-2xl shadow-2xl" />
+                <img src="/images/AdobeStock_39976543_1751485954824.jpeg" alt="Senior patient using remote monitoring device for health tracking" className="rounded-2xl shadow-2xl" />
               </div>
             </div>
           </div>

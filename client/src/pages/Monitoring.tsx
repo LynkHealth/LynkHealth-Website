@@ -112,7 +112,7 @@ export default function Monitoring() {
             </div>
             <div>
               <img
-                src="/attached_assets/AdobeStock_616281932_1751485954797.jpeg"
+                src="/images/AdobeStock_616281932_1751485954797.jpeg"
                 alt="Senior patient using remote monitoring device at home"
                 className="rounded-2xl shadow-xl w-full h-auto"
               />

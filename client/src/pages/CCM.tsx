@@ -89,7 +89,7 @@ export default function CCM() {
             </div>
             <div>
               <img
-                src="/attached_assets/AdobeStock_279901729_1751485954797.jpeg"
+                src="/images/AdobeStock_279901729_1751485954797.jpeg"
                 alt="Nurse providing chronic care management services"
                 className="rounded-2xl shadow-xl w-full h-auto"
               />

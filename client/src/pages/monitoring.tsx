@@ -118,7 +118,7 @@ export default function Monitoring() {
             <div className="relative">
               <div className="relative rounded-3xl overflow-hidden shadow-2xl">
                 <img
-                  src="/attached_assets/AdobeStock_616281932_1751485954797.jpeg"
+                  src="/images/AdobeStock_616281932_1751485954797.jpeg"
                   alt="Patient using FDA-approved remote monitoring devices for continuous health tracking"
                   className="w-full h-[400px] object-cover"
                 />

@@ -118,7 +118,7 @@ export default function BHI() {
             <div className="relative">
               <div className="relative rounded-3xl overflow-hidden shadow-2xl">
                 <img
-                  src="/attached_assets/AdobeStock_553516145_1751485954797.jpeg"
+                  src="/images/AdobeStock_553516145_1751485954797.jpeg"
                   alt="Licensed healthcare professional providing integrated behavioral health support to patient"
                   className="w-full h-[400px] object-cover"
                 />

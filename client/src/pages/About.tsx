@@ -70,7 +70,7 @@ export default function About() {
             </div>
             <div>
               <img
-                src="/attached_assets/AdobeStock_39976543_1751485954824.jpeg"
+                src="/images/AdobeStock_39976543_1751485954824.jpeg"
                 alt="Healthcare team collaborating on patient care"
                 className="rounded-2xl shadow-xl w-full h-auto"
               />

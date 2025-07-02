@@ -9,7 +9,7 @@ export default function Footer() {
           <div>
             <div className="flex items-center mb-4">
               <img 
-                src="/attached_assets/LOGO-Lynk_Health_1749182161866.png" 
+                src="/images/LOGO-Lynk_Health_1749182161866.png" 
                 alt="Lynk Health Logo" 
                 className="h-8 w-auto"
                 style={{filter: 'brightness(0) invert(1)'}}
