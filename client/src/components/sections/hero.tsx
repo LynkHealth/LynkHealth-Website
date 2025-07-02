@@ -57,8 +57,8 @@ export default function Hero() {
           <div className="relative">
             <div className="relative rounded-3xl overflow-hidden shadow-2xl">
               <img
-                src="https://lynk.health/wp-content/uploads/2023/09/AdobeStock_610198709-scaled.jpeg"
-                alt="Healthcare professional providing care to elderly patient at home"
+                src="/attached_assets/AdobeStock_616281927_1751485954823.jpeg"
+                alt="Professional healthcare team providing comprehensive chronic care management services"
                 className="w-full h-[500px] object-cover"
               />
               <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent"></div>
@@ -81,8 +81,8 @@ export default function Hero() {
             {/* Care Results Showcase */}
             <div className="mt-6 relative rounded-2xl overflow-hidden shadow-xl group">
               <img
-                src="https://lynk.health/wp-content/uploads/2023/08/elderly-monitoring.jpeg"
-                alt="Remote patient monitoring technology improving patient outcomes"
+                src="/attached_assets/AdobeStock_419808796_1751485954770.jpeg"
+                alt="Healthcare professional providing remote patient monitoring and care coordination"
                 className="w-full h-48 object-cover group-hover:scale-105 transition-transform duration-300"
               />
               <div className="absolute bottom-4 left-4 right-4">

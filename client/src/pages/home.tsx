@@ -87,8 +87,8 @@ export default function Home() {
             <div className="grid grid-cols-2 gap-4">
               <div className="relative rounded-2xl overflow-hidden shadow-lg group hover:shadow-xl transition-shadow">
                 <img
-                  src="https://lynk.health/wp-content/uploads/2023/08/elderly-monitoring.jpeg"
-                  alt="Remote patient monitoring devices for chronic care management"
+                  src="/attached_assets/AdobeStock_133178564_1751485954798.jpeg"
+                  alt="Advanced remote patient monitoring devices and technology for chronic care"
                   className="w-full h-48 object-cover group-hover:scale-105 transition-transform duration-300"
                 />
                 <div className="absolute bottom-3 left-3 right-3">
@@ -101,8 +101,8 @@ export default function Home() {
               
               <div className="relative rounded-2xl overflow-hidden shadow-lg group hover:shadow-xl transition-shadow">
                 <img
-                  src="https://lynk.health/wp-content/uploads/2023/08/elderly-behavioral-health.jpeg"
-                  alt="Behavioral health support for elderly patients"
+                  src="/attached_assets/AdobeStock_400007631_1751485954795.jpeg"
+                  alt="Behavioral health integration and mental health support services"
                   className="w-full h-48 object-cover group-hover:scale-105 transition-transform duration-300"
                 />
                 <div className="absolute bottom-3 left-3 right-3">
@@ -115,8 +115,8 @@ export default function Home() {
               
               <div className="relative rounded-2xl overflow-hidden shadow-lg group hover:shadow-xl transition-shadow">
                 <img
-                  src="https://lynk.health/wp-content/uploads/2023/08/elderly-patient-care.jpeg"
-                  alt="Professional nurse providing chronic care management"
+                  src="/attached_assets/AdobeStock_429992249_1751485954795.jpeg"
+                  alt="Professional nurse providing chronic care management services"
                   className="w-full h-48 object-cover group-hover:scale-105 transition-transform duration-300"
                 />
                 <div className="absolute bottom-3 left-3 right-3">
@@ -129,8 +129,8 @@ export default function Home() {
               
               <div className="relative rounded-2xl overflow-hidden shadow-lg group hover:shadow-xl transition-shadow">
                 <img
-                  src="https://lynk.health/wp-content/uploads/2023/09/AdobeStock_610198709-scaled.jpeg"
-                  alt="Healthcare technology integration for patient care"
+                  src="/attached_assets/AdobeStock_226055713_1751485954796.jpeg"
+                  alt="Healthcare technology integration and EHR connectivity solutions"
                   className="w-full h-48 object-cover group-hover:scale-105 transition-transform duration-300"
                 />
                 <div className="absolute bottom-3 left-3 right-3">
