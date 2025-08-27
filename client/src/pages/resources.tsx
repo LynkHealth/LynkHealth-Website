@@ -3,66 +3,10 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { FileText, Download, Calendar, Clock, Tag, BookOpen, TrendingUp, Users, Shield } from "lucide-react";
+import { getAllBlogPosts } from "../data/blog-posts";
 
 export default function Resources() {
-  const blogPosts = [
-    {
-      title: "2025 Chronic Care Management CPT Codes: Complete Billing Guide",
-      excerpt: "Complete guide to 2025 CCM billing codes including 99490, 99439, 99487, and 99489. Learn CMS requirements, documentation standards, and revenue optimization strategies.",
-      date: "January 20, 2025",
-      readTime: "11 min read",
-      category: "Billing & Compliance",
-      tags: ["CCM", "CPT Codes", "Medicare"],
-      author: "Dr. Sarah Chen, MD",
-      slug: "2025-chronic-care-management-cpt-codes"
-    },
-    {
-      title: "Remote Patient Monitoring: Proven Strategies for Better Patient Outcomes",
-      excerpt: "Discover how RPM programs reduce hospital readmissions and improve medication adherence for patients with chronic conditions.",
-      date: "December 10, 2024",
-      readTime: "15 min read",
-      category: "Clinical Best Practices",
-      tags: ["RPM", "Patient Outcomes", "Technology"],
-      author: "Michael Chen, RN",
-      slug: "rpm-patient-outcomes-strategies"
-    },
-    {
-      title: "Behavioral Health Integration: Breaking Down Barriers for Senior Care",
-      excerpt: "Explore innovative approaches to reducing stigma and improving mental health engagement among Medicare patients.",
-      date: "December 5, 2024",
-      readTime: "6 min read",
-      category: "Behavioral Health",
-      tags: ["BHI", "Mental Health", "Senior Care"],
-      author: "Lisa Rodriguez, LCSW"
-    },
-    {
-      title: "Quality Metrics That Matter: Improving HEDIS Scores with Care Coordination",
-      excerpt: "Learn which quality metrics are most impacted by comprehensive care coordination and how to track your progress effectively.",
-      date: "November 28, 2024",
-      readTime: "8 min read",
-      category: "Quality Improvement",
-      tags: ["HEDIS", "Quality Metrics", "Performance"],
-      author: "David Park, MBA"
-    },
-    {
-      title: "Building Sustainable Revenue Streams Through Value-Based Care",
-      excerpt: "Explore how care coordination programs create lasting financial benefits while improving patient outcomes and satisfaction.",
-      date: "November 20, 2024",
-      readTime: "10 min read",
-      category: "Practice Management",
-      tags: ["Revenue", "Value-Based Care", "ROI"],
-      author: "Jennifer Adams, CPA"
-    },
-    {
-      title: "Technology Integration in Healthcare: A Provider's Guide to Digital Transformation",
-      excerpt: "Navigate the digital healthcare landscape with practical strategies for implementing technology solutions that enhance patient care.",
-      date: "November 15, 2024",
-      readTime: "9 min read",
-      category: "Digital Health",
-      tags: ["Technology", "Digital Health", "Innovation"],
-      author: "Robert Kim, CTO"
-    }
-  ];
+  const blogPosts = getAllBlogPosts();
 
   const resources = [
     {
