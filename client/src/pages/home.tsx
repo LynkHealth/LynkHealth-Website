@@ -158,8 +158,13 @@ export default function Home() {
           <div className="grid lg:grid-cols-3 gap-8">
             {/* CCM Program Card */}
             <div className="bg-white rounded-2xl p-8 shadow-lg hover:shadow-xl transition-shadow">
-              <div className="w-12 h-12 bg-healthcare-primary/10 rounded-lg flex items-center justify-center mb-6">
-                <i className="fas fa-stethoscope text-healthcare-primary text-xl"></i>
+              <div className="relative w-full h-40 mb-6 rounded-lg overflow-hidden">
+                <img 
+                  src="/images/elderly-patient-care.jpeg"
+                  alt="Elderly patient receiving chronic care management from a registered nurse"
+                  className="w-full h-full object-cover"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent"></div>
               </div>
               <h3 className="text-2xl font-bold text-foreground mb-4">Chronic Care Management</h3>
               <p className="text-muted-foreground mb-6">
@@ -190,8 +195,13 @@ export default function Home() {
             
             {/* In-Home Monitoring Card */}
             <div className="bg-white rounded-2xl p-8 shadow-lg hover:shadow-xl transition-shadow">
-              <div className="w-12 h-12 bg-healthcare-secondary/10 rounded-lg flex items-center justify-center mb-6">
-                <i className="fas fa-home text-healthcare-secondary text-xl"></i>
+              <div className="relative w-full h-40 mb-6 rounded-lg overflow-hidden">
+                <img 
+                  src="/images/elderly-monitoring.jpeg"
+                  alt="Elderly patient using remote patient monitoring device at home"
+                  className="w-full h-full object-cover"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent"></div>
               </div>
               <h3 className="text-2xl font-bold text-foreground mb-4">In-Home Patient Monitoring</h3>
               <p className="text-muted-foreground mb-6">
@@ -222,13 +232,13 @@ export default function Home() {
             
             {/* BHI Program Card */}
             <div className="bg-white rounded-2xl p-8 shadow-lg hover:shadow-xl transition-shadow">
-              <div className="relative w-full h-32 mb-6 rounded-lg overflow-hidden">
+              <div className="relative w-full h-40 mb-6 rounded-lg overflow-hidden">
                 <img 
-                  src="https://lynk.health/wp-content/uploads/2022/12/AdobeStock_483359255-scaled.jpeg"
-                  alt="Elderly patient in comfortable conversation with healthcare provider in bright, welcoming setting"
+                  src="/images/elderly-behavioral-health.jpeg"
+                  alt="Elderly patient receiving behavioral health support and mental health care"
                   className="w-full h-full object-cover"
                 />
-                <div className="absolute inset-0 bg-gradient-to-t from-white/30 to-transparent"></div>
+                <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent"></div>
               </div>
               <h3 className="text-2xl font-bold text-foreground mb-4">Behavioral Health Integration</h3>
               <p className="text-muted-foreground mb-6">
