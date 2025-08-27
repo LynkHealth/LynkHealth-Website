@@ -52,7 +52,7 @@ export default function About() {
           <div className="grid lg:grid-cols-2 gap-12 items-center">
             <div className="order-2 lg:order-1">
               <img
-                src="/images/AdobeStock_212104037_1751485954798.jpeg"
+                src="/images/AdobeStock_279901729_1751485954797.jpeg"
                 alt="Professional nurse providing comprehensive remote care coordination services"
                 className="rounded-2xl shadow-xl"
               />
