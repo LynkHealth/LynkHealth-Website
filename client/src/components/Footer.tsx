@@ -55,9 +55,9 @@ export function Footer() {
           <div>
             <h4 className="text-lg font-semibold mb-4">Contact</h4>
             <div className="space-y-2 text-slate-400">
-              <div>partnerships@lynkhealth.com</div>
-              <div>(555) 123-LYNK</div>
-              <div className="text-sm">123 Healthcare Drive<br />Medical City, MC 12345</div>
+              <div>info@lynkhealthcare.com</div>
+              <div>(601) 859-4342</div>
+              <div className="text-sm">200 Trace Colony Park Dr, Suite C<br />Ridgeland, MS 39157</div>
             </div>
           </div>
         </div>
@@ -66,7 +66,7 @@ export function Footer() {
         <div className="border-t border-slate-800 pt-8">
           <div className="flex flex-col md:flex-row justify-between items-center">
             <div className="text-slate-400 text-sm mb-4 md:mb-0">
-              © 2024 Lynk Health. All rights reserved.
+              © 2025 Lynk Health. All rights reserved.
             </div>
             <div className="text-slate-400 text-sm text-center md:text-right max-w-2xl">
               <strong>Disclaimer:</strong> Lynk Health is not a provider. We partner with licensed medical professionals to deliver CMS-covered care coordination services.

@@ -463,8 +463,8 @@ export default function Home() {
                     </div>
                     <div>
                       <h4 className="font-semibold text-foreground mb-1">Phone</h4>
-                      <p className="text-muted-foreground">(555) 123-LYNK</p>
-                      <p className="text-muted-foreground text-sm">Available Monday - Friday, 8 AM - 6 PM EST</p>
+                      <p className="text-muted-foreground">(601) 859-4342</p>
+                      <p className="text-muted-foreground text-sm">Available Monday - Friday, 8 AM - 6 PM CST</p>
                     </div>
                   </div>
 
@@ -474,7 +474,7 @@ export default function Home() {
                     </div>
                     <div>
                       <h4 className="font-semibold text-foreground mb-1">Email</h4>
-                      <p className="text-muted-foreground">partners@lynkhealth.com</p>
+                      <p className="text-muted-foreground">info@lynkhealthcare.com</p>
                       <p className="text-muted-foreground text-sm">We respond within 24 hours</p>
                     </div>
                   </div>
@@ -486,8 +486,8 @@ export default function Home() {
                     <div>
                       <h4 className="font-semibold text-foreground mb-1">Headquarters</h4>
                       <p className="text-muted-foreground">
-                        123 Healthcare Drive<br />
-                        Medical City, MC 12345
+                        200 Trace Colony Park Dr, Suite C<br />
+                        Ridgeland, MS 39157
                       </p>
                     </div>
                   </div>
