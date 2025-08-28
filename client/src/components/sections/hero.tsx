@@ -1,9 +1,11 @@
 import { Link } from "wouter";
 import { Button } from "@/components/ui/button";
-import elderlyHeroImage from "@assets/elderly-hero-image.jpeg";
-import elderlyMonitoring from "@assets/elderly-monitoring.jpeg";
+import LazyImage from "@/components/LazyImage";
+import { usePerformance } from "@/hooks/use-performance";
 
 export default function Hero() {
+  usePerformance();
+  
   return (
     <section className="pt-32 pb-24 bg-gradient-to-b from-slate-50 via-white to-slate-50/50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -56,10 +58,11 @@ export default function Hero() {
           {/* Hero Visual */}
           <div className="relative">
             <div className="relative rounded-3xl overflow-hidden shadow-2xl">
-              <img
+              <LazyImage
                 src="/images/AdobeStock_616281927_1751485954823.jpeg"
                 alt="Professional healthcare team providing comprehensive chronic care management services"
                 className="w-full h-[500px] object-cover"
+                loading="eager"
               />
               <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent"></div>
               
@@ -80,7 +83,7 @@ export default function Hero() {
             
             {/* Care Results Showcase */}
             <div className="mt-6 relative rounded-2xl overflow-hidden shadow-xl group">
-              <img
+              <LazyImage
                 src="/images/AdobeStock_419808796_1751485954770.jpeg"
                 alt="Healthcare professional providing remote patient monitoring and care coordination"
                 className="w-full h-48 object-cover group-hover:scale-105 transition-transform duration-300"
