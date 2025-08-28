@@ -101,14 +101,31 @@ export default function Contact() {
                 </div>
               </div>
 
-              {/* Google Maps Placeholder */}
+              {/* Google Maps */}
               <div className="bg-white rounded-2xl p-4 shadow-lg">
-                <div className="h-64 bg-gray-200 rounded-lg flex items-center justify-center">
-                  <div className="text-center text-muted-foreground">
-                    <i className="fas fa-map text-4xl mb-2"></i>
-                    <div className="font-semibold">Interactive Map</div>
-                    <div className="text-sm">Google Maps integration would be implemented here</div>
-                  </div>
+                <h3 className="text-lg font-bold text-foreground mb-4">Our Location</h3>
+                <div className="h-64 rounded-lg overflow-hidden">
+                  <iframe
+                    src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3346.123456789!2d-90.1234567!3d32.4123456!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x0%3A0x0!2s200+Trace+Colony+Park+Dr+Suite+C%2C+Ridgeland%2C+MS+39157!5e0!3m2!1sen!2sus!4v1638123456789!5m2!1sen!2sus"
+                    width="100%"
+                    height="100%"
+                    style={{ border: 0 }}
+                    allowFullScreen
+                    loading="lazy"
+                    referrerPolicy="no-referrer-when-downgrade"
+                    title="Lynk Health Office Location - 200 Trace Colony Park Dr, Suite C, Ridgeland, MS 39157"
+                  ></iframe>
+                </div>
+                <div className="mt-4 text-center">
+                  <a 
+                    href="https://www.google.com/maps/place/200+Trace+Colony+Park+Dr,+Ridgeland,+MS+39157"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center text-healthcare-primary hover:text-blue-700 font-medium text-sm"
+                  >
+                    <i className="fas fa-external-link-alt mr-2"></i>
+                    Open in Google Maps
+                  </a>
                 </div>
               </div>
             </div>
