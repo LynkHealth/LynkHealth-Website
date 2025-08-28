@@ -67,9 +67,12 @@ export default function CCM() {
                     Launch CCM Program
                   </Button>
                 </Link>
-                <Button size="lg" variant="outline" className="border-2 border-primary text-primary hover:bg-primary hover:text-primary-foreground font-semibold px-8 py-4 rounded-lg transition-all">
-                  Program Details
-                </Button>
+                <Link href="/calculator">
+                  <Button size="lg" variant="outline" className="border-2 border-primary text-primary hover:bg-primary hover:text-primary-foreground font-semibold px-8 py-4 rounded-lg transition-all">
+                    <DollarSign className="mr-2 h-5 w-5" />
+                    Calculate Revenue
+                  </Button>
+                </Link>
               </div>
               
               {/* Key Benefits */}
