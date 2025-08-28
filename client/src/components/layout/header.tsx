@@ -123,7 +123,7 @@ export default function Header() {
 
           {/* CTA Button */}
           <div className="hidden lg:flex items-center">
-            <Link href="/#contact">
+            <Link href="/contact">
               <Button className="bg-primary hover:bg-primary/90 text-primary-foreground font-semibold px-8 py-2.5 rounded-lg shadow-lg hover:shadow-xl transition-all">
                 Partner With Us
               </Button>
@@ -187,7 +187,7 @@ export default function Header() {
                   Calculator
               </Link>
               <div className="px-3 py-2">
-                <Link href="/#contact">
+                <Link href="/contact">
                   <Button className="w-full bg-healthcare-accent hover:bg-red-700 text-white"
                           onClick={() => setMobileMenuOpen(false)}>
                     Partner With Us
