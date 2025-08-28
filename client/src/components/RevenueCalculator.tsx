@@ -10,7 +10,6 @@ import { Calculator, DollarSign, TrendingUp, Users } from "lucide-react";
 const CCM_CODES = {
   '99490': { rate: 60.49, name: 'Initial 20 minutes (clinical staff)' },
   '99439': { rate: 45.93, name: 'Each additional 20 minutes (clinical staff)' },
-  '99491': { rate: 45.32, name: 'Subsequent months CCM' },
   '99487': { rate: 131.65, name: 'Complex CCM initial 60 minutes' },
   '99489': { rate: 70.52, name: 'Complex CCM each additional 30 minutes' },
 };

@@ -309,19 +309,6 @@ export default function CCM() {
                   <CardContent className="p-6">
                     <div className="flex justify-between items-start mb-3">
                       <div>
-                        <h4 className="font-semibold text-primary">99491 - CCM Subsequent Months</h4>
-                        <p className="text-sm text-muted-foreground">Ongoing monthly CCM</p>
-                      </div>
-                      <Badge className="bg-primary text-primary-foreground">$45</Badge>
-                    </div>
-                    <p className="text-sm">Minimum 20 minutes of clinical staff time for ongoing care management and care plan refinement.</p>
-                  </CardContent>
-                </Card>
-
-                <Card className="border-primary/30 bg-primary/5">
-                  <CardContent className="p-6">
-                    <div className="flex justify-between items-start mb-3">
-                      <div>
                         <h4 className="font-semibold text-primary">99439 - Additional 20 Minutes</h4>
                         <p className="text-sm text-muted-foreground">Extended CCM time</p>
                       </div>
@@ -335,29 +322,29 @@ export default function CCM() {
 
             {/* Additional CCM Codes */}
             <div>
-              <h3 className="text-xl font-semibold mb-6 text-center">Additional CCM Codes</h3>
+              <h3 className="text-xl font-semibold mb-6 text-center text-primary">✓ Complex CCM Codes - Lynk Health Team</h3>
               <div className="space-y-4">
-                <Card>
+                <Card className="border-primary/30 bg-primary/5">
                   <CardContent className="p-6">
                     <div className="flex justify-between items-start mb-3">
                       <div>
-                        <h4 className="font-semibold">99487 - Complex CCM Initial</h4>
+                        <h4 className="font-semibold text-primary">99487 - Complex CCM Initial</h4>
                         <p className="text-sm text-muted-foreground">First month - complex patients</p>
                       </div>
-                      <Badge className="bg-secondary text-secondary-foreground">$132</Badge>
+                      <Badge className="bg-primary text-primary-foreground">$132</Badge>
                     </div>
                     <p className="text-sm">Minimum 60 minutes for patients with complex medical conditions requiring extensive care coordination.</p>
                   </CardContent>
                 </Card>
 
-                <Card>
+                <Card className="border-primary/30 bg-primary/5">
                   <CardContent className="p-6">
                     <div className="flex justify-between items-start mb-3">
                       <div>
-                        <h4 className="font-semibold">99489 - Additional 30 Minutes</h4>
+                        <h4 className="font-semibold text-primary">99489 - Additional 30 Minutes</h4>
                         <p className="text-sm text-muted-foreground">Add-on for complex CCM</p>
                       </div>
-                      <Badge className="bg-secondary text-secondary-foreground">$71</Badge>
+                      <Badge className="bg-primary text-primary-foreground">$71</Badge>
                     </div>
                     <p className="text-sm">Each additional 30 minutes of clinical staff time for complex care management (use with 99487).</p>
                   </CardContent>
