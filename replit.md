@@ -107,6 +107,12 @@ Lynk Health is a comprehensive healthcare care coordination platform that provid
 
 ## Changelog
 
+- January 30, 2025: Updated service positioning and guarantees per user requirements
+  - Removed 90-day success guarantee language throughout website to avoid overpromising
+  - Changed EHR integration from mandatory to optional client choice across all pages
+  - Updated About page, Risk Mitigation section, and Services descriptions
+  - Replaced "seamless EHR integration" with "optional EHR integration available"
+  - Emphasized flexible workflow adaptation rather than required system integration
 - January 30, 2025: Added complete leadership team to About page with professional headshots
   - Will Moon (CEO) - Leading company mission and strategy
   - Tracy Rhinewalt (CNO, FNP-BC, DNP) - Clinical excellence and nursing team development

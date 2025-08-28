@@ -8,7 +8,7 @@ export default function ServicesSection() {
     {
       icon: <Stethoscope className="h-8 w-8" />,
       title: "Chronic Care Management (CCM)",
-      description: "Medicare-approved CCM program for patients with 2+ chronic conditions. Our licensed nurses deliver 24/7 care coordination, medication management, and seamless EHR integration.",
+      description: "Medicare-approved CCM program for patients with 2+ chronic conditions. Our licensed nurses deliver 24/7 care coordination, medication management, with optional EHR integration available.",
       features: [
         "24/7 care team availability",
         "Monthly care plan updates", 

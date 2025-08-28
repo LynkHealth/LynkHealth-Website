@@ -24,10 +24,10 @@ export default function About() {
             <div>
               <h2 className="text-3xl font-bold text-foreground mb-6">Leading Medicare Care Coordination Nationwide</h2>
               <p className="text-lg text-muted-foreground mb-6 leading-relaxed">
-                At Lynk Health, we're the nation's premier provider of Medicare care coordination services, serving healthcare practices across the United States. We provide turnkey chronic care management and remote patient monitoring solutions that create immediate revenue streams while improving patient outcomes. Our dedicated nursing team—never call centers—integrates seamlessly with your practice through direct EHR access.
+                At Lynk Health, we're the nation's premier provider of Medicare care coordination services, serving healthcare practices across the United States. We provide turnkey chronic care management and remote patient monitoring solutions that create immediate revenue streams while improving patient outcomes. Our dedicated nursing team—never call centers—works with your practice using your preferred workflow, with optional EHR integration available.
               </p>
               <p className="text-lg text-muted-foreground mb-8 leading-relaxed">
-                We operate directly in your EHR with no additional software required. Zero upfront costs, fast 4-6 week implementation, and proven 90%+ patient retention rates across healthcare providers nationwide.
+                We can integrate directly with your EHR system or work independently - the choice is yours. Zero upfront costs, fast 4-6 week implementation, and proven 90%+ patient retention rates across healthcare providers nationwide.
               </p>
               <Link href="/#contact">
                 <Button className="bg-healthcare-primary hover:bg-blue-700">

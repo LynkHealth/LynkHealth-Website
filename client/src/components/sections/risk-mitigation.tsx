@@ -2,7 +2,7 @@ const riskMitigationPoints = [
   {
     concern: "Will this disrupt our current workflow?",
     solution: "Zero disruption implementation",
-    details: "We integrate directly into your existing EHR system. No new software, no staff training, no workflow changes. Your team continues working exactly as before.",
+    details: "We adapt to your existing workflow, with optional EHR integration available. No required new software, minimal staff training, and flexible implementation. Your team continues working as they prefer.",
     icon: "fas fa-sync-alt",
     color: "text-blue-600",
     bgColor: "bg-blue-50"
@@ -73,14 +73,14 @@ export default function RiskMitigation() {
           ))}
         </div>
 
-        {/* Implementation Guarantee */}
+        {/* Implementation Benefits */}
         <div className="mt-16 bg-gradient-to-r from-primary to-secondary rounded-3xl p-8 text-white text-center">
           <h3 className="text-2xl font-bold mb-4">
-            90-Day Success Guarantee
+            Risk-Free Implementation
           </h3>
           <p className="text-lg mb-6 opacity-90 max-w-2xl mx-auto">
-            If you're not generating positive ROI within 90 days, we'll work with you at no charge until you are. 
-            That's our commitment to your success.
+            Start generating revenue with no upfront costs and proven implementation support. 
+            Our experienced team ensures a smooth transition and optimal outcomes.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <div className="bg-white/20 rounded-xl px-6 py-3">
