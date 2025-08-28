@@ -129,36 +129,45 @@ export default function About() {
       <section className="py-20 bg-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16">
-            <h2 className="text-3xl font-bold text-foreground mb-6">Our Team</h2>
+            <h2 className="text-3xl font-bold text-foreground mb-6">Leadership & Team</h2>
             <p className="text-xl text-muted-foreground max-w-3xl mx-auto">
-              Our experienced healthcare professionals are dedicated to providing exceptional care coordination services.
+              Our experienced healthcare professionals and technology experts are dedicated to providing exceptional Medicare care coordination services nationwide.
             </p>
           </div>
           
           <div className="grid md:grid-cols-3 gap-8">
-            {/* Placeholder for team members - space for future headshots and bios */}
+            {/* Will Moon - CEO */}
+            <div className="text-center">
+              <div className="w-32 h-32 mx-auto mb-4 overflow-hidden rounded-full">
+                <img 
+                  src="/images/will-headshot.jpg"
+                  alt="Will Moon, CEO of Lynk Health"
+                  className="w-full h-full object-cover object-top"
+                />
+              </div>
+              <h3 className="text-xl font-semibold text-foreground mb-2">Will Moon</h3>
+              <p className="text-healthcare-primary font-medium mb-2">Chief Executive Officer</p>
+              <p className="text-muted-foreground text-sm">Leading Lynk Health's mission to transform Medicare care coordination through dedicated nursing teams and seamless technology integration.</p>
+            </div>
+            
+            {/* Clinical Leadership */}
             <div className="text-center">
               <div className="w-32 h-32 bg-slate-200 rounded-full mx-auto mb-4 flex items-center justify-center">
-                <i className="fas fa-user text-slate-400 text-4xl"></i>
+                <i className="fas fa-user-nurse text-slate-400 text-4xl"></i>
               </div>
               <h3 className="text-xl font-semibold text-foreground mb-2">Clinical Leadership</h3>
-              <p className="text-muted-foreground">Experienced registered nurses leading our care coordination teams</p>
+              <p className="text-healthcare-secondary font-medium mb-2">Nursing Team</p>
+              <p className="text-muted-foreground text-sm">Experienced registered nurses leading our care coordination teams with local community understanding</p>
             </div>
             
+            {/* Technology Team */}
             <div className="text-center">
               <div className="w-32 h-32 bg-slate-200 rounded-full mx-auto mb-4 flex items-center justify-center">
-                <i className="fas fa-user text-slate-400 text-4xl"></i>
+                <i className="fas fa-laptop-code text-slate-400 text-4xl"></i>
               </div>
               <h3 className="text-xl font-semibold text-foreground mb-2">Technology Team</h3>
-              <p className="text-muted-foreground">Healthcare technology experts ensuring seamless integration and data security</p>
-            </div>
-            
-            <div className="text-center">
-              <div className="w-32 h-32 bg-slate-200 rounded-full mx-auto mb-4 flex items-center justify-center">
-                <i className="fas fa-user text-slate-400 text-4xl"></i>
-              </div>
-              <h3 className="text-xl font-semibold text-foreground mb-2">Partnership Team</h3>
-              <p className="text-muted-foreground">Dedicated support specialists helping healthcare providers succeed</p>
+              <p className="text-healthcare-primary font-medium mb-2">EHR Integration Specialists</p>
+              <p className="text-muted-foreground text-sm">Healthcare technology experts ensuring seamless integration and enterprise-grade data security</p>
             </div>
           </div>
         </div>
