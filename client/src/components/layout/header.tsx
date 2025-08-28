@@ -118,16 +118,12 @@ export default function Header() {
                 Calculator
             </Link>
             
-            <Link href="/contact" className={`text-sm font-semibold tracking-wide transition-colors hover:text-primary ${
-                isActive("/contact") ? "text-primary" : "text-foreground"
-              }`}>
-                Contact
-            </Link>
+
           </div>
 
           {/* CTA Button */}
           <div className="hidden lg:flex items-center">
-            <Link href="/contact">
+            <Link href="/#contact">
               <Button className="bg-primary hover:bg-primary/90 text-primary-foreground font-semibold px-8 py-2.5 rounded-lg shadow-lg hover:shadow-xl transition-all">
                 Partner With Us
               </Button>
@@ -190,12 +186,8 @@ export default function Header() {
                    onClick={() => setMobileMenuOpen(false)}>
                   Calculator
               </Link>
-              <Link href="/contact" className="block px-3 py-2 text-base font-medium text-muted-foreground hover:text-healthcare-primary"
-                   onClick={() => setMobileMenuOpen(false)}>
-                  Contact
-              </Link>
               <div className="px-3 py-2">
-                <Link href="/contact">
+                <Link href="/#contact">
                   <Button className="w-full bg-healthcare-accent hover:bg-red-700 text-white"
                           onClick={() => setMobileMenuOpen(false)}>
                     Partner With Us

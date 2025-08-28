@@ -29,7 +29,7 @@ export default function About() {
               <p className="text-lg text-muted-foreground mb-8 leading-relaxed">
                 We operate directly in your EHR with no additional software required. Zero upfront costs, fast 4-6 week implementation, and proven 90%+ patient retention rates across healthcare providers nationwide.
               </p>
-              <Link href="/contact">
+              <Link href="/#contact">
                 <Button className="bg-healthcare-primary hover:bg-blue-700">
                   Partner With Us
                 </Button>

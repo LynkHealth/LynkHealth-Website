@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import Hero from "@/components/sections/hero";
 import Stats from "@/components/sections/stats";
 import Testimonials from "@/components/sections/testimonials";
+import ContactForm from "@/components/forms/contact-form";
 import elderlyBehavioralHealth from "@assets/elderly-behavioral-health.jpeg";
 
 export default function Home() {
@@ -344,6 +345,88 @@ export default function Home() {
                 <div className="text-slate-400 font-bold text-sm">PARTNER LOGO</div>
               </div>
             ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Contact Section */}
+      <section id="contact" className="py-20 bg-white">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-16">
+            <h2 className="text-3xl lg:text-4xl font-bold text-foreground mb-6">Partner With Us</h2>
+            <p className="text-xl text-muted-foreground max-w-3xl mx-auto">
+              Ready to enhance your patient care capabilities? Get in touch with our team to learn how we can help you implement comprehensive care coordination services.
+            </p>
+          </div>
+          
+          <div className="grid lg:grid-cols-2 gap-12">
+            {/* Contact Form */}
+            <ContactForm />
+
+            {/* Contact Information */}
+            <div className="space-y-8">
+              <div className="bg-slate-50 rounded-2xl p-8">
+                <h3 className="text-2xl font-bold text-foreground mb-6">Contact Information</h3>
+                <div className="space-y-6">
+                  <div className="flex items-start">
+                    <div className="w-12 h-12 bg-primary/10 rounded-lg flex items-center justify-center mr-4 flex-shrink-0">
+                      <i className="fas fa-phone text-primary"></i>
+                    </div>
+                    <div>
+                      <h4 className="font-semibold text-foreground mb-1">Phone</h4>
+                      <p className="text-muted-foreground">(555) 123-LYNK</p>
+                      <p className="text-muted-foreground text-sm">Available Monday - Friday, 8 AM - 6 PM EST</p>
+                    </div>
+                  </div>
+
+                  <div className="flex items-start">
+                    <div className="w-12 h-12 bg-secondary/10 rounded-lg flex items-center justify-center mr-4 flex-shrink-0">
+                      <i className="fas fa-envelope text-secondary"></i>
+                    </div>
+                    <div>
+                      <h4 className="font-semibold text-foreground mb-1">Email</h4>
+                      <p className="text-muted-foreground">partners@lynkhealth.com</p>
+                      <p className="text-muted-foreground text-sm">We respond within 24 hours</p>
+                    </div>
+                  </div>
+
+                  <div className="flex items-start">
+                    <div className="w-12 h-12 bg-accent/10 rounded-lg flex items-center justify-center mr-4 flex-shrink-0">
+                      <i className="fas fa-map-marker-alt text-accent"></i>
+                    </div>
+                    <div>
+                      <h4 className="font-semibold text-foreground mb-1">Headquarters</h4>
+                      <p className="text-muted-foreground">
+                        123 Healthcare Drive<br />
+                        Medical City, MC 12345
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div className="bg-gradient-to-br from-primary via-primary/95 to-secondary rounded-2xl p-8 text-white">
+                <h4 className="text-xl font-bold mb-4">Why Partner With Lynk Health?</h4>
+                <ul className="space-y-3 text-white/90">
+                  <li className="flex items-center">
+                    <i className="fas fa-check-circle mr-3 text-white"></i>
+                    Zero upfront costs
+                  </li>
+                  <li className="flex items-center">
+                    <i className="fas fa-check-circle mr-3 text-white"></i>
+                    4-6 week implementation
+                  </li>
+                  <li className="flex items-center">
+                    <i className="fas fa-check-circle mr-3 text-white"></i>
+                    CMS compliant programs
+                  </li>
+                  <li className="flex items-center">
+                    <i className="fas fa-check-circle mr-3 text-white"></i>
+                    Dedicated nursing staff
+                  </li>
+                </ul>
+              </div>
+            </div>
           </div>
         </div>
       </section>
