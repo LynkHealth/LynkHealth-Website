@@ -320,20 +320,65 @@ export default function Monitoring() {
           </div>
 
           <div className="grid lg:grid-cols-2 gap-8 mb-12">
-            {/* Setup and Device Codes */}
+            {/* Primary RPM Codes - Lynk Health Team */}
             <div>
-              <h3 className="text-xl font-semibold mb-6 text-center">Setup & Device Supply Codes</h3>
+              <h3 className="text-xl font-semibold mb-6 text-center text-primary">✓ Primary RPM Codes - Lynk Health Team</h3>
               <div className="space-y-4">
-                <Card>
+                <Card className="border-primary/30 bg-primary/5">
                   <CardContent className="p-6">
                     <div className="flex justify-between items-start mb-3">
                       <div>
-                        <h4 className="font-semibold">99453 - Initial Setup & Education</h4>
+                        <h4 className="font-semibold text-primary">99453 - Initial Setup & Education</h4>
                         <p className="text-sm text-muted-foreground">Device setup and patient training</p>
                       </div>
-                      <Badge className="bg-primary text-primary-foreground">$19</Badge>
+                      <Badge className="bg-primary text-primary-foreground">$20</Badge>
                     </div>
                     <p className="text-sm">One-time billing per device per patient. Includes device setup, patient education, and initial configuration.</p>
+                  </CardContent>
+                </Card>
+
+                <Card className="border-primary/30 bg-primary/5">
+                  <CardContent className="p-6">
+                    <div className="flex justify-between items-start mb-3">
+                      <div>
+                        <h4 className="font-semibold text-primary">99457 - RPM Treatment Management</h4>
+                        <p className="text-sm text-muted-foreground">Initial 20 minutes clinical review</p>
+                      </div>
+                      <Badge className="bg-primary text-primary-foreground">$48</Badge>
+                    </div>
+                    <p className="text-sm">First 20 minutes of clinical staff time for data analysis, care planning, and patient management.</p>
+                  </CardContent>
+                </Card>
+
+                <Card className="border-primary/30 bg-primary/5">
+                  <CardContent className="p-6">
+                    <div className="flex justify-between items-start mb-3">
+                      <div>
+                        <h4 className="font-semibold text-primary">99458 - Additional 20 Minutes</h4>
+                        <p className="text-sm text-muted-foreground">Extended management time</p>
+                      </div>
+                      <Badge className="bg-primary text-primary-foreground">$38</Badge>
+                    </div>
+                    <p className="text-sm">Each additional 20 minutes of clinical staff time for extended RPM care management services.</p>
+                  </CardContent>
+                </Card>
+              </div>
+            </div>
+
+            {/* Additional RPM Codes */}
+            <div>
+              <h3 className="text-xl font-semibold mb-6 text-center">Additional RPM Services</h3>
+              <div className="space-y-4">
+                <Card className="border-primary/30 bg-primary/5">
+                  <CardContent className="p-6">
+                    <div className="flex justify-between items-start mb-3">
+                      <div>
+                        <h4 className="font-semibold text-primary">99489 - RPM Additional Management</h4>
+                        <p className="text-sm text-muted-foreground">Extended RPM clinical time</p>
+                      </div>
+                      <Badge className="bg-primary text-primary-foreground">$71</Badge>
+                    </div>
+                    <p className="text-sm">Each additional 30 minutes of clinical staff time for complex RPM patients requiring extended care management.</p>
                   </CardContent>
                 </Card>
 
@@ -344,41 +389,9 @@ export default function Monitoring() {
                         <h4 className="font-semibold">99454 - Device Supply & Monitoring</h4>
                         <p className="text-sm text-muted-foreground">30-day device supply</p>
                       </div>
-                      <Badge className="bg-amber-100 text-amber-800">$64</Badge>
+                      <Badge className="bg-secondary text-secondary-foreground">$43</Badge>
                     </div>
                     <p className="text-sm">Monthly billing for device supply and data collection. Requires 16+ days of data transmission per month.</p>
-                  </CardContent>
-                </Card>
-
-                <Card>
-                  <CardContent className="p-6">
-                    <div className="flex justify-between items-start mb-3">
-                      <div>
-                        <h4 className="font-semibold">99458 - RPM Care Management</h4>
-                        <p className="text-sm text-muted-foreground">Clinical interpretation & management</p>
-                      </div>
-                      <Badge className="bg-secondary text-secondary-foreground">$51</Badge>
-                    </div>
-                    <p className="text-sm">Minimum 20 minutes of clinical staff time for data interpretation, care planning, and patient communication.</p>
-                  </CardContent>
-                </Card>
-              </div>
-            </div>
-
-            {/* Additional RPM Codes */}
-            <div>
-              <h3 className="text-xl font-semibold mb-6 text-center">Additional RPM Services</h3>
-              <div className="space-y-4">
-                <Card>
-                  <CardContent className="p-6">
-                    <div className="flex justify-between items-start mb-3">
-                      <div>
-                        <h4 className="font-semibold">99457 - Additional 20 Minutes</h4>
-                        <p className="text-sm text-muted-foreground">Extended care management</p>
-                      </div>
-                      <Badge className="bg-secondary text-secondary-foreground">$41</Badge>
-                    </div>
-                    <p className="text-sm">Each additional 20 minutes of clinical staff time for complex patients requiring extended monitoring.</p>
                   </CardContent>
                 </Card>
 
@@ -389,22 +402,9 @@ export default function Monitoring() {
                         <h4 className="font-semibold">99091 - Data Collection & Review</h4>
                         <p className="text-sm text-muted-foreground">Physician review</p>
                       </div>
-                      <Badge className="bg-primary text-primary-foreground">$62</Badge>
+                      <Badge className="bg-slate-100 text-slate-600">$62</Badge>
                     </div>
                     <p className="text-sm">Physician review of patient-generated health data requiring medical decision making (minimum 30 minutes).</p>
-                  </CardContent>
-                </Card>
-
-                <Card>
-                  <CardContent className="p-6">
-                    <div className="flex justify-between items-start mb-3">
-                      <div>
-                        <h4 className="font-semibold">99474 - Remote Therapeutic Monitoring</h4>
-                        <p className="text-sm text-muted-foreground">RTM device supply</p>
-                      </div>
-                      <Badge className="bg-amber-100 text-amber-800">$63</Badge>
-                    </div>
-                    <p className="text-sm">Remote therapeutic monitoring device supply for respiratory or musculoskeletal conditions (30-day period).</p>
                   </CardContent>
                 </Card>
               </div>

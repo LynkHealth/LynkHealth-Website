@@ -74,6 +74,15 @@ User interaction on the website leads to client-side form validation, API commun
   - Golden amber now strategically reserved for CTAs, revenue indicators, and key achievements
   - Achieved better color balance: Blue 45%, Teal 35%, Amber 20% (strategic placement)
 
+- January 30, 2025: Updated CPT codes to highlight Lynk Health team's primary services
+  - Primary CCM codes highlighted: 99490, 99491, 99439 with blue styling and checkmarks
+  - Primary RPM codes highlighted: 99453, 99457, 99458, 99489 with blue styling and checkmarks  
+  - Primary BHI code highlighted: 99484 with blue styling
+  - Added visual distinction: Primary codes (blue borders/backgrounds) vs Additional codes (standard styling)
+  - Updated revenue calculator with 99491 code and accurate Medicare rates
+  - Maintained collaborative care management codes as secondary reference section
+  - All CPT code sections now clearly identify Lynk Health team's core billing services
+
 ## External Dependencies
 - **Database**: `@neondatabase/serverless` (Neon Database), `drizzle-orm`.
 - **Frontend State & Validation**: `@tanstack/react-query`, `@hookform/resolvers`, `zod`.

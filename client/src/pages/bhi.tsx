@@ -369,13 +369,13 @@ export default function BHI() {
 
             {/* Collaborative Care Codes */}
             <div>
-              <h3 className="text-xl font-semibold mb-6 text-center">Collaborative Care Management</h3>
+              <h3 className="text-xl font-semibold mb-6 text-center text-primary">✓ Primary BHI Code - Lynk Health Team</h3>
               <div className="space-y-4">
-                <Card>
+                <Card className="border-primary/30 bg-primary/5">
                   <CardContent className="p-6">
                     <div className="flex justify-between items-start mb-3">
                       <div>
-                        <h4 className="font-semibold">99484 - CoCM Initial</h4>
+                        <h4 className="font-semibold text-primary">99484 - CoCM Initial</h4>
                         <p className="text-sm text-muted-foreground">First month collaborative care</p>
                       </div>
                       <Badge className="bg-primary text-primary-foreground">$165</Badge>
