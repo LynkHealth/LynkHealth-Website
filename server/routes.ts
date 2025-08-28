@@ -3,13 +3,78 @@ import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { insertContactInquirySchema } from "@shared/schema";
 import { z } from "zod";
+// @ts-ignore - No type definitions available for this package
+import mailchimp from "@mailchimp/mailchimp_marketing";
+
+// Initialize Mailchimp
+mailchimp.setConfig({
+  apiKey: process.env.MAILCHIMP_API_KEY,
+  server: process.env.MAILCHIMP_SERVER_PREFIX,
+});
+
+async function addToMailchimp(email: string, firstName: string, lastName: string, organizationType: string) {
+  try {
+    const response = await mailchimp.lists.addListMember(process.env.MAILCHIMP_AUDIENCE_ID!, {
+      email_address: email,
+      status: "subscribed",
+      merge_fields: {
+        FNAME: firstName,
+        LNAME: lastName,
+        ORGTYPE: organizationType
+      },
+      tags: ["Website Contact Form"]
+    });
+    console.log("Successfully added to Mailchimp:", email);
+    return response;
+  } catch (error: any) {
+    // If user already exists, try to update their info
+    if (error.response?.body?.title === "Member Exists") {
+      try {
+        const updateResponse = await mailchimp.lists.updateListMember(
+          process.env.MAILCHIMP_AUDIENCE_ID!,
+          email,
+          {
+            merge_fields: {
+              FNAME: firstName,
+              LNAME: lastName,
+              ORGTYPE: organizationType
+            },
+            tags: ["Website Contact Form"]
+          }
+        );
+        console.log("Updated existing Mailchimp subscriber:", email);
+        return updateResponse;
+      } catch (updateError) {
+        console.error("Error updating Mailchimp subscriber:", updateError);
+        // Don't throw here - we still want the contact form to work
+      }
+    } else {
+      console.error("Error adding to Mailchimp:", error.response?.body || error.message);
+    }
+  }
+}
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Contact form submission endpoint
   app.post("/api/contact", async (req, res) => {
     try {
       const validatedData = insertContactInquirySchema.parse(req.body);
+      
+      // Store in database
       const inquiry = await storage.createContactInquiry(validatedData);
+      
+      // Add to Mailchimp (don't let this fail the whole request)
+      try {
+        await addToMailchimp(
+          validatedData.email,
+          validatedData.firstName,
+          validatedData.lastName,
+          validatedData.organizationType
+        );
+      } catch (mailchimpError) {
+        console.error("Mailchimp integration failed, but contact form succeeded:", mailchimpError);
+      }
+      
       res.json({ 
         success: true, 
         message: "Thank you for your inquiry! We will contact you within 24 hours.",
