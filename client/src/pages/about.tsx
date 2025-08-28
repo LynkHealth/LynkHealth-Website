@@ -63,8 +63,8 @@ export default function About() {
           </div>
         </div>
         <div className="absolute bottom-1/4 right-8 animate-bounce delay-500">
-          <div className="w-14 h-14 bg-accent/20 rounded-full flex items-center justify-center">
-            <i className="fas fa-chart-line text-accent"></i>
+          <div className="w-14 h-14 bg-secondary/20 rounded-full flex items-center justify-center">
+            <i className="fas fa-chart-line text-secondary"></i>
           </div>
         </div>
       </section>
@@ -169,8 +169,8 @@ export default function About() {
               <div className="text-sm text-white/70">High engagement and satisfaction</div>
             </div>
             <div className="text-center bg-white/10 backdrop-blur-sm rounded-2xl p-8 border border-white/20">
-              <div className="text-4xl font-bold text-white mb-3">63%</div>
-              <div className="text-white/90 font-semibold text-lg mb-2">ED Utilization Reduction</div>
+              <div className="text-4xl font-bold text-white mb-3">35%</div>
+              <div className="text-white/90 font-semibold text-lg mb-2">ER Visit Reduction</div>
               <div className="text-sm text-white/70">Fewer emergency room visits</div>
             </div>
           </div>

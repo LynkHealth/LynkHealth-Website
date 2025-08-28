@@ -19,13 +19,13 @@ export default function Footer() {
               Professional nurse-led care coordination services for Medicare patients with chronic conditions.
             </p>
             <div className="flex space-x-4">
-              <a href="#" className="w-10 h-10 bg-slate-800 rounded-full flex items-center justify-center hover:bg-healthcare-primary transition-colors">
+              <a href="#" className="w-10 h-10 bg-slate-800 rounded-full flex items-center justify-center hover:bg-primary transition-colors">
                 <i className="fab fa-linkedin"></i>
               </a>
-              <a href="#" className="w-10 h-10 bg-slate-800 rounded-full flex items-center justify-center hover:bg-healthcare-primary transition-colors">
+              <a href="#" className="w-10 h-10 bg-slate-800 rounded-full flex items-center justify-center hover:bg-secondary transition-colors">
                 <i className="fab fa-twitter"></i>
               </a>
-              <a href="#" className="w-10 h-10 bg-slate-800 rounded-full flex items-center justify-center hover:bg-healthcare-primary transition-colors">
+              <a href="#" className="w-10 h-10 bg-slate-800 rounded-full flex items-center justify-center hover:bg-primary transition-colors">
                 <i className="fab fa-facebook"></i>
               </a>
             </div>

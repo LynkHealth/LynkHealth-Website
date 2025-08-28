@@ -41,8 +41,8 @@ export default function Home() {
             </div>
             
             <div className="text-center group">
-              <div className="w-16 h-16 bg-healthcare-accent/10 rounded-full flex items-center justify-center mx-auto mb-4 group-hover:bg-healthcare-accent/20 transition-colors">
-                <i className="fas fa-heart text-healthcare-accent text-2xl"></i>
+              <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4 group-hover:bg-primary/20 transition-colors">
+                <i className="fas fa-heart text-primary text-2xl"></i>
               </div>
               <h3 className="text-xl font-semibold text-foreground mb-2">FQHCs</h3>
               <p className="text-muted-foreground">Serve underserved populations with culturally competent care coordination services.</p>

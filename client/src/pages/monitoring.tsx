@@ -71,7 +71,7 @@ export default function Monitoring() {
           <div className="grid lg:grid-cols-2 gap-16 items-center">
             <div className="max-w-xl">
               <div className="mb-6">
-                <Badge className="mb-4 bg-primary/10 text-primary font-semibold px-4 py-2 rounded-full">
+                <Badge className="mb-4 bg-secondary/10 text-secondary font-semibold px-4 py-2 rounded-full">
                   Remote Patient Monitoring
                 </Badge>
               </div>
