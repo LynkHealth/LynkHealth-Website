@@ -87,15 +87,15 @@ export default function Footer() {
             <div className="space-y-2 text-slate-400">
               <div className="flex items-center">
                 <i className="fas fa-phone mr-3 text-healthcare-primary"></i>
-                <span>(555) 123-LYNK</span>
+                <span>(601) 859-4342</span>
               </div>
               <div className="flex items-center">
                 <i className="fas fa-envelope mr-3 text-healthcare-primary"></i>
-                <span>partners@lynkhealth.com</span>
+                <span>info@lynkhealthcare.com</span>
               </div>
               <div className="flex items-start">
                 <i className="fas fa-map-marker-alt mr-3 text-healthcare-primary mt-1"></i>
-                <span>123 Healthcare Drive<br />Medical City, MC 12345</span>
+                <span>200 Trace Colony Park Dr, Suite C<br />Ridgeland, MS 39157</span>
               </div>
             </div>
           </div>
