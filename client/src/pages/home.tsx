@@ -226,7 +226,7 @@ export default function Home() {
             <div className="bg-white rounded-2xl p-6 shadow-lg hover:shadow-xl transition-shadow">
               <div className="relative w-full h-32 mb-4 rounded-lg overflow-hidden">
                 <img 
-                  src="/images/elderly-monitoring.jpeg"
+                  src="/images/AdobeStock_400007631_1751485954795.jpeg"
                   alt="Remote therapeutic monitoring for rehabilitation and therapy"
                   className="w-full h-full object-cover"
                 />
@@ -259,7 +259,7 @@ export default function Home() {
             <div className="bg-white rounded-2xl p-6 shadow-lg hover:shadow-xl transition-shadow">
               <div className="relative w-full h-32 mb-4 rounded-lg overflow-hidden">
                 <img 
-                  src="/images/elderly-patient-care.jpeg"
+                  src="/images/AdobeStock_279901729_1751485954797.jpeg"
                   alt="Advanced primary care management comprehensive coordination"
                   className="w-full h-full object-cover"
                 />
