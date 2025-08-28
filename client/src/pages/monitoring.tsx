@@ -307,6 +307,150 @@ export default function Monitoring() {
         </div>
       </section>
 
+      {/* CPT Codes Section */}
+      <section className="py-16 bg-slate-50">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-12">
+            <h2 className="text-3xl font-bold text-foreground mb-4">
+              RPM CPT Codes & Reimbursement Rates
+            </h2>
+            <p className="text-lg text-muted-foreground">
+              2025 Medicare reimbursement rates for Remote Patient Monitoring services
+            </p>
+          </div>
+
+          <div className="grid lg:grid-cols-2 gap-8 mb-12">
+            {/* Setup and Device Codes */}
+            <div>
+              <h3 className="text-xl font-semibold mb-6 text-center">Setup & Device Supply Codes</h3>
+              <div className="space-y-4">
+                <Card>
+                  <CardContent className="p-6">
+                    <div className="flex justify-between items-start mb-3">
+                      <div>
+                        <h4 className="font-semibold">99453 - Initial Setup & Education</h4>
+                        <p className="text-sm text-muted-foreground">Device setup and patient training</p>
+                      </div>
+                      <Badge className="bg-primary text-primary-foreground">$19</Badge>
+                    </div>
+                    <p className="text-sm">One-time billing per device per patient. Includes device setup, patient education, and initial configuration.</p>
+                  </CardContent>
+                </Card>
+
+                <Card>
+                  <CardContent className="p-6">
+                    <div className="flex justify-between items-start mb-3">
+                      <div>
+                        <h4 className="font-semibold">99454 - Device Supply & Monitoring</h4>
+                        <p className="text-sm text-muted-foreground">30-day device supply</p>
+                      </div>
+                      <Badge className="bg-amber-100 text-amber-800">$64</Badge>
+                    </div>
+                    <p className="text-sm">Monthly billing for device supply and data collection. Requires 16+ days of data transmission per month.</p>
+                  </CardContent>
+                </Card>
+
+                <Card>
+                  <CardContent className="p-6">
+                    <div className="flex justify-between items-start mb-3">
+                      <div>
+                        <h4 className="font-semibold">99458 - RPM Care Management</h4>
+                        <p className="text-sm text-muted-foreground">Clinical interpretation & management</p>
+                      </div>
+                      <Badge className="bg-secondary text-secondary-foreground">$51</Badge>
+                    </div>
+                    <p className="text-sm">Minimum 20 minutes of clinical staff time for data interpretation, care planning, and patient communication.</p>
+                  </CardContent>
+                </Card>
+              </div>
+            </div>
+
+            {/* Additional RPM Codes */}
+            <div>
+              <h3 className="text-xl font-semibold mb-6 text-center">Additional RPM Services</h3>
+              <div className="space-y-4">
+                <Card>
+                  <CardContent className="p-6">
+                    <div className="flex justify-between items-start mb-3">
+                      <div>
+                        <h4 className="font-semibold">99457 - Additional 20 Minutes</h4>
+                        <p className="text-sm text-muted-foreground">Extended care management</p>
+                      </div>
+                      <Badge className="bg-secondary text-secondary-foreground">$41</Badge>
+                    </div>
+                    <p className="text-sm">Each additional 20 minutes of clinical staff time for complex patients requiring extended monitoring.</p>
+                  </CardContent>
+                </Card>
+
+                <Card>
+                  <CardContent className="p-6">
+                    <div className="flex justify-between items-start mb-3">
+                      <div>
+                        <h4 className="font-semibold">99091 - Data Collection & Review</h4>
+                        <p className="text-sm text-muted-foreground">Physician review</p>
+                      </div>
+                      <Badge className="bg-primary text-primary-foreground">$62</Badge>
+                    </div>
+                    <p className="text-sm">Physician review of patient-generated health data requiring medical decision making (minimum 30 minutes).</p>
+                  </CardContent>
+                </Card>
+
+                <Card>
+                  <CardContent className="p-6">
+                    <div className="flex justify-between items-start mb-3">
+                      <div>
+                        <h4 className="font-semibold">99474 - Remote Therapeutic Monitoring</h4>
+                        <p className="text-sm text-muted-foreground">RTM device supply</p>
+                      </div>
+                      <Badge className="bg-amber-100 text-amber-800">$63</Badge>
+                    </div>
+                    <p className="text-sm">Remote therapeutic monitoring device supply for respiratory or musculoskeletal conditions (30-day period).</p>
+                  </CardContent>
+                </Card>
+              </div>
+            </div>
+          </div>
+
+          {/* Revenue Example */}
+          <Card className="bg-gradient-to-r from-primary/5 to-secondary/5 border-primary/20">
+            <CardContent className="p-8">
+              <div className="text-center mb-6">
+                <h3 className="text-2xl font-bold text-foreground mb-2">
+                  RPM Revenue Example (300 patients)
+                </h3>
+                <p className="text-muted-foreground">
+                  Typical monthly revenue potential for active RPM patients
+                </p>
+              </div>
+              
+              <div className="grid md:grid-cols-3 gap-6 text-center">
+                <div className="bg-white rounded-lg p-6">
+                  <div className="text-sm text-muted-foreground mb-1">Device Supply (300 patients)</div>
+                  <div className="text-3xl font-bold text-primary mb-2">$19,200</div>
+                  <div className="text-xs text-muted-foreground">$64 × 300 patients/month</div>
+                </div>
+                <div className="bg-white rounded-lg p-6">
+                  <div className="text-sm text-muted-foreground mb-1">Care Management (300 patients)</div>
+                  <div className="text-3xl font-bold text-secondary mb-2">$15,300</div>
+                  <div className="text-xs text-muted-foreground">$51 × 300 patients/month</div>
+                </div>
+                <div className="bg-white rounded-lg p-6">
+                  <div className="text-sm text-muted-foreground mb-1">Setup (60 new/month)</div>
+                  <div className="text-3xl font-bold text-amber-600 mb-2">$1,140</div>
+                  <div className="text-xs text-muted-foreground">$19 × 60 new patients/month</div>
+                </div>
+              </div>
+              
+              <div className="text-center mt-6 p-4 bg-primary/10 rounded-lg">
+                <div className="text-lg font-semibold text-foreground">Total Monthly RPM Revenue</div>
+                <div className="text-4xl font-bold text-primary">$35,640</div>
+                <div className="text-sm text-muted-foreground mt-2">Annual Revenue: $427,680</div>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      </section>
+
       {/* CTA Section */}
       <section className="py-24 bg-gradient-to-br from-primary/5 to-secondary/5">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">

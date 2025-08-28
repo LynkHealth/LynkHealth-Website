@@ -272,6 +272,150 @@ export default function CCM() {
         </div>
       </section>
 
+      {/* CPT Codes Section */}
+      <section className="py-16 bg-slate-50">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-12">
+            <h2 className="text-3xl font-bold text-foreground mb-4">
+              CCM CPT Codes & Reimbursement Rates
+            </h2>
+            <p className="text-lg text-muted-foreground">
+              2025 Medicare reimbursement rates for Chronic Care Management services
+            </p>
+          </div>
+
+          <div className="grid lg:grid-cols-2 gap-8 mb-12">
+            {/* Primary CCM Codes */}
+            <div>
+              <h3 className="text-xl font-semibold mb-6 text-center">Primary CCM Codes</h3>
+              <div className="space-y-4">
+                <Card>
+                  <CardContent className="p-6">
+                    <div className="flex justify-between items-start mb-3">
+                      <div>
+                        <h4 className="font-semibold">99490 - CCM Initial Month</h4>
+                        <p className="text-sm text-muted-foreground">First month of CCM services</p>
+                      </div>
+                      <Badge className="bg-primary text-primary-foreground">$42</Badge>
+                    </div>
+                    <p className="text-sm">Minimum 20 minutes of clinical staff time for care management services. Includes comprehensive care plan development.</p>
+                  </CardContent>
+                </Card>
+
+                <Card>
+                  <CardContent className="p-6">
+                    <div className="flex justify-between items-start mb-3">
+                      <div>
+                        <h4 className="font-semibold">99491 - CCM Subsequent Months</h4>
+                        <p className="text-sm text-muted-foreground">Ongoing monthly CCM</p>
+                      </div>
+                      <Badge className="bg-amber-100 text-amber-800">$35</Badge>
+                    </div>
+                    <p className="text-sm">Minimum 20 minutes of clinical staff time for ongoing care management and care plan refinement.</p>
+                  </CardContent>
+                </Card>
+
+                <Card>
+                  <CardContent className="p-6">
+                    <div className="flex justify-between items-start mb-3">
+                      <div>
+                        <h4 className="font-semibold">99487 - Complex CCM Initial</h4>
+                        <p className="text-sm text-muted-foreground">First month - complex patients</p>
+                      </div>
+                      <Badge className="bg-secondary text-secondary-foreground">$94</Badge>
+                    </div>
+                    <p className="text-sm">Minimum 60 minutes for patients with complex medical conditions requiring extensive care coordination.</p>
+                  </CardContent>
+                </Card>
+              </div>
+            </div>
+
+            {/* Additional CCM Codes */}
+            <div>
+              <h3 className="text-xl font-semibold mb-6 text-center">Additional CCM Codes</h3>
+              <div className="space-y-4">
+                <Card>
+                  <CardContent className="p-6">
+                    <div className="flex justify-between items-start mb-3">
+                      <div>
+                        <h4 className="font-semibold">99489 - Additional 30 Minutes</h4>
+                        <p className="text-sm text-muted-foreground">Add-on for complex CCM</p>
+                      </div>
+                      <Badge className="bg-secondary text-secondary-foreground">$47</Badge>
+                    </div>
+                    <p className="text-sm">Each additional 30 minutes of clinical staff time for complex care management (use with 99487).</p>
+                  </CardContent>
+                </Card>
+
+                <Card>
+                  <CardContent className="p-6">
+                    <div className="flex justify-between items-start mb-3">
+                      <div>
+                        <h4 className="font-semibold">99495 - Transitional Care</h4>
+                        <p className="text-sm text-muted-foreground">Post-discharge management</p>
+                      </div>
+                      <Badge className="bg-primary text-primary-foreground">$165</Badge>
+                    </div>
+                    <p className="text-sm">Post-hospital discharge transitional care management services within 14 days of discharge.</p>
+                  </CardContent>
+                </Card>
+
+                <Card>
+                  <CardContent className="p-6">
+                    <div className="flex justify-between items-start mb-3">
+                      <div>
+                        <h4 className="font-semibold">99496 - Transitional Care Complex</h4>
+                        <p className="text-sm text-muted-foreground">High complexity post-discharge</p>
+                      </div>
+                      <Badge className="bg-primary text-primary-foreground">$230</Badge>
+                    </div>
+                    <p className="text-sm">High complexity transitional care management requiring medical decision making within 7 days.</p>
+                  </CardContent>
+                </Card>
+              </div>
+            </div>
+          </div>
+
+          {/* Revenue Example */}
+          <Card className="bg-gradient-to-r from-primary/5 to-secondary/5 border-primary/20">
+            <CardContent className="p-8">
+              <div className="text-center mb-6">
+                <h3 className="text-2xl font-bold text-foreground mb-2">
+                  CCM Revenue Example (500 patients)
+                </h3>
+                <p className="text-muted-foreground">
+                  Typical monthly revenue potential for active CCM patients
+                </p>
+              </div>
+              
+              <div className="grid md:grid-cols-3 gap-6 text-center">
+                <div className="bg-white rounded-lg p-6">
+                  <div className="text-sm text-muted-foreground mb-1">Standard CCM (400 patients)</div>
+                  <div className="text-3xl font-bold text-primary mb-2">$14,000</div>
+                  <div className="text-xs text-muted-foreground">$35 × 400 patients/month</div>
+                </div>
+                <div className="bg-white rounded-lg p-6">
+                  <div className="text-sm text-muted-foreground mb-1">Complex CCM (100 patients)</div>
+                  <div className="text-3xl font-bold text-secondary mb-2">$9,400</div>
+                  <div className="text-xs text-muted-foreground">$94 × 100 patients/month</div>
+                </div>
+                <div className="bg-white rounded-lg p-6">
+                  <div className="text-sm text-muted-foreground mb-1">Transitional Care (50/month)</div>
+                  <div className="text-3xl font-bold text-amber-600 mb-2">$8,250</div>
+                  <div className="text-xs text-muted-foreground">$165 × 50 patients/month</div>
+                </div>
+              </div>
+              
+              <div className="text-center mt-6 p-4 bg-primary/10 rounded-lg">
+                <div className="text-lg font-semibold text-foreground">Total Monthly CCM Revenue</div>
+                <div className="text-4xl font-bold text-primary">$31,650</div>
+                <div className="text-sm text-muted-foreground mt-2">Annual Revenue: $379,800</div>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      </section>
+
       {/* CTA Section */}
       <section className="py-24 bg-gradient-to-br from-primary/5 to-secondary/5">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">

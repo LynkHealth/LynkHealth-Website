@@ -309,6 +309,150 @@ export default function BHI() {
         </div>
       </section>
 
+      {/* CPT Codes Section */}
+      <section className="py-16 bg-slate-50">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-12">
+            <h2 className="text-3xl font-bold text-foreground mb-4">
+              BHI CPT Codes & Reimbursement Rates
+            </h2>
+            <p className="text-lg text-muted-foreground">
+              2025 Medicare reimbursement rates for Behavioral Health Integration services
+            </p>
+          </div>
+
+          <div className="grid lg:grid-cols-2 gap-8 mb-12">
+            {/* Primary BHI Codes */}
+            <div>
+              <h3 className="text-xl font-semibold mb-6 text-center">Primary BHI Codes</h3>
+              <div className="space-y-4">
+                <Card>
+                  <CardContent className="p-6">
+                    <div className="flex justify-between items-start mb-3">
+                      <div>
+                        <h4 className="font-semibold">99492 - BHI Initial Assessment</h4>
+                        <p className="text-sm text-muted-foreground">First month of BHI services</p>
+                      </div>
+                      <Badge className="bg-primary text-primary-foreground">$140</Badge>
+                    </div>
+                    <p className="text-sm">Initial behavioral health assessment and care planning by clinical staff under physician supervision.</p>
+                  </CardContent>
+                </Card>
+
+                <Card>
+                  <CardContent className="p-6">
+                    <div className="flex justify-between items-start mb-3">
+                      <div>
+                        <h4 className="font-semibold">99493 - BHI Subsequent Months</h4>
+                        <p className="text-sm text-muted-foreground">Ongoing monthly BHI</p>
+                      </div>
+                      <Badge className="bg-amber-100 text-amber-800">$95</Badge>
+                    </div>
+                    <p className="text-sm">Ongoing behavioral health care management including assessment, care planning, and coordination.</p>
+                  </CardContent>
+                </Card>
+
+                <Card>
+                  <CardContent className="p-6">
+                    <div className="flex justify-between items-start mb-3">
+                      <div>
+                        <h4 className="font-semibold">99494 - BHI Crisis Response</h4>
+                        <p className="text-sm text-muted-foreground">Emergency intervention</p>
+                      </div>
+                      <Badge className="bg-secondary text-secondary-foreground">$85</Badge>
+                    </div>
+                    <p className="text-sm">Crisis intervention and safety planning for behavioral health emergencies (per incident).</p>
+                  </CardContent>
+                </Card>
+              </div>
+            </div>
+
+            {/* Collaborative Care Codes */}
+            <div>
+              <h3 className="text-xl font-semibold mb-6 text-center">Collaborative Care Management</h3>
+              <div className="space-y-4">
+                <Card>
+                  <CardContent className="p-6">
+                    <div className="flex justify-between items-start mb-3">
+                      <div>
+                        <h4 className="font-semibold">99484 - CoCM Initial</h4>
+                        <p className="text-sm text-muted-foreground">First month collaborative care</p>
+                      </div>
+                      <Badge className="bg-primary text-primary-foreground">$165</Badge>
+                    </div>
+                    <p className="text-sm">Initial month of collaborative care management with psychiatric consultation and care coordination.</p>
+                  </CardContent>
+                </Card>
+
+                <Card>
+                  <CardContent className="p-6">
+                    <div className="flex justify-between items-start mb-3">
+                      <div>
+                        <h4 className="font-semibold">99492 - CoCM Subsequent</h4>
+                        <p className="text-sm text-muted-foreground">Ongoing collaborative care</p>
+                      </div>
+                      <Badge className="bg-amber-100 text-amber-800">$125</Badge>
+                    </div>
+                    <p className="text-sm">Subsequent months of collaborative care management with ongoing psychiatric consultation.</p>
+                  </CardContent>
+                </Card>
+
+                <Card>
+                  <CardContent className="p-6">
+                    <div className="flex justify-between items-start mb-3">
+                      <div>
+                        <h4 className="font-semibold">99495 - Psychiatric Consultation</h4>
+                        <p className="text-sm text-muted-foreground">Per consultation session</p>
+                      </div>
+                      <Badge className="bg-secondary text-secondary-foreground">$115</Badge>
+                    </div>
+                    <p className="text-sm">Psychiatric consultation for complex cases requiring specialist input and treatment adjustment.</p>
+                  </CardContent>
+                </Card>
+              </div>
+            </div>
+          </div>
+
+          {/* Revenue Example */}
+          <Card className="bg-gradient-to-r from-primary/5 to-secondary/5 border-primary/20">
+            <CardContent className="p-8">
+              <div className="text-center mb-6">
+                <h3 className="text-2xl font-bold text-foreground mb-2">
+                  BHI Revenue Example (200 patients)
+                </h3>
+                <p className="text-muted-foreground">
+                  Typical monthly revenue potential for active BHI patients
+                </p>
+              </div>
+              
+              <div className="grid md:grid-cols-3 gap-6 text-center">
+                <div className="bg-white rounded-lg p-6">
+                  <div className="text-sm text-muted-foreground mb-1">Standard BHI (150 patients)</div>
+                  <div className="text-3xl font-bold text-primary mb-2">$14,250</div>
+                  <div className="text-xs text-muted-foreground">$95 × 150 patients/month</div>
+                </div>
+                <div className="bg-white rounded-lg p-6">
+                  <div className="text-sm text-muted-foreground mb-1">Collaborative Care (50 patients)</div>
+                  <div className="text-3xl font-bold text-secondary mb-2">$6,250</div>
+                  <div className="text-xs text-muted-foreground">$125 × 50 patients/month</div>
+                </div>
+                <div className="bg-white rounded-lg p-6">
+                  <div className="text-sm text-muted-foreground mb-1">Crisis Interventions (20/month)</div>
+                  <div className="text-3xl font-bold text-amber-600 mb-2">$1,700</div>
+                  <div className="text-xs text-muted-foreground">$85 × 20 incidents/month</div>
+                </div>
+              </div>
+              
+              <div className="text-center mt-6 p-4 bg-primary/10 rounded-lg">
+                <div className="text-lg font-semibold text-foreground">Total Monthly BHI Revenue</div>
+                <div className="text-4xl font-bold text-primary">$22,200</div>
+                <div className="text-sm text-muted-foreground mt-2">Annual Revenue: $266,400</div>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      </section>
+
       {/* CTA Section */}
       <section className="py-24 bg-gradient-to-br from-primary/5 to-secondary/5">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
