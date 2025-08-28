@@ -4,20 +4,105 @@ export default function Contact() {
   return (
     <div className="pt-20">
       {/* Hero Section */}
-      <section className="py-20 bg-gradient-to-br from-slate-50 to-white">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center">
-            <h1 className="text-4xl lg:text-5xl font-bold text-foreground mb-6">Partner With Us</h1>
-            <p className="text-xl text-muted-foreground max-w-3xl mx-auto">
-              Ready to enhance your patient care capabilities? Get in touch with our team to learn how we can help you implement comprehensive care coordination services.
+      <section className="relative py-20 bg-gradient-to-br from-primary via-primary/95 to-secondary overflow-hidden">
+        {/* Background Elements */}
+        <div className="absolute inset-0 opacity-10">
+          <div className="absolute top-10 left-10 w-32 h-32 bg-white rounded-full"></div>
+          <div className="absolute top-40 right-20 w-20 h-20 bg-white rounded-full"></div>
+          <div className="absolute bottom-20 left-1/4 w-16 h-16 bg-white rounded-full"></div>
+          <div className="absolute bottom-40 right-1/3 w-28 h-28 bg-white rounded-full"></div>
+        </div>
+        
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative">
+          <div className="text-center text-white">
+            <div className="inline-flex items-center px-6 py-3 bg-white/20 backdrop-blur-sm rounded-full shadow-lg mb-8">
+              <div className="flex items-center space-x-2">
+                <div className="w-3 h-3 bg-green-400 rounded-full animate-pulse"></div>
+                <span className="text-sm font-semibold">Zero Upfront Costs • 4-6 Week Implementation</span>
+              </div>
+            </div>
+            
+            <h1 className="text-4xl lg:text-6xl font-bold mb-6 leading-tight">
+              Start Generating <span className="text-accent">$100+</span> Per Patient Monthly
+            </h1>
+            <p className="text-xl text-blue-100 max-w-4xl mx-auto leading-relaxed mb-8">
+              Join healthcare providers nationwide who are transforming Medicare care coordination and creating sustainable revenue streams. No upfront investment, proven results, flexible implementation.
             </p>
+            
+            {/* Value Props */}
+            <div className="grid md:grid-cols-3 gap-6 max-w-4xl mx-auto mb-8">
+              <div className="bg-white/10 backdrop-blur-sm rounded-xl p-6 border border-white/20">
+                <div className="text-2xl font-bold text-accent mb-2">$2,457</div>
+                <div className="text-sm text-blue-100">Annual cost savings per patient</div>
+              </div>
+              <div className="bg-white/10 backdrop-blur-sm rounded-xl p-6 border border-white/20">
+                <div className="text-2xl font-bold text-accent mb-2">90%+</div>
+                <div className="text-sm text-blue-100">Patient retention with local nurses</div>
+              </div>
+              <div className="bg-white/10 backdrop-blur-sm rounded-xl p-6 border border-white/20">
+                <div className="text-2xl font-bold text-accent mb-2">45%</div>
+                <div className="text-sm text-blue-100">Average enrollment rate</div>
+              </div>
+            </div>
+            
+            <div className="flex flex-col sm:flex-row gap-4 justify-center">
+              <a href="#contact-form" className="bg-accent hover:bg-red-700 text-white px-8 py-4 rounded-lg font-semibold text-lg transition-colors shadow-lg">
+                Get Your Revenue Projection
+              </a>
+              <a href="/calculator" className="bg-white/20 hover:bg-white/30 backdrop-blur-sm text-white px-8 py-4 rounded-lg font-semibold text-lg transition-colors border border-white/30">
+                Use ROI Calculator
+              </a>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Why Partner Section */}
+      <section className="py-20 bg-white">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-16">
+            <h2 className="text-3xl font-bold text-foreground mb-6">Why 500+ Healthcare Providers Choose Lynk Health</h2>
+            <p className="text-xl text-muted-foreground max-w-3xl mx-auto">
+              We handle the complexity so you can focus on what matters most - patient care.
+            </p>
+          </div>
+          
+          <div className="grid md:grid-cols-3 gap-8 mb-16">
+            <div className="text-center p-6 bg-slate-50 rounded-2xl hover:shadow-lg transition-shadow">
+              <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4">
+                <i className="fas fa-dollar-sign text-primary text-2xl"></i>
+              </div>
+              <h3 className="text-xl font-bold text-foreground mb-3">Immediate Revenue</h3>
+              <p className="text-muted-foreground">Start generating $42-$110 per patient monthly with CMS-approved Medicare programs. No upfront investment required.</p>
+            </div>
+            
+            <div className="text-center p-6 bg-slate-50 rounded-2xl hover:shadow-lg transition-shadow">
+              <div className="w-16 h-16 bg-secondary/10 rounded-full flex items-center justify-center mx-auto mb-4">
+                <i className="fas fa-user-nurse text-secondary text-2xl"></i>
+              </div>
+              <h3 className="text-xl font-bold text-foreground mb-3">Local Nurses</h3>
+              <p className="text-muted-foreground">Dedicated nursing teams who understand your community - never call centers. Build authentic patient relationships.</p>
+            </div>
+            
+            <div className="text-center p-6 bg-slate-50 rounded-2xl hover:shadow-lg transition-shadow">
+              <div className="w-16 h-16 bg-accent/10 rounded-full flex items-center justify-center mx-auto mb-4">
+                <i className="fas fa-cogs text-accent text-2xl"></i>
+              </div>
+              <h3 className="text-xl font-bold text-foreground mb-3">Flexible Integration</h3>
+              <p className="text-muted-foreground">Optional EHR integration or independent workflow - the choice is yours. Minimal disruption, maximum flexibility.</p>
+            </div>
           </div>
         </div>
       </section>
 
       {/* Contact Section */}
-      <section className="py-20 bg-slate-50">
+      <section id="contact-form" className="py-20 bg-slate-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-12">
+            <h2 className="text-3xl font-bold text-foreground mb-4">Ready to Transform Your Practice?</h2>
+            <p className="text-xl text-muted-foreground">Get your personalized revenue projection and implementation timeline.</p>
+          </div>
+          
           <div className="grid lg:grid-cols-2 gap-12">
             {/* Contact Form */}
             <ContactForm />
@@ -186,18 +271,58 @@ export default function Contact() {
         </div>
       </section>
 
-      {/* Emergency Contact */}
-      <section className="py-12 bg-healthcare-primary text-white">
+      {/* Implementation Timeline */}
+      <section className="py-20 bg-gradient-to-r from-primary to-secondary text-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center">
-            <h3 className="text-xl font-bold mb-2">24/7 Clinical Support</h3>
-            <p className="text-blue-100 mb-4">
-              For urgent clinical matters or patient emergencies, our nursing team is available around the clock.
+          <div className="text-center mb-12">
+            <h2 className="text-3xl font-bold mb-6">Your 4-6 Week Implementation Timeline</h2>
+            <p className="text-xl text-blue-100 max-w-3xl mx-auto">
+              We make starting easy with a proven implementation process that gets you generating revenue quickly.
             </p>
-            <div className="flex items-center justify-center">
-              <i className="fas fa-phone mr-2"></i>
-              <span className="text-lg font-semibold">(601) 859-4342</span>
+          </div>
+          
+          <div className="grid md:grid-cols-4 gap-8">
+            <div className="text-center">
+              <div className="w-16 h-16 bg-white/20 rounded-full flex items-center justify-center mx-auto mb-4">
+                <span className="text-2xl font-bold">1</span>
+              </div>
+              <h3 className="text-lg font-semibold mb-2">Week 1</h3>
+              <p className="text-blue-100 text-sm">Contract signing, credentialing, and initial setup</p>
             </div>
+            
+            <div className="text-center">
+              <div className="w-16 h-16 bg-white/20 rounded-full flex items-center justify-center mx-auto mb-4">
+                <span className="text-2xl font-bold">2-3</span>
+              </div>
+              <h3 className="text-lg font-semibold mb-2">Weeks 2-3</h3>
+              <p className="text-blue-100 text-sm">Staff training, workflow setup, and optional EHR integration</p>
+            </div>
+            
+            <div className="text-center">
+              <div className="w-16 h-16 bg-white/20 rounded-full flex items-center justify-center mx-auto mb-4">
+                <span className="text-2xl font-bold">4</span>
+              </div>
+              <h3 className="text-lg font-semibold mb-2">Week 4</h3>
+              <p className="text-blue-100 text-sm">Patient identification and enrollment begins</p>
+            </div>
+            
+            <div className="text-center">
+              <div className="w-16 h-16 bg-accent/90 rounded-full flex items-center justify-center mx-auto mb-4">
+                <i className="fas fa-dollar-sign text-xl"></i>
+              </div>
+              <h3 className="text-lg font-semibold mb-2">Weeks 5-6</h3>
+              <p className="text-blue-100 text-sm">First revenue generated, full program launch</p>
+            </div>
+          </div>
+          
+          <div className="text-center mt-12">
+            <div className="inline-flex items-center px-6 py-3 bg-white/20 backdrop-blur-sm rounded-full mb-6">
+              <i className="fas fa-phone mr-2"></i>
+              <span className="font-semibold">24/7 Clinical Support: (601) 859-4342</span>
+            </div>
+            <p className="text-blue-100">
+              Our nursing team is available around the clock for urgent clinical matters or patient emergencies.
+            </p>
           </div>
         </div>
       </section>

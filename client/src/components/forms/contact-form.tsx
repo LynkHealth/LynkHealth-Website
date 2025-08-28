@@ -63,8 +63,14 @@ export default function ContactForm() {
   };
 
   return (
-    <div className="bg-white rounded-2xl p-8 shadow-lg">
-      <h3 className="text-2xl font-bold text-foreground mb-6">Get Started Today</h3>
+    <div className="bg-white rounded-2xl p-8 shadow-lg border border-primary/10">
+      <div className="text-center mb-6">
+        <div className="inline-flex items-center px-4 py-2 bg-primary/10 text-primary rounded-full text-sm font-semibold mb-4">
+          ⚡ Get Response Within 24 Hours
+        </div>
+        <h3 className="text-2xl font-bold text-foreground">Get Your Revenue Projection</h3>
+        <p className="text-muted-foreground mt-2">See exactly how much your practice can earn with Medicare care coordination</p>
+      </div>
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
           <div className="grid md:grid-cols-2 gap-6">
@@ -172,10 +178,10 @@ export default function ContactForm() {
           <Button
             type="submit"
             size="lg"
-            className="w-full bg-healthcare-primary hover:bg-blue-700 text-white"
+            className="w-full bg-accent hover:bg-red-700 text-white shadow-lg"
             disabled={contactMutation.isPending}
           >
-            {contactMutation.isPending ? "Sending..." : "Send Partnership Inquiry"}
+            {contactMutation.isPending ? "Sending..." : "Get My Revenue Projection"}
           </Button>
         </form>
       </Form>

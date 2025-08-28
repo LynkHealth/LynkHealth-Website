@@ -287,7 +287,7 @@ export default function HowItWorks() {
             Join healthcare providers across the country who are improving patient outcomes and generating additional revenue with our care coordination services.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Link href="/#contact">
+            <Link href="/contact">
               <Button size="lg" className="bg-white text-healthcare-primary hover:bg-slate-100">
                 Schedule a Consultation
               </Button>
