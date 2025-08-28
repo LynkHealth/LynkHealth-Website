@@ -116,9 +116,15 @@ export default function Contact() {
                     <div className="w-12 h-12 bg-healthcare-primary/10 rounded-lg flex items-center justify-center mr-4 flex-shrink-0">
                       <i className="fas fa-phone text-healthcare-primary"></i>
                     </div>
-                    <div>
+                    <div className="flex-1">
                       <h4 className="font-semibold text-foreground mb-1">Phone</h4>
-                      <p className="text-muted-foreground">(601) 859-4342</p>
+                      <a 
+                        href="tel:+16018594342" 
+                        className="inline-flex items-center text-healthcare-primary hover:text-healthcare-primary/80 font-medium transition-colors mb-2"
+                      >
+                        <i className="fas fa-phone-alt mr-2"></i>
+                        (601) 859-4342
+                      </a>
                       <p className="text-muted-foreground text-sm">Available Monday - Friday, 8 AM - 6 PM CST</p>
                     </div>
                   </div>
@@ -127,9 +133,15 @@ export default function Contact() {
                     <div className="w-12 h-12 bg-healthcare-secondary/10 rounded-lg flex items-center justify-center mr-4 flex-shrink-0">
                       <i className="fas fa-envelope text-healthcare-secondary"></i>
                     </div>
-                    <div>
+                    <div className="flex-1">
                       <h4 className="font-semibold text-foreground mb-1">Email</h4>
-                      <p className="text-muted-foreground">info@lynkhealthcare.com</p>
+                      <a 
+                        href="mailto:info@lynkhealthcare.com" 
+                        className="inline-flex items-center text-healthcare-secondary hover:text-healthcare-secondary/80 font-medium transition-colors mb-2"
+                      >
+                        <i className="fas fa-envelope-open mr-2"></i>
+                        info@lynkhealthcare.com
+                      </a>
                       <p className="text-muted-foreground text-sm">We respond within 24 hours</p>
                     </div>
                   </div>
