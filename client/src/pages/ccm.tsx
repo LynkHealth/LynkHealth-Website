@@ -287,7 +287,7 @@ export default function CCM() {
             Partner with Lynk Health to provide comprehensive chronic care management services that improve patient outcomes while generating sustainable revenue for your practice.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Link href="/#contact">
+            <Link href="/contact">
               <Button size="lg" className="bg-primary hover:bg-primary/90 text-primary-foreground font-semibold px-8 py-4 rounded-lg shadow-lg hover:shadow-xl transition-all">
                 Start Partnership
               </Button>

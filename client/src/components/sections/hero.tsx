@@ -24,7 +24,7 @@ export default function Hero() {
               Chronic Care Management (CCM), Remote Patient Monitoring (RPM), Behavioral Health Integration (BHI), Remote Therapeutic Monitoring (RTM), and Advanced Primary Care Management (APCM)—no call centers. Generate $100+ revenue per patient monthly while achieving 90%+ retention rates.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 mb-8">
-              <Link href="/#contact">
+              <Link href="/contact">
                 <Button size="lg" className="bg-primary hover:bg-primary/90 text-primary-foreground font-semibold px-8 py-4 rounded-lg shadow-lg hover:shadow-xl transition-all">
                   Start Partnership
                 </Button>
