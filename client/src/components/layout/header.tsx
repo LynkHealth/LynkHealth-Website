@@ -64,9 +64,25 @@ export default function Header() {
                       </Link>
                       <Link href="/services/monitoring">
                         <div className="block px-4 py-3 text-sm hover:bg-gray-50 rounded-md cursor-pointer">
-                          <div className="font-medium">In-Home Patient Monitoring</div>
+                          <div className="font-medium">Remote Patient Monitoring</div>
                           <div className="text-xs text-muted-foreground mt-1">
-                            Remote monitoring and RTM services
+                            FDA-approved device monitoring
+                          </div>
+                        </div>
+                      </Link>
+                      <Link href="/services/rtm">
+                        <div className="block px-4 py-3 text-sm hover:bg-gray-50 rounded-md cursor-pointer">
+                          <div className="font-medium">Remote Therapeutic Monitoring</div>
+                          <div className="text-xs text-muted-foreground mt-1">
+                            Non-physiological therapy monitoring
+                          </div>
+                        </div>
+                      </Link>
+                      <Link href="/services/apcm">
+                        <div className="block px-4 py-3 text-sm hover:bg-gray-50 rounded-md cursor-pointer">
+                          <div className="font-medium">Advanced Primary Care Management</div>
+                          <div className="text-xs text-muted-foreground mt-1">
+                            CMS's newest 2025 program
                           </div>
                         </div>
                       </Link>
@@ -148,11 +164,19 @@ export default function Header() {
               </Link>
               <Link href="/services/monitoring" className="block px-3 py-2 pl-6 text-sm font-medium text-muted-foreground hover:text-healthcare-primary"
                    onClick={() => setMobileMenuOpen(false)}>
-                  In-Home Monitoring
+                  Remote Patient Monitoring
+              </Link>
+              <Link href="/services/rtm" className="block px-3 py-2 pl-6 text-sm font-medium text-muted-foreground hover:text-healthcare-primary"
+                   onClick={() => setMobileMenuOpen(false)}>
+                  Remote Therapeutic Monitoring
+              </Link>
+              <Link href="/services/apcm" className="block px-3 py-2 pl-6 text-sm font-medium text-muted-foreground hover:text-healthcare-primary"
+                   onClick={() => setMobileMenuOpen(false)}>
+                  Advanced Primary Care Management
               </Link>
               <Link href="/services/bhi" className="block px-3 py-2 pl-6 text-sm font-medium text-muted-foreground hover:text-healthcare-primary"
                    onClick={() => setMobileMenuOpen(false)}>
-                  Behavioral Health
+                  Behavioral Health Integration
               </Link>
               <Link href="/how-it-works" className="block px-3 py-2 text-base font-medium text-muted-foreground hover:text-healthcare-primary"
                    onClick={() => setMobileMenuOpen(false)}>
