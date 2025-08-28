@@ -107,6 +107,12 @@ Lynk Health is a comprehensive healthcare care coordination platform that provid
 
 ## Changelog
 
+- January 30, 2025: Added complete leadership team to About page with professional headshots
+  - Will Moon (CEO) - Leading company mission and strategy
+  - Tracy Rhinewalt (CNO, FNP-BC, DNP) - Clinical excellence and nursing team development
+  - Dennis Watts (CAO, PhD) - Operational excellence and strategic partnerships
+  - Applied consistent lighter greyscale filter to all leadership photos for professional branding
+  - Enhanced team section with authentic credentials and role-specific descriptions
 - January 30, 2025: Replaced testimonials section with white-label friendly marketing alternatives
   - Created "Proven Results Across Healthcare Partners" section using anonymous aggregate data
   - Added industry certifications and compliance credentials (HIPAA, CMS, Joint Commission, SOC 2)

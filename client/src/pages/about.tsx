@@ -142,7 +142,7 @@ export default function About() {
                 <img 
                   src="/images/will-headshot.jpg"
                   alt="Will Moon, CEO of Lynk Health"
-                  className="w-full h-full object-cover object-top"
+                  className="w-full h-full object-cover object-top filter grayscale brightness-110"
                 />
               </div>
               <h3 className="text-xl font-semibold text-foreground mb-2">Will Moon</h3>
@@ -156,7 +156,7 @@ export default function About() {
                 <img 
                   src="/images/tracy-headshot.jpg"
                   alt="Tracy Rhinewalt, Chief Nursing Officer"
-                  className="w-full h-full object-cover object-top filter grayscale"
+                  className="w-full h-full object-cover object-top filter grayscale brightness-110"
                 />
               </div>
               <h3 className="text-xl font-semibold text-foreground mb-2">Tracy Rhinewalt</h3>
@@ -165,14 +165,19 @@ export default function About() {
               <p className="text-muted-foreground text-sm">Leading our clinical excellence initiatives and nursing team development with advanced practice expertise in chronic care management.</p>
             </div>
             
-            {/* Technology Team */}
+            {/* Dennis Watts - CAO */}
             <div className="text-center">
-              <div className="w-32 h-32 bg-slate-200 rounded-full mx-auto mb-4 flex items-center justify-center">
-                <i className="fas fa-laptop-code text-slate-400 text-4xl"></i>
+              <div className="w-32 h-32 mx-auto mb-4 overflow-hidden rounded-full">
+                <img 
+                  src="/images/dennis-headshot.jpg"
+                  alt="Dennis Watts, Chief Administrative Officer"
+                  className="w-full h-full object-cover object-top filter grayscale brightness-110"
+                />
               </div>
-              <h3 className="text-xl font-semibold text-foreground mb-2">Technology Team</h3>
-              <p className="text-healthcare-primary font-medium mb-2">EHR Integration Specialists</p>
-              <p className="text-muted-foreground text-sm">Healthcare technology experts ensuring seamless integration and enterprise-grade data security</p>
+              <h3 className="text-xl font-semibold text-foreground mb-2">Dennis Watts</h3>
+              <p className="text-healthcare-primary font-medium mb-1">Chief Administrative Officer</p>
+              <p className="text-muted-foreground font-medium text-sm mb-2">PhD</p>
+              <p className="text-muted-foreground text-sm">Overseeing operational excellence and strategic partnerships to ensure seamless healthcare provider integration and compliance.</p>
             </div>
           </div>
         </div>
