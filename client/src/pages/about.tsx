@@ -159,9 +159,8 @@ export default function About() {
                   className="w-full h-full object-cover object-top filter grayscale brightness-110"
                 />
               </div>
-              <h3 className="text-xl font-semibold text-foreground mb-2">Tracy Rhinewalt</h3>
-              <p className="text-healthcare-secondary font-medium mb-1">Chief Nursing Officer</p>
-              <p className="text-muted-foreground font-medium text-sm mb-2">FNP-BC, DNP</p>
+              <h3 className="text-xl font-semibold text-foreground mb-2">Tracy Rhinewalt, FNP-BC, DNP</h3>
+              <p className="text-healthcare-secondary font-medium mb-2">Chief Nursing Officer</p>
               <p className="text-muted-foreground text-sm">Leading our clinical excellence initiatives and nursing team development with advanced practice expertise in chronic care management.</p>
             </div>
             
@@ -174,9 +173,8 @@ export default function About() {
                   className="w-full h-full object-cover object-top filter grayscale brightness-110"
                 />
               </div>
-              <h3 className="text-xl font-semibold text-foreground mb-2">Dennis Watts</h3>
-              <p className="text-healthcare-primary font-medium mb-1">Chief Administrative Officer</p>
-              <p className="text-muted-foreground font-medium text-sm mb-2">PhD</p>
+              <h3 className="text-xl font-semibold text-foreground mb-2">Dennis Watts, PhD</h3>
+              <p className="text-healthcare-primary font-medium mb-2">Chief Administrative Officer</p>
               <p className="text-muted-foreground text-sm">Overseeing operational excellence and strategic partnerships to ensure seamless healthcare provider integration and compliance.</p>
             </div>
           </div>
