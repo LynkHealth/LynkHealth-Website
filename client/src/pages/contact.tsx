@@ -61,7 +61,7 @@ export default function Contact() {
       <section className="py-20 bg-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16">
-            <h2 className="text-3xl font-bold text-foreground mb-6">Why 500+ Healthcare Providers Choose Lynk Health</h2>
+            <h2 className="text-3xl font-bold text-foreground mb-6">Why 65+ Healthcare Providers Choose Lynk Health</h2>
             <p className="text-xl text-muted-foreground max-w-3xl mx-auto">
               We handle the complexity so you can focus on what matters most - patient care.
             </p>

@@ -21,7 +21,7 @@ export default function Hero() {
             </h1>
             <p className="text-xl text-muted-foreground mb-8 leading-relaxed">
               Turnkey Medicare programs with dedicated nurses who understand your patients' communities. 
-              Chronic Care Management (CCM), Remote Patient Monitoring (RPM), Behavioral Health Integration (BHI), Remote Therapeutic Monitoring (RTM), and Advanced Primary Care Management (APCM)—no call centers. Generate $100+ revenue per patient monthly while achieving 90%+ retention rates.
+              Chronic Care Management (CCM), Remote Patient Monitoring (RPM), Behavioral Health Integration (BHI), Remote Therapeutic Monitoring (RTM), and Advanced Primary Care Management (APCM)—no call centers. Serving 25,000+ patients through 65+ healthcare providers nationwide. Generate $100+ revenue per patient monthly while achieving 90%+ retention rates.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 mb-8">
               <Link href="/contact">

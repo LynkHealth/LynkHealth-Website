@@ -52,7 +52,7 @@ User interaction on the website leads to client-side form validation, API commun
   - Maintained consistent patient satisfaction rates and retention metrics
   - Updated testimonials section to use consistent 35% ER visit reduction
   - Fixed MonitoringPage.tsx to use standardized 35% ER visit reduction statistic
-  - Added 500+ healthcare providers metric to home page for credibility
+  - Updated to authentic statistics: 65+ healthcare providers and 25,000+ patients served
   - All CTAs now consistently redirect to /contact (Partner With Us page) for unified user flow
 
 ## External Dependencies
