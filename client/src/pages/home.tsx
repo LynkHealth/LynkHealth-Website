@@ -331,6 +331,95 @@ export default function Home() {
       {/* Testimonials */}
       <Testimonials />
 
+      {/* Local Nurses Section */}
+      <section className="py-20 bg-gradient-to-br from-primary/5 to-secondary/5">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="grid lg:grid-cols-2 gap-16 items-center">
+            <div>
+              <div className="mb-6">
+                <span className="inline-block px-4 py-2 bg-primary/10 text-primary font-semibold text-sm rounded-full">
+                  Local Healthcare Professionals
+                </span>
+              </div>
+              <h2 className="text-3xl lg:text-4xl font-bold text-foreground mb-6">
+                Local Nurses Who <span className="text-primary">Understand Your Community</span>
+              </h2>
+              <p className="text-lg text-muted-foreground mb-6 leading-relaxed">
+                Unlike call centers with scripted conversations, our local nurses understand your patients' dialects, culture, and community challenges. They build genuine relationships that lead to better engagement and health outcomes.
+              </p>
+              <div className="space-y-4 mb-8">
+                <div className="flex items-start gap-4">
+                  <div className="w-8 h-8 bg-primary/10 rounded-full flex items-center justify-center flex-shrink-0 mt-1">
+                    <i className="fas fa-heart text-primary text-sm"></i>
+                  </div>
+                  <div>
+                    <h4 className="font-semibold text-foreground mb-1">Authentic Connection</h4>
+                    <p className="text-muted-foreground text-sm">Nurses who share your patients' accents, understand local customs, and speak their language—literally and culturally.</p>
+                  </div>
+                </div>
+                <div className="flex items-start gap-4">
+                  <div className="w-8 h-8 bg-secondary/10 rounded-full flex items-center justify-center flex-shrink-0 mt-1">
+                    <i className="fas fa-handshake text-secondary text-sm"></i>
+                  </div>
+                  <div>
+                    <h4 className="font-semibold text-foreground mb-1">Trust & Comfort</h4>
+                    <p className="text-muted-foreground text-sm">Patients open up to nurses who sound familiar and understand their community, leading to better health reporting.</p>
+                  </div>
+                </div>
+                <div className="flex items-start gap-4">
+                  <div className="w-8 h-8 bg-accent/10 rounded-full flex items-center justify-center flex-shrink-0 mt-1">
+                    <i className="fas fa-chart-line text-accent text-sm"></i>
+                  </div>
+                  <div>
+                    <h4 className="font-semibold text-foreground mb-1">Better Outcomes</h4>
+                    <p className="text-muted-foreground text-sm">93% of patients report health issues sooner when they feel understood and comfortable with their care team.</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div className="relative">
+              <div className="bg-white rounded-2xl shadow-xl p-8">
+                <h3 className="text-xl font-bold text-foreground mb-6">Why Local Matters</h3>
+                <div className="space-y-6">
+                  <div className="flex items-center justify-between">
+                    <span className="text-muted-foreground">Patient Comfort Level</span>
+                    <div className="flex items-center gap-2">
+                      <div className="w-24 h-2 bg-gray-200 rounded-full">
+                        <div className="w-[90%] h-2 bg-primary rounded-full"></div>
+                      </div>
+                      <span className="text-sm font-semibold text-primary">90%</span>
+                    </div>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-muted-foreground">Health Issue Reporting</span>
+                    <div className="flex items-center gap-2">
+                      <div className="w-24 h-2 bg-gray-200 rounded-full">
+                        <div className="w-[93%] h-2 bg-secondary rounded-full"></div>
+                      </div>
+                      <span className="text-sm font-semibold text-secondary">93%</span>
+                    </div>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-muted-foreground">Program Retention</span>
+                    <div className="flex items-center gap-2">
+                      <div className="w-24 h-2 bg-gray-200 rounded-full">
+                        <div className="w-[92%] h-2 bg-accent rounded-full"></div>
+                      </div>
+                      <span className="text-sm font-semibold text-accent">92%</span>
+                    </div>
+                  </div>
+                </div>
+                <div className="mt-8 pt-6 border-t border-gray-100">
+                  <p className="text-sm text-muted-foreground italic">
+                    "My nurse sounds just like my neighbor. I feel comfortable telling her things I'd never share with someone from a call center." - Patient testimonial
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
       {/* Partner Logos Section */}
       <section className="bg-slate-50 py-16">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -422,7 +511,7 @@ export default function Home() {
                   </li>
                   <li className="flex items-center">
                     <i className="fas fa-check-circle mr-3 text-white"></i>
-                    Dedicated nursing staff
+                    Local nurses, no call centers
                   </li>
                 </ul>
               </div>

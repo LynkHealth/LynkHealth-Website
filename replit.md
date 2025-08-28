@@ -107,6 +107,12 @@ Lynk Health is a comprehensive healthcare care coordination platform that provid
 
 ## Changelog
 
+- January 30, 2025: Enhanced local nurse messaging throughout website to differentiate from call centers
+  - Added dedicated "Local Nurses Who Understand Your Community" section to home page with patient testimonial
+  - Updated hero messaging to emphasize "local, dedicated nurses who understand your patients' communities"
+  - Integrated "no call centers" messaging across CCM, RPM, BHI, and about pages
+  - Added visual metrics showing 90% patient comfort, 93% health issue reporting, and 92% retention with local nurses
+  - Emphasized authentic connections, trust, and cultural understanding as key differentiators
 - January 30, 2025: Streamlined contact flow by consolidating contact form into home page
   - Removed standalone contact page to eliminate duplication and improve user experience
   - Added comprehensive contact section to home page with contact form, information, and trust indicators

@@ -59,7 +59,7 @@ export default function CCM() {
               </h1>
               <p className="text-xl text-muted-foreground mb-8 leading-relaxed">
                 Turnkey CCM program for Medicare patients with 2+ chronic conditions. Zero upfront costs, 
-                seamless EHR integration, and dedicated nurses generating $42+ per patient monthly.
+                seamless EHR integration, and local nurses who understand your patients' communities—generating $42+ per patient monthly.
               </p>
               <div className="flex flex-col sm:flex-row gap-4 mb-8">
                 <Link href="/#contact">
@@ -88,7 +88,7 @@ export default function CCM() {
                 </div>
                 <div className="flex items-center gap-2">
                   <div className="w-2 h-2 bg-secondary rounded-full"></div>
-                  <span className="text-muted-foreground">RN-led coordination</span>
+                  <span className="text-muted-foreground">Local RN coordination</span>
                 </div>
               </div>
             </div>

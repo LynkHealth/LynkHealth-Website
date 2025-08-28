@@ -80,8 +80,8 @@ export default function Monitoring() {
                 <span className="text-primary"> Solutions</span>
               </h1>
               <p className="text-xl text-muted-foreground mb-8 leading-relaxed">
-                Turnkey RPM and RTM programs with cellular-enabled devices and 24/7 clinical monitoring. 
-                Generate $58+ per patient monthly with FDA-approved monitoring technology.
+                Turnkey RPM and RTM programs with cellular-enabled devices and 24/7 clinical monitoring by local nurses. 
+                No call centers—generate $58+ per patient monthly with FDA-approved monitoring technology and genuine patient relationships.
               </p>
               <div className="flex flex-col sm:flex-row gap-4 mb-8">
                 <Link href="/#contact">

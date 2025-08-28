@@ -81,7 +81,7 @@ export default function BHI() {
               </h1>
               <p className="text-xl text-muted-foreground mb-8 leading-relaxed">
                 Comprehensive behavioral health support integrated into primary care settings. 
-                Our licensed professionals provide mental health screening, intervention, and ongoing support using a low-stigma, collaborative approach.
+                Our local licensed professionals—never call centers—provide mental health screening, intervention, and ongoing support using a low-stigma, collaborative approach that patients trust.
               </p>
               <div className="flex flex-col sm:flex-row gap-4 mb-8">
                 <Link href="/#contact">

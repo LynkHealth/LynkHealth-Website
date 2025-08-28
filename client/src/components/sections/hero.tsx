@@ -20,8 +20,8 @@ export default function Hero() {
               <span className="text-primary">That Actually Works</span>
             </h1>
             <p className="text-xl text-muted-foreground mb-8 leading-relaxed">
-              Turnkey Medicare care management programs with dedicated nurses, seamless EHR integration, and 24/7 patient support. 
-              Generate $2,457+ annual savings per patient while achieving 90%+ retention rates with zero upfront costs.
+              Turnkey Medicare care management programs with local, dedicated nurses who understand your patients' communities. 
+              No call centers—just genuine relationships that generate $2,457+ annual savings per patient while achieving 90%+ retention rates.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 mb-8">
               <Link href="/#contact">
@@ -44,7 +44,7 @@ export default function Hero() {
               </div>
               <div className="flex items-center gap-2">
                 <div className="w-2 h-2 bg-secondary rounded-full"></div>
-                Licensed Nurses
+                Local Licensed Nurses
               </div>
               <div className="flex items-center gap-2">
                 <div className="w-2 h-2 bg-secondary rounded-full"></div>
