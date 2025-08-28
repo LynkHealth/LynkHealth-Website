@@ -150,14 +150,19 @@ export default function About() {
               <p className="text-muted-foreground text-sm">Leading Lynk Health's mission to transform Medicare care coordination through dedicated nursing teams and seamless technology integration.</p>
             </div>
             
-            {/* Clinical Leadership */}
+            {/* Tracy Rhinewalt - CNO */}
             <div className="text-center">
-              <div className="w-32 h-32 bg-slate-200 rounded-full mx-auto mb-4 flex items-center justify-center">
-                <i className="fas fa-user-nurse text-slate-400 text-4xl"></i>
+              <div className="w-32 h-32 mx-auto mb-4 overflow-hidden rounded-full">
+                <img 
+                  src="/images/tracy-headshot.jpg"
+                  alt="Tracy Rhinewalt, Chief Nursing Officer"
+                  className="w-full h-full object-cover object-top filter grayscale"
+                />
               </div>
-              <h3 className="text-xl font-semibold text-foreground mb-2">Clinical Leadership</h3>
-              <p className="text-healthcare-secondary font-medium mb-2">Nursing Team</p>
-              <p className="text-muted-foreground text-sm">Experienced registered nurses leading our care coordination teams with local community understanding</p>
+              <h3 className="text-xl font-semibold text-foreground mb-2">Tracy Rhinewalt</h3>
+              <p className="text-healthcare-secondary font-medium mb-1">Chief Nursing Officer</p>
+              <p className="text-muted-foreground font-medium text-sm mb-2">FNP-BC, DNP</p>
+              <p className="text-muted-foreground text-sm">Leading our clinical excellence initiatives and nursing team development with advanced practice expertise in chronic care management.</p>
             </div>
             
             {/* Technology Team */}
