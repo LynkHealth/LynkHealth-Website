@@ -305,7 +305,7 @@ export default function MonitoringPage() {
                   <div className="text-slate-600">Annual revenue potential per 50 patients</div>
                 </div>
                 <div>
-                  <div className="text-3xl font-bold text-accent mb-2">30%</div>
+                  <div className="text-3xl font-bold text-accent mb-2">35%</div>
                   <div className="text-slate-600">Reduction in emergency room visits</div>
                 </div>
               </div>

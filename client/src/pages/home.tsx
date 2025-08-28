@@ -19,7 +19,7 @@ export default function Home() {
           <div className="text-center mb-16">
             <h2 className="text-3xl lg:text-4xl font-bold text-foreground mb-6">Who We Serve</h2>
             <p className="text-xl text-muted-foreground max-w-3xl mx-auto">
-              We partner with healthcare providers nationwide to deliver comprehensive Medicare care coordination services for patients with chronic conditions. Our dedicated nursing teams integrate seamlessly with your practice to improve outcomes and generate new revenue streams.
+              We partner with 500+ healthcare providers nationwide to deliver comprehensive Medicare care coordination services for patients with chronic conditions. Our dedicated nursing teams integrate seamlessly with your practice to improve outcomes and generate new revenue streams.
             </p>
           </div>
           

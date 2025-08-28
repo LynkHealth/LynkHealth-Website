@@ -24,7 +24,7 @@ const provenResults = [
     bgColor: "bg-blue-50"
   },
   {
-    metric: "63%",
+    metric: "35%",
     label: "Reduction in ER Visits",
     description: "Through proactive monitoring and early intervention protocols",
     icon: "fas fa-hospital",
