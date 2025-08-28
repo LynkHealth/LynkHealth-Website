@@ -296,12 +296,12 @@ export default function CCM() {
                   <CardContent className="p-6">
                     <div className="flex justify-between items-start mb-3">
                       <div>
-                        <h4 className="font-semibold text-primary">99490 - CCM Initial Month</h4>
-                        <p className="text-sm text-muted-foreground">First month of CCM services</p>
+                        <h4 className="font-semibold text-primary">99490 - CCM Monthly Service</h4>
+                        <p className="text-sm text-muted-foreground">Monthly CCM billing (any month)</p>
                       </div>
                       <Badge className="bg-primary text-primary-foreground">$60</Badge>
                     </div>
-                    <p className="text-sm">Minimum 20 minutes of clinical staff time for care management services. Includes comprehensive care plan development.</p>
+                    <p className="text-sm">Monthly billing for minimum 20 minutes of clinical staff time for care management services each month.</p>
                   </CardContent>
                 </Card>
 
@@ -328,12 +328,12 @@ export default function CCM() {
                   <CardContent className="p-6">
                     <div className="flex justify-between items-start mb-3">
                       <div>
-                        <h4 className="font-semibold text-primary">99487 - Complex CCM Initial</h4>
-                        <p className="text-sm text-muted-foreground">First month - complex patients</p>
+                        <h4 className="font-semibold text-primary">99487 - Complex CCM Monthly</h4>
+                        <p className="text-sm text-muted-foreground">Monthly complex CCM billing</p>
                       </div>
                       <Badge className="bg-primary text-primary-foreground">$132</Badge>
                     </div>
-                    <p className="text-sm">Minimum 60 minutes for patients with complex medical conditions requiring extensive care coordination.</p>
+                    <p className="text-sm">Monthly billing for minimum 60 minutes of clinical staff time for complex patients requiring extensive care coordination.</p>
                   </CardContent>
                 </Card>
 
