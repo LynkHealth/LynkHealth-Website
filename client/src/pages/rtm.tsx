@@ -266,7 +266,7 @@ export default function RTM() {
                         <h4 className="font-semibold">98975 - Initial Setup & Education</h4>
                         <p className="text-sm text-muted-foreground">Device setup and patient education</p>
                       </div>
-                      <Badge className="bg-green-100 text-green-800">$56</Badge>
+                      <Badge className="bg-amber-100 text-amber-800">$56</Badge>
                     </div>
                     <p className="text-sm">Billed once per episode of care. Includes device setup, patient training, and initial configuration.</p>
                   </CardContent>
@@ -279,7 +279,7 @@ export default function RTM() {
                         <h4 className="font-semibold">98976 - Respiratory System Monitoring</h4>
                         <p className="text-sm text-muted-foreground">30-day device supply</p>
                       </div>
-                      <Badge className="bg-green-100 text-green-800">$65</Badge>
+                      <Badge className="bg-amber-100 text-amber-800">$65</Badge>
                     </div>
                     <p className="text-sm">Peak flow meters, spirometers. Requires 16+ days of data collection per month.</p>
                   </CardContent>
@@ -292,7 +292,7 @@ export default function RTM() {
                         <h4 className="font-semibold">98977 - Musculoskeletal Monitoring</h4>
                         <p className="text-sm text-muted-foreground">30-day device supply</p>
                       </div>
-                      <Badge className="bg-green-100 text-green-800">$63</Badge>
+                      <Badge className="bg-amber-100 text-amber-800">$63</Badge>
                     </div>
                     <p className="text-sm">Motion sensors, activity trackers. Requires 16+ days of data collection per month.</p>
                   </CardContent>

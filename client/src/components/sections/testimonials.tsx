@@ -4,16 +4,16 @@ const provenResults = [
     label: "Average Annual Cost Reduction",
     description: "Per patient through improved care coordination and reduced hospitalizations",
     icon: "fas fa-chart-line",
-    color: "text-green-600",
-    bgColor: "bg-green-50"
+    color: "text-amber-600",
+    bgColor: "bg-amber-50"
   },
   {
     metric: "90%+",
     label: "Patient Retention Rate",
     description: "Industry-leading engagement with dedicated nurse relationships",
     icon: "fas fa-heart",
-    color: "text-green-600", 
-    bgColor: "bg-green-50"
+    color: "text-amber-600", 
+    bgColor: "bg-amber-50"
   },
   {
     metric: "4-6 Weeks",
@@ -36,8 +36,8 @@ const provenResults = [
     label: "Medication Adherence",
     description: "Improved compliance through consistent nurse follow-up and education",
     icon: "fas fa-pills",
-    color: "text-green-600",
-    bgColor: "bg-green-50"
+    color: "text-amber-600",
+    bgColor: "bg-amber-50"
   },
   {
     metric: "45%",

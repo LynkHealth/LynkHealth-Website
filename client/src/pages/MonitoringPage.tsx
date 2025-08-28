@@ -129,8 +129,8 @@ export default function MonitoringPage() {
               </div>
               
               <div className="bg-white rounded-xl p-6 shadow-sm text-center">
-                <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                  <i className="fas fa-tint text-green-600 text-2xl"></i>
+                <div className="w-16 h-16 bg-amber-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <i className="fas fa-tint text-amber-600 text-2xl"></i>
                 </div>
                 <h3 className="font-semibold text-slate-900 mb-2">Glucose Meters</h3>
                 <p className="text-slate-600 text-sm">Connected glucometers for diabetes management and glucose tracking</p>
@@ -175,8 +175,8 @@ export default function MonitoringPage() {
               </div>
               
               <div className="bg-slate-50 rounded-xl p-6">
-                <div className="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center mb-4">
-                  <i className="fas fa-pills text-green-600"></i>
+                <div className="w-10 h-10 bg-amber-100 rounded-lg flex items-center justify-center mb-4">
+                  <i className="fas fa-pills text-amber-600"></i>
                 </div>
                 <h3 className="font-semibold text-slate-900 mb-2">Diabetes</h3>
                 <p className="text-slate-600 text-sm">Continuous glucose monitoring helps maintain optimal blood sugar control and prevent complications.</p>
@@ -221,8 +221,8 @@ export default function MonitoringPage() {
                 
                 <div className="space-y-4">
                   <div className="flex items-center">
-                    <div className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center mr-4">
-                      <i className="fas fa-shield-alt text-green-600"></i>
+                    <div className="w-8 h-8 bg-amber-100 rounded-full flex items-center justify-center mr-4">
+                      <i className="fas fa-shield-alt text-amber-600"></i>
                     </div>
                     <span className="text-slate-700">HIPAA-compliant data encryption</span>
                   </div>

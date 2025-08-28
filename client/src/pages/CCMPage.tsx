@@ -226,8 +226,8 @@ export default function CCMPage() {
               </div>
               
               <div className="bg-white rounded-xl p-6 shadow-sm">
-                <div className="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center mb-4">
-                  <i className="fas fa-chart-bar text-green-600"></i>
+                <div className="w-10 h-10 bg-amber-100 rounded-lg flex items-center justify-center mb-4">
+                  <i className="fas fa-chart-bar text-amber-600"></i>
                 </div>
                 <h3 className="font-semibold text-slate-900 mb-2">Health Monitoring</h3>
                 <p className="text-slate-600 text-sm">Continuous tracking of health metrics and early identification of concerning trends.</p>

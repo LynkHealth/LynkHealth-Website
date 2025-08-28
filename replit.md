@@ -41,10 +41,11 @@ User interaction on the website leads to client-side form validation, API commun
 
 ## Recent Changes
 - January 30, 2025: Updated color scheme throughout the site
-  - Replaced orange accent color with healthcare-appropriate green (142 76% 36%)
+  - Replaced orange accent color with golden amber (35 84% 56%) for warm, optimistic appeal
   - Updated all color references including buttons, icons, and UI elements
   - Maintained professional blue primary and teal secondary colors
-  - Fixed hover states and transitions to use new green accent color
+  - Fixed hover states and transitions to use new amber accent color
+  - Converted green UI elements to amber equivalents for consistency
 
 ## External Dependencies
 - **Database**: `@neondatabase/serverless` (Neon Database), `drizzle-orm`.

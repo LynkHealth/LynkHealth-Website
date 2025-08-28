@@ -187,31 +187,31 @@ export default function APCM() {
               </CardContent>
             </Card>
 
-            <Card className="border-2 border-green-200">
-              <CardHeader className="bg-green-50">
+            <Card className="border-2 border-amber-200">
+              <CardHeader className="bg-amber-50">
                 <div className="flex justify-between items-center">
-                  <CardTitle className="text-green-800">Level 2 - G0557</CardTitle>
-                  <Badge className="bg-green-100 text-green-800 text-lg px-3 py-1">$50/month</Badge>
+                  <CardTitle className="text-amber-800">Level 2 - G0557</CardTitle>
+                  <Badge className="bg-amber-100 text-amber-800 text-lg px-3 py-1">$50/month</Badge>
                 </div>
               </CardHeader>
               <CardContent className="p-6">
                 <h4 className="font-semibold mb-3">Patient Criteria:</h4>
                 <ul className="space-y-2 text-sm mb-4">
                   <li className="flex items-start">
-                    <CheckCircle2 className="h-4 w-4 text-green-500 mr-2 mt-0.5 flex-shrink-0" />
+                    <CheckCircle2 className="h-4 w-4 text-amber-500 mr-2 mt-0.5 flex-shrink-0" />
                     Medicare beneficiaries with ≥2 chronic conditions
                   </li>
                   <li className="flex items-start">
-                    <CheckCircle2 className="h-4 w-4 text-green-500 mr-2 mt-0.5 flex-shrink-0" />
+                    <CheckCircle2 className="h-4 w-4 text-amber-500 mr-2 mt-0.5 flex-shrink-0" />
                     Conditions lasting 12+ months
                   </li>
                   <li className="flex items-start">
-                    <CheckCircle2 className="h-4 w-4 text-green-500 mr-2 mt-0.5 flex-shrink-0" />
+                    <CheckCircle2 className="h-4 w-4 text-amber-500 mr-2 mt-0.5 flex-shrink-0" />
                     Require complex care coordination
                   </li>
                 </ul>
-                <div className="bg-green-50 p-3 rounded">
-                  <p className="text-xs text-green-700">
+                <div className="bg-amber-50 p-3 rounded">
+                  <p className="text-xs text-amber-700">
                     <strong>Annual Revenue:</strong> $600 per patient
                   </p>
                 </div>
@@ -270,7 +270,7 @@ export default function APCM() {
                 </div>
                 <div className="bg-white rounded-lg p-6">
                   <div className="text-sm text-muted-foreground mb-1">Level 2 (500 patients)</div>
-                  <div className="text-3xl font-bold text-green-600 mb-2">$300,000</div>
+                  <div className="text-3xl font-bold text-amber-600 mb-2">$300,000</div>
                   <div className="text-xs text-muted-foreground">$50 × 500 × 12 months</div>
                 </div>
                 <div className="bg-white rounded-lg p-6">

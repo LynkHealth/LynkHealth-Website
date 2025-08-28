@@ -341,17 +341,17 @@ export default function RevenueCalculator() {
         </div>
 
         {/* CTA */}
-        <Card className="mt-12 shadow-xl border-0 bg-gradient-to-r from-green-500 to-green-600 text-white">
+        <Card className="mt-12 shadow-xl border-0 bg-gradient-to-r from-amber-500 to-amber-600 text-white">
           <CardContent className="p-12 text-center">
             <h3 className="text-2xl font-bold mb-4">Ready to Implement These Programs?</h3>
-            <p className="text-lg mb-8 text-green-50 max-w-3xl mx-auto">
+            <p className="text-lg mb-8 text-amber-50 max-w-3xl mx-auto">
               Lynk Health provides turnkey CCM and RPM services with zero upfront costs. 
               Our licensed nurses handle all patient care, documentation, and billing compliance 
               so you can focus on what you do best - providing excellent patient care.
             </p>
             <Button 
               onClick={handleContactUs}
-              className="bg-white text-green-600 hover:bg-green-50 font-semibold px-8 py-4 text-lg rounded-lg shadow-lg"
+              className="bg-white text-amber-600 hover:bg-amber-50 font-semibold px-8 py-4 text-lg rounded-lg shadow-lg"
             >
               Contact Us to Get Started
             </Button>

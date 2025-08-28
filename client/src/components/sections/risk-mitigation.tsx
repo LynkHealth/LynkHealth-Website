@@ -12,8 +12,8 @@ const riskMitigationPoints = [
     solution: "90%+ retention guarantee",
     details: "Our dedicated nurses build authentic relationships that patients trust. Unlike call centers, our approach generates industry-leading engagement rates.",
     icon: "fas fa-handshake",
-    color: "text-green-600",
-    bgColor: "bg-green-50"
+    color: "text-amber-600",
+    bgColor: "bg-amber-50"
   },
   {
     concern: "How do we ensure quality oversight?",
@@ -28,8 +28,8 @@ const riskMitigationPoints = [
     solution: "Enterprise-grade compliance",
     details: "SOC 2 Type II certified, HIPAA compliant, CMS approved programs. Our compliance team handles all regulatory requirements and documentation.",
     icon: "fas fa-shield-alt",
-    color: "text-green-600",
-    bgColor: "bg-green-50"
+    color: "text-amber-600",
+    bgColor: "bg-amber-50"
   }
 ];
 

@@ -106,8 +106,8 @@ export default function AboutPage() {
               </div>
               
               <div className="text-center p-6">
-                <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                  <i className="fas fa-shield-alt text-green-600 text-2xl"></i>
+                <div className="w-16 h-16 bg-amber-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <i className="fas fa-shield-alt text-amber-600 text-2xl"></i>
                 </div>
                 <h3 className="text-xl font-semibold text-slate-900 mb-3">Integrity</h3>
                 <p className="text-slate-600">We operate with transparency, honesty, and strict adherence to regulatory compliance.</p>
