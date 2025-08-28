@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import Hero from "@/components/sections/hero";
 import Stats from "@/components/sections/stats";
 import Testimonials from "@/components/sections/testimonials";
+import RiskMitigation from "@/components/sections/risk-mitigation";
 import ContactForm from "@/components/forms/contact-form";
 import elderlyBehavioralHealth from "@assets/elderly-behavioral-health.jpeg";
 
@@ -328,8 +329,11 @@ export default function Home() {
       {/* Patient Impact Stats */}
       <Stats />
 
-      {/* Testimonials */}
+      {/* Proven Results */}
       <Testimonials />
+
+      {/* Risk Mitigation */}
+      <RiskMitigation />
 
       {/* Local Nurses Section */}
       <section className="py-20 bg-gradient-to-br from-primary/5 to-secondary/5">
@@ -420,23 +424,7 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Partner Logos Section */}
-      <section className="bg-slate-50 py-16">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-12">
-            <h2 className="text-2xl font-bold text-foreground mb-4">Trusted by Healthcare Leaders</h2>
-            <p className="text-muted-foreground">We partner with leading healthcare organizations across the country</p>
-          </div>
-          
-          <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-8 items-center opacity-60">
-            {[...Array(6)].map((_, i) => (
-              <div key={i} className="flex items-center justify-center h-16 bg-white rounded-lg shadow-sm p-4">
-                <div className="text-slate-400 font-bold text-sm">PARTNER LOGO</div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
+
 
       {/* Contact Section */}
       <section id="contact" className="py-20 bg-white">
