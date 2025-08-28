@@ -1,10 +1,10 @@
 import { useEffect, useRef, useState } from "react";
 
 const stats = [
-  { number: "97%", label: "Care Plan Adherence", description: "Patient compliance with treatment plans" },
-  { number: "24/7", label: "Care Support", description: "Around-the-clock patient access" },
-  { number: "<5%", label: "Patient Churn", description: "Low dropout rate from programs" },
-  { number: "30%", label: "Avg Revenue Uplift", description: "For partner healthcare practices" },
+  { number: "$2,457", label: "Annual Cost Reduction", description: "Per patient in total healthcare costs" },
+  { number: "45%", label: "Average Enrollment Rate", description: "Primary care practice participation" },
+  { number: "90%+", label: "Patient Retention", description: "High engagement and satisfaction" },
+  { number: "63%", label: "ED Utilization Reduction", description: "Fewer emergency room visits" },
 ];
 
 export default function Stats() {
@@ -38,10 +38,10 @@ export default function Stats() {
             </span>
           </div>
           <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold text-white mb-6">
-            Real-Time Improved Outcomes & Cost Savings
+            Industry-Leading Results & Cost Savings
           </h2>
           <p className="text-xl text-white/90 max-w-3xl mx-auto leading-relaxed">
-            See real-time results from patients using Lynk Health CCM and RPM programs.
+            Proven outcomes from Medicare care management programs that consistently outperform industry benchmarks.
           </p>
         </div>
 

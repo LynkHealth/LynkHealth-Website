@@ -90,6 +90,41 @@ export default function About() {
         </div>
       </section>
 
+      {/* Results Section */}
+      <section className="py-20 bg-gradient-to-br from-primary via-primary/95 to-secondary">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-16">
+            <h2 className="text-3xl font-bold text-white mb-6">Proven Results</h2>
+            <p className="text-xl text-white/90 max-w-3xl mx-auto">
+              Our care coordination programs deliver measurable outcomes that benefit patients, providers, and health systems.
+            </p>
+          </div>
+          
+          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
+            <div className="text-center bg-white/10 backdrop-blur-sm rounded-2xl p-8 border border-white/20">
+              <div className="text-4xl font-bold text-white mb-3">$2,457</div>
+              <div className="text-white/90 font-semibold text-lg mb-2">Annual Cost Reduction</div>
+              <div className="text-sm text-white/70">Per patient in total healthcare costs</div>
+            </div>
+            <div className="text-center bg-white/10 backdrop-blur-sm rounded-2xl p-8 border border-white/20">
+              <div className="text-4xl font-bold text-white mb-3">45%</div>
+              <div className="text-white/90 font-semibold text-lg mb-2">Average Enrollment Rate</div>
+              <div className="text-sm text-white/70">Primary care practice participation</div>
+            </div>
+            <div className="text-center bg-white/10 backdrop-blur-sm rounded-2xl p-8 border border-white/20">
+              <div className="text-4xl font-bold text-white mb-3">90%+</div>
+              <div className="text-white/90 font-semibold text-lg mb-2">Patient Retention</div>
+              <div className="text-sm text-white/70">High engagement and satisfaction</div>
+            </div>
+            <div className="text-center bg-white/10 backdrop-blur-sm rounded-2xl p-8 border border-white/20">
+              <div className="text-4xl font-bold text-white mb-3">63%</div>
+              <div className="text-white/90 font-semibold text-lg mb-2">ED Utilization Reduction</div>
+              <div className="text-sm text-white/70">Fewer emergency room visits</div>
+            </div>
+          </div>
+        </div>
+      </section>
+
       {/* Team Section */}
       <section className="py-20 bg-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">

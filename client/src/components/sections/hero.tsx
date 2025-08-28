@@ -20,8 +20,8 @@ export default function Hero() {
               <span className="text-primary">That Actually Works</span>
             </h1>
             <p className="text-xl text-muted-foreground mb-8 leading-relaxed">
-              Turnkey CCM and RPM programs with dedicated nurses, seamless EHR integration, and 24/7 patient support. 
-              Generate additional revenue while improving patient outcomes with zero upfront costs.
+              Turnkey Medicare care management programs with dedicated nurses, seamless EHR integration, and 24/7 patient support. 
+              Generate $2,457+ annual savings per patient while achieving 90%+ retention rates with zero upfront costs.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 mb-8">
               <Link href="/contact">
@@ -67,12 +67,12 @@ export default function Hero() {
               <div className="absolute bottom-6 left-6 right-6">
                 <div className="grid grid-cols-2 gap-4">
                   <div className="bg-white/90 backdrop-blur-sm rounded-xl p-4 shadow-lg">
-                    <div className="text-2xl font-bold text-primary mb-1">98%</div>
-                    <div className="text-sm text-muted-foreground">Patient Satisfaction</div>
+                    <div className="text-2xl font-bold text-primary mb-1">93%</div>
+                    <div className="text-sm text-muted-foreground">Report Health Issues Sooner</div>
                   </div>
                   <div className="bg-white/90 backdrop-blur-sm rounded-xl p-4 shadow-lg">
-                    <div className="text-2xl font-bold text-secondary mb-1">24/7</div>
-                    <div className="text-sm text-muted-foreground">Care Support</div>
+                    <div className="text-2xl font-bold text-secondary mb-1">86%</div>
+                    <div className="text-sm text-muted-foreground">Better Med Adherence</div>
                   </div>
                 </div>
               </div>

@@ -5,9 +5,9 @@ export default function Calculator() {
   return (
     <>
       <SEOHead
-        title="CCM & RPM Revenue Calculator | Lynk Health"
-        description="Calculate your potential revenue from Medicare's Chronic Care Management and Remote Patient Monitoring programs. Free calculator with 2025 reimbursement rates."
-        keywords="CCM calculator, RPM calculator, Medicare revenue, chronic care management calculator, remote patient monitoring revenue"
+        title="Medicare Care Management Revenue Calculator | Lynk Health"
+        description="Calculate your potential revenue from Medicare's CCM, RPM, RTM, APCM, and BHI programs. Free calculator with 2025 reimbursement rates showing up to $2,457 annual savings per patient."
+        keywords="Medicare revenue calculator, CCM calculator, RPM calculator, RTM calculator, APCM calculator, chronic care management revenue, remote patient monitoring revenue"
       />
       
       <div className="pt-16">
