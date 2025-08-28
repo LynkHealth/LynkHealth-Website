@@ -54,12 +54,12 @@ export default function CCM() {
                 </Badge>
               </div>
               <h1 className="text-4xl md:text-5xl xl:text-6xl font-bold text-foreground leading-[1.1] mb-6">
-                Medicare Chronic Care Management
-                <span className="text-primary"> That Actually Works</span>
+                #1 Chronic Care Management in
+                <span className="text-primary"> Mississippi</span>
               </h1>
               <p className="text-xl text-muted-foreground mb-8 leading-relaxed">
-                Turnkey CCM program for Medicare patients with 2+ chronic conditions. Zero upfront costs, 
-                seamless EHR integration, and local nurses who understand your patients' communities—generating $50+ per patient monthly in new revenue.
+                Leading Medicare Chronic Care Management (CCM) provider serving Mississippi healthcare providers in Jackson, Gulfport, Southaven, Hattiesburg, Biloxi, and Meridian. 
+                Zero upfront costs, seamless EHR integration, and local Mississippi nurses—generating $50+ per patient monthly in new revenue.
               </p>
               <div className="flex flex-col sm:flex-row gap-4 mb-8">
                 <Link href="/#contact">

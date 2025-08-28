@@ -16,12 +16,12 @@ export default function Hero() {
               </span>
             </div>
             <h1 className="text-4xl md:text-5xl xl:text-6xl font-bold text-foreground leading-[1.1] mb-6">
-              Chronic Care Management & Remote Patient Monitoring{" "}
-              <span className="text-primary">That Actually Works</span>
+              #1 Medicare Care Coordination in{" "}
+              <span className="text-primary">Mississippi</span>
             </h1>
             <p className="text-xl text-muted-foreground mb-8 leading-relaxed">
-              Turnkey Medicare care management programs with local, dedicated nurses who understand your patients' communities. 
-              No call centers—just genuine relationships that generate $100+ revenue per patient monthly while achieving 90%+ retention rates.
+              Leading provider of Chronic Care Management (CCM), Remote Patient Monitoring (RPM), and Behavioral Health Integration (BHI) services across Mississippi. 
+              Local nurses from Jackson, Gulfport, Southaven, and Hattiesburg—no call centers. Generate $100+ revenue per patient monthly while achieving 90%+ retention rates.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 mb-8">
               <Link href="/#contact">

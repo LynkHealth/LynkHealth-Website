@@ -76,12 +76,12 @@ export default function Monitoring() {
                 </Badge>
               </div>
               <h1 className="text-4xl md:text-5xl xl:text-6xl font-bold text-foreground leading-[1.1] mb-6">
-                Remote Patient Monitoring
-                <span className="text-primary"> Solutions</span>
+                #1 Remote Patient Monitoring
+                <span className="text-primary"> in Mississippi</span>
               </h1>
               <p className="text-xl text-muted-foreground mb-8 leading-relaxed">
-                Turnkey RPM and RTM programs with cellular-enabled devices and 24/7 clinical monitoring by local nurses. 
-                No call centers—create $58+ per patient monthly in new revenue streams with FDA-approved monitoring technology and genuine patient relationships.
+                Leading Remote Patient Monitoring (RPM) and Remote Therapeutic Monitoring (RTM) provider serving Mississippi healthcare practices in Jackson, Gulfport, Southaven, Hattiesburg, and statewide. 
+                No call centers—create $58+ per patient monthly in new revenue streams with FDA-approved monitoring technology and local Mississippi nurses.
               </p>
               <div className="flex flex-col sm:flex-row gap-4 mb-8">
                 <Link href="/#contact">

@@ -1,0 +1,25 @@
+User-agent: *
+Allow: /
+
+# High priority pages
+Allow: /
+Allow: /services/ccm
+Allow: /services/monitoring
+Allow: /services/bhi
+Allow: /services/rtm
+Allow: /services/apcm
+Allow: /about
+Allow: /contact
+Allow: /calculator
+Allow: /resources
+Allow: /how-it-works
+
+# Block admin areas
+Disallow: /admin/
+Disallow: /api/
+
+# Sitemap location
+Sitemap: https://lynkhealthcare.com/sitemap.xml
+
+# Crawl delay for respectful crawling
+Crawl-delay: 1

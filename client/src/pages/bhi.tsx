@@ -76,12 +76,12 @@ export default function BHI() {
                 </Badge>
               </div>
               <h1 className="text-4xl md:text-5xl xl:text-6xl font-bold text-foreground leading-[1.1] mb-6">
-                Behavioral Health 
-                <span className="text-primary"> Integration (BHI)</span>
+                #1 Behavioral Health Integration
+                <span className="text-primary"> in Mississippi</span>
               </h1>
               <p className="text-xl text-muted-foreground mb-8 leading-relaxed">
-                Comprehensive behavioral health support integrated into primary care settings that generates additional revenue streams. 
-                Our local licensed professionals—never call centers—provide mental health screening, intervention, and ongoing support using a low-stigma, collaborative approach that patients trust.
+                Leading Behavioral Health Integration (BHI) provider serving Mississippi primary care practices in Jackson, Gulfport, Southaven, Hattiesburg, and across the state. 
+                Our local Mississippi licensed professionals—never call centers—provide mental health screening, intervention, and ongoing support that generates additional revenue streams.
               </p>
               <div className="flex flex-col sm:flex-row gap-4 mb-8">
                 <Link href="/#contact">
