@@ -1,10 +1,10 @@
 import { useEffect, useRef, useState } from "react";
 
 const stats = [
-  { number: "$2,457", label: "Annual Cost Reduction", description: "Per patient in total healthcare costs" },
+  { number: "$100+", label: "Monthly Revenue Per Patient", description: "Combined CCM, RPM, and APCM programs" },
   { number: "45%", label: "Average Enrollment Rate", description: "Primary care practice participation" },
   { number: "90%+", label: "Patient Retention", description: "High engagement and satisfaction" },
-  { number: "63%", label: "ED Utilization Reduction", description: "Fewer emergency room visits" },
+  { number: "$120K+", label: "Annual Revenue Potential", description: "Per 100 enrolled patients" },
 ];
 
 export default function Stats() {

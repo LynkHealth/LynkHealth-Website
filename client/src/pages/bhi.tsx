@@ -80,7 +80,7 @@ export default function BHI() {
                 <span className="text-primary"> Integration (BHI)</span>
               </h1>
               <p className="text-xl text-muted-foreground mb-8 leading-relaxed">
-                Comprehensive behavioral health support integrated into primary care settings. 
+                Comprehensive behavioral health support integrated into primary care settings that generates additional revenue streams. 
                 Our local licensed professionals—never call centers—provide mental health screening, intervention, and ongoing support using a low-stigma, collaborative approach that patients trust.
               </p>
               <div className="flex flex-col sm:flex-row gap-4 mb-8">

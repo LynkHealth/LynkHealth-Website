@@ -21,7 +21,7 @@ export default function Hero() {
             </h1>
             <p className="text-xl text-muted-foreground mb-8 leading-relaxed">
               Turnkey Medicare care management programs with local, dedicated nurses who understand your patients' communities. 
-              No call centers—just genuine relationships that generate $2,457+ annual savings per patient while achieving 90%+ retention rates.
+              No call centers—just genuine relationships that generate $100+ revenue per patient monthly while achieving 90%+ retention rates.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 mb-8">
               <Link href="/#contact">

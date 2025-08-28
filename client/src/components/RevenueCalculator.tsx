@@ -112,11 +112,11 @@ export default function RevenueCalculator() {
             </span>
           </div>
           <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold text-foreground mb-6">
-            Comprehensive CCM & RPM Revenue Analysis
+            Medicare Revenue Growth Calculator
           </h2>
           <p className="text-xl text-muted-foreground max-w-3xl mx-auto leading-relaxed">
-            Advanced calculator using actual Medicare billing codes and realistic practice patterns 
-            to project your revenue from Chronic Care Management and Remote Patient Monitoring programs.
+            Discover your practice's revenue potential using actual Medicare billing codes and realistic practice patterns 
+            to project new revenue streams from Chronic Care Management and Remote Patient Monitoring programs.
           </p>
         </div>
 
