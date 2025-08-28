@@ -5,14 +5,66 @@ export default function About() {
   return (
     <div className="pt-20">
       {/* Hero Section */}
-      <section className="py-20 bg-gradient-to-br from-slate-50 to-white">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <section className="relative py-20 bg-gradient-to-br from-primary/10 via-secondary/5 to-accent/10 overflow-hidden">
+        {/* Background Pattern */}
+        <div className="absolute inset-0 opacity-5">
+          <div className="absolute top-10 left-10 w-20 h-20 bg-primary rounded-full"></div>
+          <div className="absolute top-32 right-20 w-16 h-16 bg-secondary rounded-full"></div>
+          <div className="absolute bottom-20 left-1/4 w-12 h-12 bg-accent rounded-full"></div>
+          <div className="absolute bottom-32 right-1/3 w-24 h-24 bg-primary rounded-full"></div>
+        </div>
+        
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative">
           <div className="text-center mb-16">
-            <h1 className="text-4xl lg:text-5xl font-bold text-foreground mb-6">Leading Chronic Care Management & Remote Patient Monitoring Provider</h1>
-            <p className="text-xl text-muted-foreground max-w-3xl mx-auto">
-              Helping healthcare providers deliver exceptional patient outcomes with turnkey CCM and RPM programs. 
-              Zero upfront costs, seamless EHR integration, and proven revenue generation.
+            <div className="inline-flex items-center px-6 py-3 bg-white/80 backdrop-blur-sm rounded-full shadow-lg mb-8">
+              <div className="flex items-center space-x-2">
+                <div className="w-3 h-3 bg-green-500 rounded-full animate-pulse"></div>
+                <span className="text-sm font-semibold text-gray-700">Serving Healthcare Providers Nationwide</span>
+              </div>
+            </div>
+            
+            <h1 className="text-4xl lg:text-6xl font-bold text-foreground mb-6 leading-tight">
+              Leading Medicare Care 
+              <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary to-secondary"> Coordination</span>
+            </h1>
+            
+            <p className="text-xl text-muted-foreground max-w-4xl mx-auto leading-relaxed mb-8">
+              Transforming Medicare care coordination with dedicated nursing teams, proven clinical outcomes, 
+              and flexible technology solutions that generate sustainable revenue for healthcare providers.
             </p>
+            
+            {/* Key Stats */}
+            <div className="grid md:grid-cols-3 gap-8 max-w-3xl mx-auto">
+              <div className="bg-white/60 backdrop-blur-sm rounded-xl p-6 shadow-lg border border-white/20">
+                <div className="text-3xl font-bold text-primary mb-2">$2,457</div>
+                <div className="text-sm text-muted-foreground">Annual cost reduction per patient</div>
+              </div>
+              <div className="bg-white/60 backdrop-blur-sm rounded-xl p-6 shadow-lg border border-white/20">
+                <div className="text-3xl font-bold text-secondary mb-2">90%+</div>
+                <div className="text-sm text-muted-foreground">Patient retention rate</div>
+              </div>
+              <div className="bg-white/60 backdrop-blur-sm rounded-xl p-6 shadow-lg border border-white/20">
+                <div className="text-3xl font-bold text-accent mb-2">4-6</div>
+                <div className="text-sm text-muted-foreground">Weeks to implementation</div>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        {/* Floating Icons */}
+        <div className="absolute top-1/4 left-8 animate-bounce delay-300">
+          <div className="w-12 h-12 bg-primary/20 rounded-full flex items-center justify-center">
+            <i className="fas fa-heart text-primary"></i>
+          </div>
+        </div>
+        <div className="absolute top-1/3 right-12 animate-bounce delay-700">
+          <div className="w-10 h-10 bg-secondary/20 rounded-full flex items-center justify-center">
+            <i className="fas fa-stethoscope text-secondary"></i>
+          </div>
+        </div>
+        <div className="absolute bottom-1/4 right-8 animate-bounce delay-500">
+          <div className="w-14 h-14 bg-accent/20 rounded-full flex items-center justify-center">
+            <i className="fas fa-chart-line text-accent"></i>
           </div>
         </div>
       </section>
