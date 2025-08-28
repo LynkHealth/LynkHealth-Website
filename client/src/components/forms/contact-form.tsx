@@ -178,7 +178,7 @@ export default function ContactForm() {
           <Button
             type="submit"
             size="lg"
-            className="w-full bg-accent hover:bg-red-700 text-white shadow-lg"
+            className="w-full bg-accent hover:bg-accent/90 text-white shadow-lg"
             disabled={contactMutation.isPending}
           >
             {contactMutation.isPending ? "Sending..." : "Get My Revenue Projection"}

@@ -23,7 +23,7 @@ export default function HomePage() {
                   Helping patients stay healthy and independent through Chronic Care Management, In-Home Monitoring, and Behavioral Health Integration.
                 </p>
                 <div className="flex flex-col sm:flex-row gap-4">
-                  <Link href="/contact" className="bg-accent text-white px-8 py-4 rounded-lg font-semibold text-lg hover:bg-red-700 transition-colors text-center">
+                  <Link href="/contact" className="bg-accent text-white px-8 py-4 rounded-lg font-semibold text-lg hover:bg-accent/90 transition-colors text-center">
                     Partner With Us
                   </Link>
                   <Link href="/how-it-works" className="border-2 border-white text-white px-8 py-4 rounded-lg font-semibold text-lg hover:bg-white hover:text-primary transition-colors text-center">

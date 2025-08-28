@@ -46,7 +46,7 @@ export default function Contact() {
             </div>
             
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <a href="#contact-form" className="bg-accent hover:bg-red-700 text-white px-8 py-4 rounded-lg font-semibold text-lg transition-colors shadow-lg">
+              <a href="#contact-form" className="bg-accent hover:bg-accent/90 text-white px-8 py-4 rounded-lg font-semibold text-lg transition-colors shadow-lg">
                 Get Your Revenue Projection
               </a>
               <a href="/calculator" className="bg-white/20 hover:bg-white/30 backdrop-blur-sm text-white px-8 py-4 rounded-lg font-semibold text-lg transition-colors border border-white/30">

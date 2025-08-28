@@ -28,8 +28,8 @@ const riskMitigationPoints = [
     solution: "Enterprise-grade compliance",
     details: "SOC 2 Type II certified, HIPAA compliant, CMS approved programs. Our compliance team handles all regulatory requirements and documentation.",
     icon: "fas fa-shield-alt",
-    color: "text-red-600",
-    bgColor: "bg-red-50"
+    color: "text-green-600",
+    bgColor: "bg-green-50"
   }
 ];
 

@@ -12,8 +12,8 @@ const provenResults = [
     label: "Patient Retention Rate",
     description: "Industry-leading engagement with dedicated nurse relationships",
     icon: "fas fa-heart",
-    color: "text-red-600", 
-    bgColor: "bg-red-50"
+    color: "text-green-600", 
+    bgColor: "bg-green-50"
   },
   {
     metric: "4-6 Weeks",
@@ -36,8 +36,8 @@ const provenResults = [
     label: "Medication Adherence",
     description: "Improved compliance through consistent nurse follow-up and education",
     icon: "fas fa-pills",
-    color: "text-orange-600",
-    bgColor: "bg-orange-50"
+    color: "text-green-600",
+    bgColor: "bg-green-50"
   },
   {
     metric: "45%",

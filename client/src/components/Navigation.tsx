@@ -77,7 +77,7 @@ export function Navigation() {
           <div className="hidden md:block">
             <Link
               href="/contact"
-              className="bg-accent text-white px-6 py-2 rounded-lg text-sm font-medium hover:bg-red-700 transition-colors"
+              className="bg-accent text-white px-6 py-2 rounded-lg text-sm font-medium hover:bg-accent/90 transition-colors"
             >
               Partner With Us
             </Link>
@@ -123,7 +123,7 @@ export function Navigation() {
             <div className="px-3 py-2">
               <Link
                 href="/contact"
-                className="block bg-accent text-white px-6 py-2 rounded-lg text-sm font-medium text-center hover:bg-red-700 transition-colors"
+                className="block bg-accent text-white px-6 py-2 rounded-lg text-sm font-medium text-center hover:bg-accent/90 transition-colors"
               >
                 Partner With Us
               </Link>

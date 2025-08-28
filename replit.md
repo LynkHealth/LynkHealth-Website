@@ -39,6 +39,13 @@ User interaction on the website leads to client-side form validation, API commun
 - Testimonials replaced with white-label friendly marketing alternatives focusing on aggregate results and compliance (HIPAA, CMS, SOC 2).
 - Enhanced local nurse messaging to differentiate from call centers and emphasize authentic connections.
 
+## Recent Changes
+- January 30, 2025: Updated color scheme throughout the site
+  - Replaced orange accent color with healthcare-appropriate green (142 76% 36%)
+  - Updated all color references including buttons, icons, and UI elements
+  - Maintained professional blue primary and teal secondary colors
+  - Fixed hover states and transitions to use new green accent color
+
 ## External Dependencies
 - **Database**: `@neondatabase/serverless` (Neon Database), `drizzle-orm`.
 - **Frontend State & Validation**: `@tanstack/react-query`, `@hookform/resolvers`, `zod`.

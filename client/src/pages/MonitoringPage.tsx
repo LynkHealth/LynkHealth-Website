@@ -20,7 +20,7 @@ export default function MonitoringPage() {
                 <p className="text-xl text-green-100 mb-8 leading-relaxed">
                   Advanced Remote Patient Monitoring (RPM) and Remote Therapeutic Monitoring (RTM) services that enable continuous health tracking from the comfort of home.
                 </p>
-                <Link href="/contact" className="bg-accent text-white px-8 py-4 rounded-lg font-semibold text-lg hover:bg-red-700 transition-colors">
+                <Link href="/contact" className="bg-accent text-white px-8 py-4 rounded-lg font-semibold text-lg hover:bg-accent/90 transition-colors">
                   Learn About RPM/RTM
                 </Link>
               </div>
@@ -321,7 +321,7 @@ export default function MonitoringPage() {
               Start monitoring your patients remotely and generate additional revenue while preventing hospitalizations and improving outcomes.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <Link href="/contact" className="bg-accent text-white px-8 py-4 rounded-lg font-semibold text-lg hover:bg-red-700 transition-colors">
+              <Link href="/contact" className="bg-accent text-white px-8 py-4 rounded-lg font-semibold text-lg hover:bg-accent/90 transition-colors">
                 Get Started Today
               </Link>
               <Link href="/how-it-works" className="border-2 border-white text-white px-8 py-4 rounded-lg font-semibold text-lg hover:bg-white hover:text-secondary transition-colors">

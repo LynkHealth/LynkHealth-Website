@@ -20,7 +20,7 @@ export default function CCMPage() {
                 <p className="text-xl text-blue-100 mb-8 leading-relaxed">
                   Comprehensive, nurse-led care coordination for Medicare patients with multiple chronic conditions. Generate revenue while improving patient outcomes.
                 </p>
-                <Link href="/contact" className="bg-accent text-white px-8 py-4 rounded-lg font-semibold text-lg hover:bg-red-700 transition-colors">
+                <Link href="/contact" className="bg-accent text-white px-8 py-4 rounded-lg font-semibold text-lg hover:bg-accent/90 transition-colors">
                   Start a CCM Program
                 </Link>
               </div>
@@ -252,7 +252,7 @@ export default function CCMPage() {
               Join healthcare providers across the country who are improving patient outcomes and generating additional revenue with our CCM services.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <Link href="/contact" className="bg-accent text-white px-8 py-4 rounded-lg font-semibold text-lg hover:bg-red-700 transition-colors">
+              <Link href="/contact" className="bg-accent text-white px-8 py-4 rounded-lg font-semibold text-lg hover:bg-accent/90 transition-colors">
                 Get Started Today
               </Link>
               <Link href="/how-it-works" className="border-2 border-white text-white px-8 py-4 rounded-lg font-semibold text-lg hover:bg-white hover:text-primary transition-colors">

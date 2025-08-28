@@ -188,7 +188,7 @@ export default function Header() {
               </Link>
               <div className="px-3 py-2">
                 <Link href="/contact">
-                  <Button className="w-full bg-healthcare-accent hover:bg-red-700 text-white"
+                  <Button className="w-full bg-accent hover:bg-accent/90 text-white"
                           onClick={() => setMobileMenuOpen(false)}>
                     Partner With Us
                   </Button>
