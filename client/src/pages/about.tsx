@@ -22,9 +22,9 @@ export default function About() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid lg:grid-cols-2 gap-12 items-center">
             <div>
-              <h2 className="text-3xl font-bold text-foreground mb-6">Leading Medicare Care Coordination in Mississippi</h2>
+              <h2 className="text-3xl font-bold text-foreground mb-6">Leading Medicare Care Coordination in the Southeast</h2>
               <p className="text-lg text-muted-foreground mb-6 leading-relaxed">
-                At Lynk Health, we're Mississippi's premier provider of Medicare care coordination services, serving healthcare practices across Jackson, Gulfport, Southaven, Hattiesburg, Biloxi, and Meridian. We provide turnkey chronic care management and remote patient monitoring solutions that create immediate revenue streams while improving patient outcomes. Our local Mississippi nursing team—never call centers—integrates seamlessly with your practice through direct EHR access.
+                At Lynk Health, we're the Southeast's premier provider of Medicare care coordination services, headquartered in Mississippi and serving healthcare practices across the region. We provide turnkey chronic care management and remote patient monitoring solutions that create immediate revenue streams while improving patient outcomes. Our regional nursing team—never call centers—integrates seamlessly with your practice through direct EHR access.
               </p>
               <p className="text-lg text-muted-foreground mb-8 leading-relaxed">
                 We operate directly in your EHR with no additional software required. Zero upfront costs, fast 4-6 week implementation, and proven 90%+ patient retention rates across healthcare providers nationwide.

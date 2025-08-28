@@ -18,7 +18,7 @@ export default function Home() {
           <div className="text-center mb-16">
             <h2 className="text-3xl lg:text-4xl font-bold text-foreground mb-6">Who We Serve</h2>
             <p className="text-xl text-muted-foreground max-w-3xl mx-auto">
-              We partner with Mississippi healthcare providers across Jackson, Gulfport, Southaven, Hattiesburg, Biloxi, and Meridian to deliver comprehensive Medicare care coordination services for patients with chronic conditions.
+              We partner with healthcare providers across the Southeast region to deliver comprehensive Medicare care coordination services for patients with chronic conditions. Headquartered in Mississippi with strong local presence in Jackson, Gulfport, Southaven, and Hattiesburg.
             </p>
           </div>
           

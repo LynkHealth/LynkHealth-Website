@@ -107,6 +107,15 @@ Lynk Health is a comprehensive healthcare care coordination platform that provid
 
 ## Changelog
 
+- January 30, 2025: Updated SEO strategy for Southeast regional focus while maintaining Mississippi local presence
+  - Changed positioning from "Mississippi-only" to "Southeast regional provider with Mississippi headquarters"
+  - Updated all page titles and descriptions to target "Southeast" while maintaining Mississippi keywords
+  - Modified structured data to include Southeast states (MS, AL, TN, GA, FL, LA) in service areas
+  - Headlines now say "Leading in the Southeast" instead of "#1 in Mississippi" to avoid regional limitations
+  - Maintained Mississippi cities (Jackson, Gulfport, Southaven, Hattiesburg) for local SEO benefits
+  - Enhanced meta descriptions with "Mississippi headquarters" and "regional nurses" messaging
+  - Created comprehensive sitemap.xml and robots.txt for optimal search engine discovery
+  - Keywords now include "Southeast Medicare services" along with state-specific terms for broader reach
 - January 30, 2025: Enhanced local nurse messaging throughout website to differentiate from call centers
   - Added dedicated "Local Nurses Who Understand Your Community" section to home page with patient testimonial
   - Updated hero messaging to emphasize "local, dedicated nurses who understand your patients' communities"
