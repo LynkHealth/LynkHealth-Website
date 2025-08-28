@@ -73,13 +73,13 @@ export default function Home() {
             {/* Main Care Image - Optimized loading */}
             <div className="relative rounded-3xl overflow-hidden shadow-2xl">
               <LazyImage
-                src="https://lynk.health/wp-content/uploads/2023/09/AdobeStock_610198709-scaled.jpeg"
-                alt="Professional nurse providing chronic care management to elderly patient"
+                src="/images/AdobeStock_616281927_1751485954823.jpeg"
+                alt="Professional nurse providing care coordination to elderly patient"
                 className="w-full h-[400px] object-cover"
               />
               <div className="absolute bottom-6 left-6 right-6">
                 <div className="bg-white/95 backdrop-blur-sm rounded-xl p-4">
-                  <h3 className="font-bold text-foreground mb-1">Chronic Care Management Excellence</h3>
+                  <h3 className="font-bold text-foreground mb-1">Care Coordination Excellence</h3>
                   <p className="text-sm text-muted-foreground">Professional nursing care delivering measurable health outcomes for Medicare patients</p>
                 </div>
               </div>
