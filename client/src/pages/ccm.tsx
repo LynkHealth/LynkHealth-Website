@@ -54,12 +54,12 @@ export default function CCM() {
                 </Badge>
               </div>
               <h1 className="text-4xl md:text-5xl xl:text-6xl font-bold text-foreground leading-[1.1] mb-6">
-                Leading Chronic Care Management in the
-                <span className="text-primary"> Southeast</span>
+                Chronic Care Management
+                <span className="text-primary"> That Actually Works</span>
               </h1>
               <p className="text-xl text-muted-foreground mb-8 leading-relaxed">
-                Premier Medicare Chronic Care Management (CCM) provider serving Southeast healthcare providers with Mississippi headquarters. 
-                Zero upfront costs, seamless EHR integration, and regional nurses—generating $50+ per patient monthly in new revenue.
+                Turnkey Medicare Chronic Care Management (CCM) program for healthcare providers nationwide. 
+                Zero upfront costs, seamless EHR integration, and dedicated nurses who understand your patients' communities—generating $50+ per patient monthly in new revenue.
               </p>
               <div className="flex flex-col sm:flex-row gap-4 mb-8">
                 <Link href="/#contact">

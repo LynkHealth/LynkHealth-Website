@@ -16,11 +16,12 @@ export default function Hero() {
               </span>
             </div>
             <h1 className="text-4xl md:text-5xl xl:text-6xl font-bold text-foreground leading-[1.1] mb-6">
-              Leading Medicare Care Coordination in the{" "}
-              <span className="text-primary">Southeast</span>
+              Medicare Care Coordination{" "}
+              <span className="text-primary">That Actually Works</span>
             </h1>
             <p className="text-xl text-muted-foreground mb-8 leading-relaxed">
-              Comprehensive Medicare care coordination serving the Southeast region with headquarters in Mississippi. Chronic Care Management (CCM), Remote Patient Monitoring (RPM), and Behavioral Health Integration (BHI) delivered by regional nurses—no call centers. Generate $100+ revenue per patient monthly while achieving 90%+ retention rates.
+              Turnkey Medicare programs with dedicated nurses who understand your patients' communities. 
+              Chronic Care Management (CCM), Remote Patient Monitoring (RPM), Behavioral Health Integration (BHI), Remote Therapeutic Monitoring (RTM), and Advanced Primary Care Management (APCM)—no call centers. Generate $100+ revenue per patient monthly while achieving 90%+ retention rates.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 mb-8">
               <Link href="/#contact">

@@ -76,12 +76,12 @@ export default function Monitoring() {
                 </Badge>
               </div>
               <h1 className="text-4xl md:text-5xl xl:text-6xl font-bold text-foreground leading-[1.1] mb-6">
-                Leading Remote Patient Monitoring
-                <span className="text-primary"> in the Southeast</span>
+                Remote Patient Monitoring
+                <span className="text-primary"> Solutions</span>
               </h1>
               <p className="text-xl text-muted-foreground mb-8 leading-relaxed">
-                Premier Remote Patient Monitoring (RPM) and Remote Therapeutic Monitoring (RTM) provider serving Southeast healthcare practices with Mississippi headquarters. 
-                No call centers—create $58+ per patient monthly in new revenue streams with FDA-approved monitoring technology and regional nurses.
+                Turnkey Remote Patient Monitoring (RPM) and Remote Therapeutic Monitoring (RTM) programs with cellular-enabled devices and 24/7 clinical monitoring by dedicated nurses. 
+                No call centers—create $58+ per patient monthly in new revenue streams with FDA-approved monitoring technology and genuine patient relationships.
               </p>
               <div className="flex flex-col sm:flex-row gap-4 mb-8">
                 <Link href="/#contact">
