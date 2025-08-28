@@ -15,10 +15,28 @@ import {
   Heart,
   Stethoscope,
   Calendar,
-  FileText
+  FileText,
+  Calculator
 } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { useState } from "react";
 
 export default function APCM() {
+  // APCM Calculator state
+  const [patientCount, setPatientCount] = useState(100);
+  const [level1Percentage, setLevel1Percentage] = useState(30);
+  const [level2Percentage, setLevel2Percentage] = useState(50);
+  const [level3Percentage, setLevel3Percentage] = useState(20);
+
+  // Calculate APCM revenue
+  const level1Patients = Math.round(patientCount * (level1Percentage / 100));
+  const level2Patients = Math.round(patientCount * (level2Percentage / 100));
+  const level3Patients = Math.round(patientCount * (level3Percentage / 100));
+
+  const monthlyRevenue = (level1Patients * 15) + (level2Patients * 50) + (level3Patients * 110);
+  const annualRevenue = monthlyRevenue * 12;
+
   return (
     <div className="min-h-screen bg-gradient-to-b from-slate-50 to-white">
       {/* Hero Section */}
@@ -709,6 +727,179 @@ export default function APCM() {
                 Calculate APCM Revenue
               </Button>
             </Link>
+          </div>
+        </div>
+      </section>
+
+      {/* APCM Revenue Calculator */}
+      <section className="py-16">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-12">
+            <h2 className="text-3xl font-bold text-foreground mb-4 flex items-center justify-center">
+              <Calculator className="mr-3 h-8 w-8 text-primary" />
+              APCM Revenue Calculator
+            </h2>
+            <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
+              Calculate your potential monthly and annual revenue from Advanced Primary Care Management programs
+            </p>
+          </div>
+
+          <div className="grid lg:grid-cols-2 gap-12 items-start">
+            {/* Calculator Controls */}
+            <Card className="p-6">
+              <CardHeader>
+                <CardTitle className="flex items-center">
+                  <Users className="mr-2 h-5 w-5" />
+                  Patient Distribution
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                <div>
+                  <Label htmlFor="patientCount">Total APCM Patients</Label>
+                  <Input
+                    id="patientCount"
+                    type="number"
+                    value={patientCount}
+                    onChange={(e) => setPatientCount(parseInt(e.target.value) || 0)}
+                    className="mt-2"
+                    min="0"
+                  />
+                </div>
+
+                <div className="space-y-4">
+                  <h4 className="font-semibold">Patient Level Distribution (%)</h4>
+                  
+                  <div>
+                    <Label htmlFor="level1">Level 1 (G0556) - $15/month</Label>
+                    <Input
+                      id="level1"
+                      type="number"
+                      value={level1Percentage}
+                      onChange={(e) => setLevel1Percentage(parseInt(e.target.value) || 0)}
+                      className="mt-2"
+                      min="0"
+                      max="100"
+                    />
+                    <p className="text-sm text-muted-foreground mt-1">
+                      Patients: {level1Patients}
+                    </p>
+                  </div>
+
+                  <div>
+                    <Label htmlFor="level2">Level 2 (G0557) - $50/month</Label>
+                    <Input
+                      id="level2"
+                      type="number"
+                      value={level2Percentage}
+                      onChange={(e) => setLevel2Percentage(parseInt(e.target.value) || 0)}
+                      className="mt-2"
+                      min="0"
+                      max="100"
+                    />
+                    <p className="text-sm text-muted-foreground mt-1">
+                      Patients: {level2Patients}
+                    </p>
+                  </div>
+
+                  <div>
+                    <Label htmlFor="level3">Level 3 (G0558) - $110/month</Label>
+                    <Input
+                      id="level3"
+                      type="number"
+                      value={level3Percentage}
+                      onChange={(e) => setLevel3Percentage(parseInt(e.target.value) || 0)}
+                      className="mt-2"
+                      min="0"
+                      max="100"
+                    />
+                    <p className="text-sm text-muted-foreground mt-1">
+                      Patients: {level3Patients}
+                    </p>
+                  </div>
+
+                  <div className="text-sm text-muted-foreground">
+                    Total Distribution: {level1Percentage + level2Percentage + level3Percentage}%
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Revenue Results */}
+            <div className="space-y-6">
+              <Card className="border-2 border-primary/20">
+                <CardHeader className="bg-primary/5">
+                  <CardTitle className="flex items-center text-primary">
+                    <DollarSign className="mr-2 h-5 w-5" />
+                    Monthly Revenue Breakdown
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="p-6">
+                  <div className="space-y-4">
+                    <div className="flex justify-between items-center">
+                      <span>Level 1 ({level1Patients} patients × $15)</span>
+                      <span className="font-bold">${(level1Patients * 15).toLocaleString()}</span>
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <span>Level 2 ({level2Patients} patients × $50)</span>
+                      <span className="font-bold">${(level2Patients * 50).toLocaleString()}</span>
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <span>Level 3 ({level3Patients} patients × $110)</span>
+                      <span className="font-bold">${(level3Patients * 110).toLocaleString()}</span>
+                    </div>
+                    <div className="border-t pt-4">
+                      <div className="flex justify-between items-center text-lg font-bold text-primary">
+                        <span>Total Monthly Revenue</span>
+                        <span>${monthlyRevenue.toLocaleString()}</span>
+                      </div>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card className="border-2 border-accent/20">
+                <CardHeader className="bg-accent/5">
+                  <CardTitle className="flex items-center text-accent">
+                    <TrendingUp className="mr-2 h-5 w-5" />
+                    Annual Revenue Projection
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="p-6">
+                  <div className="text-center">
+                    <div className="text-4xl font-bold text-accent mb-2">
+                      ${annualRevenue.toLocaleString()}
+                    </div>
+                    <p className="text-muted-foreground">
+                      Total annual revenue from APCM programs
+                    </p>
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card className="bg-gradient-to-r from-secondary/10 to-primary/10">
+                <CardContent className="p-6">
+                  <h3 className="font-semibold mb-3">Key APCM Benefits</h3>
+                  <ul className="space-y-2 text-sm">
+                    <li className="flex items-center">
+                      <CheckCircle2 className="h-4 w-4 text-green-500 mr-2" />
+                      No time requirements like traditional CCM
+                    </li>
+                    <li className="flex items-center">
+                      <CheckCircle2 className="h-4 w-4 text-green-500 mr-2" />
+                      24/7 access and continuity of care
+                    </li>
+                    <li className="flex items-center">
+                      <CheckCircle2 className="h-4 w-4 text-green-500 mr-2" />
+                      Integrated with Value in Primary Care MIPS
+                    </li>
+                    <li className="flex items-center">
+                      <CheckCircle2 className="h-4 w-4 text-green-500 mr-2" />
+                      Higher reimbursement for complex patients
+                    </li>
+                  </ul>
+                </CardContent>
+              </Card>
+            </div>
           </div>
         </div>
       </section>

@@ -14,10 +14,36 @@ import {
   TrendingUp,
   Heart,
   Stethoscope,
-  Brain
+  Brain,
+  Calculator
 } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { useState } from "react";
 
 export default function RTM() {
+  // RTM Calculator state
+  const [patientCount, setPatientCount] = useState(50);
+  const [setupPercentage, setSetupPercentage] = useState(100);
+  const [deviceSupplyPercentage, setDeviceSupplyPercentage] = useState(90);
+  const [treatmentManagementPercentage, setTreatmentManagementPercentage] = useState(85);
+
+  // RTM billing rates
+  const SETUP_RATE = 62.14; // G0058 - Initial setup and patient education
+  const DEVICE_SUPPLY_RATE = 58.73; // G0059 - Device supply
+  const TREATMENT_MANAGEMENT_RATE = 78.45; // G0060 - Treatment management services
+
+  // Calculate RTM revenue
+  const setupPatients = Math.round(patientCount * (setupPercentage / 100));
+  const deviceSupplyPatients = Math.round(patientCount * (deviceSupplyPercentage / 100));
+  const treatmentPatients = Math.round(patientCount * (treatmentManagementPercentage / 100));
+
+  const monthlyRevenue = 
+    (setupPatients * SETUP_RATE) + 
+    (deviceSupplyPatients * DEVICE_SUPPLY_RATE) + 
+    (treatmentPatients * TREATMENT_MANAGEMENT_RATE);
+  const annualRevenue = monthlyRevenue * 12;
+
   return (
     <div className="min-h-screen bg-gradient-to-b from-slate-50 to-white">
       {/* Hero Section */}
@@ -583,6 +609,184 @@ export default function RTM() {
                 Calculate RTM Revenue
               </Button>
             </Link>
+          </div>
+        </div>
+      </section>
+
+      {/* RTM Revenue Calculator */}
+      <section className="py-16">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-12">
+            <h2 className="text-3xl font-bold text-foreground mb-4 flex items-center justify-center">
+              <Calculator className="mr-3 h-8 w-8 text-primary" />
+              RTM Revenue Calculator
+            </h2>
+            <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
+              Calculate your potential monthly and annual revenue from Remote Therapeutic Monitoring programs
+            </p>
+          </div>
+
+          <div className="grid lg:grid-cols-2 gap-12 items-start">
+            {/* Calculator Controls */}
+            <Card className="p-6">
+              <CardHeader>
+                <CardTitle className="flex items-center">
+                  <Users className="mr-2 h-5 w-5" />
+                  RTM Patient Metrics
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                <div>
+                  <Label htmlFor="rtmPatientCount">Total RTM Patients</Label>
+                  <Input
+                    id="rtmPatientCount"
+                    type="number"
+                    value={patientCount}
+                    onChange={(e) => setPatientCount(parseInt(e.target.value) || 0)}
+                    className="mt-2"
+                    min="0"
+                  />
+                </div>
+
+                <div className="space-y-4">
+                  <h4 className="font-semibold">Service Utilization Rates (%)</h4>
+                  
+                  <div>
+                    <Label htmlFor="setup">Initial Setup & Education (G0058)</Label>
+                    <Input
+                      id="setup"
+                      type="number"
+                      value={setupPercentage}
+                      onChange={(e) => setSetupPercentage(parseInt(e.target.value) || 0)}
+                      className="mt-2"
+                      min="0"
+                      max="100"
+                    />
+                    <p className="text-sm text-muted-foreground mt-1">
+                      Patients: {setupPatients} × $62.14 = ${(setupPatients * SETUP_RATE).toLocaleString()}
+                    </p>
+                  </div>
+
+                  <div>
+                    <Label htmlFor="deviceSupply">Device Supply & Data Collection (G0059)</Label>
+                    <Input
+                      id="deviceSupply"
+                      type="number"
+                      value={deviceSupplyPercentage}
+                      onChange={(e) => setDeviceSupplyPercentage(parseInt(e.target.value) || 0)}
+                      className="mt-2"
+                      min="0"
+                      max="100"
+                    />
+                    <p className="text-sm text-muted-foreground mt-1">
+                      Patients: {deviceSupplyPatients} × $58.73 = ${(deviceSupplyPatients * DEVICE_SUPPLY_RATE).toLocaleString()}
+                    </p>
+                  </div>
+
+                  <div>
+                    <Label htmlFor="treatment">Treatment Management (G0060)</Label>
+                    <Input
+                      id="treatment"
+                      type="number"
+                      value={treatmentManagementPercentage}
+                      onChange={(e) => setTreatmentManagementPercentage(parseInt(e.target.value) || 0)}
+                      className="mt-2"
+                      min="0"
+                      max="100"
+                    />
+                    <p className="text-sm text-muted-foreground mt-1">
+                      Patients: {treatmentPatients} × $78.45 = ${(treatmentPatients * TREATMENT_MANAGEMENT_RATE).toLocaleString()}
+                    </p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Revenue Results */}
+            <div className="space-y-6">
+              <Card className="border-2 border-primary/20">
+                <CardHeader className="bg-primary/5">
+                  <CardTitle className="flex items-center text-primary">
+                    <DollarSign className="mr-2 h-5 w-5" />
+                    Monthly Revenue Breakdown
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="p-6">
+                  <div className="space-y-4">
+                    <div className="flex justify-between items-center">
+                      <div>
+                        <span className="font-medium">Setup & Education (G0058)</span>
+                        <div className="text-sm text-muted-foreground">{setupPatients} patients</div>
+                      </div>
+                      <span className="font-bold">${(setupPatients * SETUP_RATE).toLocaleString()}</span>
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <div>
+                        <span className="font-medium">Device Supply (G0059)</span>
+                        <div className="text-sm text-muted-foreground">{deviceSupplyPatients} patients</div>
+                      </div>
+                      <span className="font-bold">${(deviceSupplyPatients * DEVICE_SUPPLY_RATE).toLocaleString()}</span>
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <div>
+                        <span className="font-medium">Treatment Management (G0060)</span>
+                        <div className="text-sm text-muted-foreground">{treatmentPatients} patients</div>
+                      </div>
+                      <span className="font-bold">${(treatmentPatients * TREATMENT_MANAGEMENT_RATE).toLocaleString()}</span>
+                    </div>
+                    <div className="border-t pt-4">
+                      <div className="flex justify-between items-center text-lg font-bold text-primary">
+                        <span>Total Monthly Revenue</span>
+                        <span>${monthlyRevenue.toLocaleString()}</span>
+                      </div>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card className="border-2 border-accent/20">
+                <CardHeader className="bg-accent/5">
+                  <CardTitle className="flex items-center text-accent">
+                    <TrendingUp className="mr-2 h-5 w-5" />
+                    Annual Revenue Projection
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="p-6">
+                  <div className="text-center">
+                    <div className="text-4xl font-bold text-accent mb-2">
+                      ${annualRevenue.toLocaleString()}
+                    </div>
+                    <p className="text-muted-foreground">
+                      Total annual revenue from RTM programs
+                    </p>
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card className="bg-gradient-to-r from-secondary/10 to-primary/10">
+                <CardContent className="p-6">
+                  <h3 className="font-semibold mb-3">RTM Key Benefits</h3>
+                  <ul className="space-y-2 text-sm">
+                    <li className="flex items-center">
+                      <CheckCircle2 className="h-4 w-4 text-green-500 mr-2" />
+                      No established patient relationship required
+                    </li>
+                    <li className="flex items-center">
+                      <CheckCircle2 className="h-4 w-4 text-green-500 mr-2" />
+                      16+ days of data collection monthly
+                    </li>
+                    <li className="flex items-center">
+                      <CheckCircle2 className="h-4 w-4 text-green-500 mr-2" />
+                      Non-physiological therapeutic monitoring
+                    </li>
+                    <li className="flex items-center">
+                      <CheckCircle2 className="h-4 w-4 text-green-500 mr-2" />
+                      Higher reimbursement than traditional RPM
+                    </li>
+                  </ul>
+                </CardContent>
+              </Card>
+            </div>
           </div>
         </div>
       </section>
