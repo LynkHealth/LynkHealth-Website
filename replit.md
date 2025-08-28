@@ -43,7 +43,7 @@ Lynk Health is a comprehensive healthcare care coordination platform that provid
 ### Core Pages
 - **Home**: Hero section with services overview and testimonials
 - **About**: Company mission, vision, and team information
-- **Services**: Detailed pages for CCM, RPM/RTM, and BHI services
+- **Services**: Detailed pages for CCM, RPM, RTM, APCM, and BHI services
 - **How It Works**: 3-step process explanation
 - **Resources**: Blog posts and educational content
 - **Contact**: Contact form with organization type selection
@@ -107,6 +107,22 @@ Lynk Health is a comprehensive healthcare care coordination platform that provid
 
 ## Changelog
 
+- January 30, 2025: Added comprehensive RTM and APCM service pages with Medicare program details
+  - Created comprehensive RTM service page (rtm.tsx) with authentic Medicare CPT codes and billing requirements:
+    * Setup codes (98975) - $56 initial education and device configuration
+    * Device supply codes (98976-98978) - $63-$65 monthly for respiratory, musculoskeletal, and CBT monitoring
+    * Treatment management codes (98980-98981) - $78 for first 20 minutes, $39 for additional increments
+    * Detailed RTM vs RPM comparison highlighting key differences in data types and billing requirements
+    * Implementation process and revenue potential analysis
+  - Created detailed APCM service page (apcm.tsx) covering new 2025 G-codes and program requirements:
+    * Three-tier payment structure: G0556 ($15), G0557 ($50), G0558 ($110) monthly rates
+    * Comprehensive coverage of 13 core service elements including 24/7 access and care coordination
+    * APCM vs other Medicare programs comparison table
+    * Quality reporting requirements and MIPS Value Pathway integration
+    * Revenue examples showing potential $504,000 annual revenue for 1,000-patient practice
+  - Updated navigation system to include RTM and APCM in services dropdown menu
+  - Enhanced home page with 5-service grid layout showcasing all Medicare programs
+  - Integrated authentic 2025 Medicare billing rates and program requirements throughout
 - January 30, 2025: Implemented centralized blog post management system
   - Created comprehensive blog-posts.ts data file with 6 full-length professional articles
   - All blog posts now contain extensive, relevant content (1,500-4,000+ words each):

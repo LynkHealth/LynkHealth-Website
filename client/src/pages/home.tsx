@@ -155,10 +155,10 @@ export default function Home() {
             </p>
           </div>
           
-          <div className="grid lg:grid-cols-3 gap-8">
+          <div className="grid lg:grid-cols-3 xl:grid-cols-5 gap-6">
             {/* CCM Program Card */}
-            <div className="bg-white rounded-2xl p-8 shadow-lg hover:shadow-xl transition-shadow">
-              <div className="relative w-full h-40 mb-6 rounded-lg overflow-hidden">
+            <div className="bg-white rounded-2xl p-6 shadow-lg hover:shadow-xl transition-shadow">
+              <div className="relative w-full h-32 mb-4 rounded-lg overflow-hidden">
                 <img 
                   src="/images/elderly-patient-care.jpeg"
                   alt="Elderly patient receiving chronic care management from a registered nurse"
@@ -166,36 +166,32 @@ export default function Home() {
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent"></div>
               </div>
-              <h3 className="text-2xl font-bold text-foreground mb-4">Chronic Care Management</h3>
-              <p className="text-muted-foreground mb-6">
-                CMS-covered monthly care coordination for patients with multiple chronic conditions. Our registered nurses provide comprehensive health monitoring and care plan management.
+              <h3 className="text-xl font-bold text-foreground mb-4">Chronic Care Management</h3>
+              <p className="text-muted-foreground mb-4">
+                CMS-covered monthly care coordination for patients with multiple chronic conditions by registered nurses.
               </p>
-              <ul className="space-y-2 mb-6">
-                <li className="flex items-center text-muted-foreground">
-                  <i className="fas fa-check text-healthcare-secondary mr-3"></i>
+              <ul className="space-y-2 mb-4">
+                <li className="flex items-center text-muted-foreground text-sm">
+                  <i className="fas fa-check text-healthcare-secondary mr-2"></i>
                   24/7 care team availability
                 </li>
-                <li className="flex items-center text-muted-foreground">
-                  <i className="fas fa-check text-healthcare-secondary mr-3"></i>
-                  Monthly care plan updates
+                <li className="flex items-center text-muted-foreground text-sm">
+                  <i className="fas fa-check text-healthcare-secondary mr-2"></i>
+                  $50+ per patient/month
                 </li>
-                <li className="flex items-center text-muted-foreground">
-                  <i className="fas fa-check text-healthcare-secondary mr-3"></i>
-                  Medication management
-                </li>
-                <li className="flex items-center text-muted-foreground">
-                  <i className="fas fa-check text-healthcare-secondary mr-3"></i>
-                  Provider communication
+                <li className="flex items-center text-muted-foreground text-sm">
+                  <i className="fas fa-check text-healthcare-secondary mr-2"></i>
+                  20+ minutes monthly
                 </li>
               </ul>
-              <Link href="/services/ccm" className="inline-flex items-center text-healthcare-primary font-semibold hover:text-blue-700">
+              <Link href="/services/ccm" className="inline-flex items-center text-healthcare-primary font-semibold hover:text-blue-700 text-sm">
                 Learn More <i className="fas fa-arrow-right ml-2"></i>
               </Link>
             </div>
             
-            {/* In-Home Monitoring Card */}
-            <div className="bg-white rounded-2xl p-8 shadow-lg hover:shadow-xl transition-shadow">
-              <div className="relative w-full h-40 mb-6 rounded-lg overflow-hidden">
+            {/* RPM Program Card */}
+            <div className="bg-white rounded-2xl p-6 shadow-lg hover:shadow-xl transition-shadow">
+              <div className="relative w-full h-32 mb-4 rounded-lg overflow-hidden">
                 <img 
                   src="/images/elderly-monitoring.jpeg"
                   alt="Elderly patient using remote patient monitoring device at home"
@@ -203,36 +199,98 @@ export default function Home() {
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent"></div>
               </div>
-              <h3 className="text-2xl font-bold text-foreground mb-4">In-Home Patient Monitoring</h3>
-              <p className="text-muted-foreground mb-6">
-                Remote Patient Monitoring (RPM) and Remote Therapeutic Monitoring (RTM) services that enable continuous health tracking from the comfort of home.
+              <h3 className="text-xl font-bold text-foreground mb-4">Remote Patient Monitoring</h3>
+              <p className="text-muted-foreground mb-4">
+                FDA-approved device monitoring of physiological data like blood pressure, weight, and glucose levels.
               </p>
-              <ul className="space-y-2 mb-6">
-                <li className="flex items-center text-muted-foreground">
-                  <i className="fas fa-check text-healthcare-secondary mr-3"></i>
+              <ul className="space-y-2 mb-4">
+                <li className="flex items-center text-muted-foreground text-sm">
+                  <i className="fas fa-check text-healthcare-secondary mr-2"></i>
                   FDA-approved devices
                 </li>
-                <li className="flex items-center text-muted-foreground">
-                  <i className="fas fa-check text-healthcare-secondary mr-3"></i>
-                  Real-time data transmission
+                <li className="flex items-center text-muted-foreground text-sm">
+                  <i className="fas fa-check text-healthcare-secondary mr-2"></i>
+                  $58+ per patient/month
                 </li>
-                <li className="flex items-center text-muted-foreground">
-                  <i className="fas fa-check text-healthcare-secondary mr-3"></i>
-                  Alert management
-                </li>
-                <li className="flex items-center text-muted-foreground">
-                  <i className="fas fa-check text-healthcare-secondary mr-3"></i>
-                  Patient education
+                <li className="flex items-center text-muted-foreground text-sm">
+                  <i className="fas fa-check text-healthcare-secondary mr-2"></i>
+                  16-day data requirement
                 </li>
               </ul>
-              <Link href="/services/monitoring" className="inline-flex items-center text-healthcare-primary font-semibold hover:text-blue-700">
+              <Link href="/services/monitoring" className="inline-flex items-center text-healthcare-primary font-semibold hover:text-blue-700 text-sm">
                 Learn More <i className="fas fa-arrow-right ml-2"></i>
               </Link>
             </div>
             
+            {/* RTM Program Card */}
+            <div className="bg-white rounded-2xl p-6 shadow-lg hover:shadow-xl transition-shadow">
+              <div className="relative w-full h-32 mb-4 rounded-lg overflow-hidden">
+                <img 
+                  src="/images/elderly-monitoring.jpeg"
+                  alt="Remote therapeutic monitoring for rehabilitation and therapy"
+                  className="w-full h-full object-cover"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent"></div>
+              </div>
+              <h3 className="text-xl font-bold text-foreground mb-4">Remote Therapeutic Monitoring</h3>
+              <p className="text-muted-foreground mb-4">
+                Non-physiological monitoring for therapy adherence, pain levels, and rehabilitation progress.
+              </p>
+              <ul className="space-y-2 mb-4">
+                <li className="flex items-center text-muted-foreground text-sm">
+                  <i className="fas fa-check text-healthcare-secondary mr-2"></i>
+                  Therapy monitoring
+                </li>
+                <li className="flex items-center text-muted-foreground text-sm">
+                  <i className="fas fa-check text-healthcare-secondary mr-2"></i>
+                  $78+ per patient/month
+                </li>
+                <li className="flex items-center text-muted-foreground text-sm">
+                  <i className="fas fa-check text-healthcare-secondary mr-2"></i>
+                  No prior relationship required
+                </li>
+              </ul>
+              <Link href="/services/rtm" className="inline-flex items-center text-healthcare-primary font-semibold hover:text-blue-700 text-sm">
+                Learn More <i className="fas fa-arrow-right ml-2"></i>
+              </Link>
+            </div>
+
+            {/* APCM Program Card */}
+            <div className="bg-white rounded-2xl p-6 shadow-lg hover:shadow-xl transition-shadow">
+              <div className="relative w-full h-32 mb-4 rounded-lg overflow-hidden">
+                <img 
+                  src="/images/elderly-patient-care.jpeg"
+                  alt="Advanced primary care management comprehensive coordination"
+                  className="w-full h-full object-cover"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent"></div>
+              </div>
+              <h3 className="text-xl font-bold text-foreground mb-4">Advanced Primary Care Management</h3>
+              <p className="text-muted-foreground mb-4">
+                CMS's newest 2025 program providing comprehensive primary care coordination with reduced administrative burden.
+              </p>
+              <ul className="space-y-2 mb-4">
+                <li className="flex items-center text-muted-foreground text-sm">
+                  <i className="fas fa-check text-healthcare-secondary mr-2"></i>
+                  24/7 access capability
+                </li>
+                <li className="flex items-center text-muted-foreground text-sm">
+                  <i className="fas fa-check text-healthcare-secondary mr-2"></i>
+                  $15-$110 per patient/month
+                </li>
+                <li className="flex items-center text-muted-foreground text-sm">
+                  <i className="fas fa-check text-healthcare-secondary mr-2"></i>
+                  No time requirements
+                </li>
+              </ul>
+              <Link href="/services/apcm" className="inline-flex items-center text-healthcare-primary font-semibold hover:text-blue-700 text-sm">
+                Learn More <i className="fas fa-arrow-right ml-2"></i>
+              </Link>
+            </div>
+
             {/* BHI Program Card */}
-            <div className="bg-white rounded-2xl p-8 shadow-lg hover:shadow-xl transition-shadow">
-              <div className="relative w-full h-40 mb-6 rounded-lg overflow-hidden">
+            <div className="bg-white rounded-2xl p-6 shadow-lg hover:shadow-xl transition-shadow">
+              <div className="relative w-full h-32 mb-4 rounded-lg overflow-hidden">
                 <img 
                   src="/images/elderly-behavioral-health.jpeg"
                   alt="Elderly patient receiving behavioral health support and mental health care"
@@ -240,29 +298,25 @@ export default function Home() {
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent"></div>
               </div>
-              <h3 className="text-2xl font-bold text-foreground mb-4">Behavioral Health Integration</h3>
-              <p className="text-muted-foreground mb-6">
-                Compassionate mental health support for seniors with behavioral conditions, using a low-stigma approach to improve engagement and outcomes.
+              <h3 className="text-xl font-bold text-foreground mb-4">Behavioral Health Integration</h3>
+              <p className="text-muted-foreground mb-4">
+                Compassionate mental health support for seniors with behavioral conditions using evidence-based interventions.
               </p>
-              <ul className="space-y-2 mb-6">
-                <li className="flex items-center text-muted-foreground">
-                  <i className="fas fa-check text-healthcare-secondary mr-3"></i>
+              <ul className="space-y-2 mb-4">
+                <li className="flex items-center text-muted-foreground text-sm">
+                  <i className="fas fa-check text-healthcare-secondary mr-2"></i>
                   Depression screening
                 </li>
-                <li className="flex items-center text-muted-foreground">
-                  <i className="fas fa-check text-healthcare-secondary mr-3"></i>
-                  Medication adherence
+                <li className="flex items-center text-muted-foreground text-sm">
+                  <i className="fas fa-check text-healthcare-secondary mr-2"></i>
+                  $42+ per patient/month
                 </li>
-                <li className="flex items-center text-muted-foreground">
-                  <i className="fas fa-check text-healthcare-secondary mr-3"></i>
+                <li className="flex items-center text-muted-foreground text-sm">
+                  <i className="fas fa-check text-healthcare-secondary mr-2"></i>
                   Crisis intervention
                 </li>
-                <li className="flex items-center text-muted-foreground">
-                  <i className="fas fa-check text-healthcare-secondary mr-3"></i>
-                  Care team coordination
-                </li>
               </ul>
-              <Link href="/services/bhi" className="inline-flex items-center text-healthcare-primary font-semibold hover:text-blue-700">
+              <Link href="/services/bhi" className="inline-flex items-center text-healthcare-primary font-semibold hover:text-blue-700 text-sm">
                 Learn More <i className="fas fa-arrow-right ml-2"></i>
               </Link>
             </div>

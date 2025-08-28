@@ -19,7 +19,9 @@ export function Navigation() {
 
   const serviceLinks = [
     { href: "/services/ccm", label: "Chronic Care Management", description: "CCM services for chronic conditions" },
-    { href: "/services/monitoring", label: "In-Home Patient Monitoring", description: "Remote monitoring and RTM services" },
+    { href: "/services/monitoring", label: "Remote Patient Monitoring", description: "RPM physiological monitoring" },
+    { href: "/services/rtm", label: "Remote Therapeutic Monitoring", description: "RTM non-physiological monitoring" },
+    { href: "/services/apcm", label: "Advanced Primary Care Management", description: "APCM comprehensive care coordination" },
     { href: "/services/bhi", label: "Behavioral Health Integration", description: "Mental health support services" },
   ];
 

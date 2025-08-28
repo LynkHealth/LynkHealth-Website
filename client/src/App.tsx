@@ -9,6 +9,8 @@ import Home from "@/pages/home";
 import About from "@/pages/about";
 import CCM from "@/pages/ccm";
 import Monitoring from "@/pages/monitoring";
+import RTM from "@/pages/rtm";
+import APCM from "@/pages/apcm";
 import BHI from "@/pages/bhi";
 import HowItWorks from "@/pages/how-it-works";
 import Resources from "@/pages/resources";
@@ -28,6 +30,8 @@ function Router() {
           <Route path="/about" component={About} />
           <Route path="/services/ccm" component={CCM} />
           <Route path="/services/monitoring" component={Monitoring} />
+          <Route path="/services/rtm" component={RTM} />
+          <Route path="/services/apcm" component={APCM} />
           <Route path="/services/bhi" component={BHI} />
           <Route path="/how-it-works" component={HowItWorks} />
           <Route path="/resources" component={Resources} />
