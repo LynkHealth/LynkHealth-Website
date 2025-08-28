@@ -571,7 +571,7 @@ export default function RTM() {
           </div>
 
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Link href="/#contact">
+            <Link href="/contact">
               <Button size="lg" className="bg-white text-primary hover:bg-white/90">
                 Start Your RTM Program
                 <ArrowRight className="ml-2 h-5 w-5" />

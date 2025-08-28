@@ -472,9 +472,11 @@ export default function Monitoring() {
                 Start Partnership
               </Button>
             </Link>
-            <Button size="lg" variant="outline" className="border-2 border-primary text-primary hover:bg-primary hover:text-primary-foreground font-semibold px-8 py-4 rounded-lg transition-all">
-              Schedule Demo
-            </Button>
+            <Link href="/contact">
+              <Button size="lg" variant="outline" className="border-2 border-primary text-primary hover:bg-primary hover:text-primary-foreground font-semibold px-8 py-4 rounded-lg transition-all">
+                Schedule Demo
+              </Button>
+            </Link>
           </div>
         </div>
       </section>
