@@ -72,8 +72,8 @@ export default function Home() {
           <div className="grid lg:grid-cols-2 gap-12 items-center">
             {/* Main Care Image - Optimized loading */}
             <div className="relative rounded-3xl overflow-hidden shadow-2xl">
-              <LazyImage
-                src="/images/AdobeStock_616281927_1751485954823.jpeg"
+              <img
+                src="/images/elderly-patient-care.jpeg"
                 alt="Professional nurse providing care coordination to elderly patient"
                 className="w-full h-[400px] object-cover"
               />
