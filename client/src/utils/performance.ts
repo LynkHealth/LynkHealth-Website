@@ -1,7 +1,7 @@
 // Performance utilities for load time optimization
 export function preloadCriticalResources() {
   const criticalImages = [
-    '/images/AdobeStock_616281927_1751485954823.jpeg',
+    '/images/elderly-patient-care.jpeg',
     '/images/AdobeStock_419808796_1751485954770.jpeg'
   ];
 
