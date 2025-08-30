@@ -1,9 +1,9 @@
+import React from 'react';
+
 function App() {
-  return (
-    <div>
-      <h1>Lynk Health Test</h1>
-      <p>Site is working!</p>
-    </div>
+  return React.createElement('div', null,
+    React.createElement('h1', null, 'Lynk Health Test'),
+    React.createElement('p', null, 'Site is working!')
   );
 }
 

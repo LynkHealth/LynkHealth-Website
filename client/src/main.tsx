@@ -1,5 +1,10 @@
-import { createRoot } from "react-dom/client";
-import App from "./App-simple";
-import "./index.css";
+// Test if basic JavaScript works
+console.log("main.tsx is loading");
 
-createRoot(document.getElementById("root")!).render(<App />);
+const rootElement = document.getElementById("root");
+console.log("Root element found:", rootElement);
+
+if (rootElement) {
+  rootElement.innerHTML = "<h1>JavaScript is working</h1><p>Basic HTML injection test</p>";
+  console.log("HTML injected successfully");
+}
