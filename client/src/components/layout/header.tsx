@@ -54,7 +54,7 @@ export default function Header() {
                   </NavigationMenuTrigger>
                   <NavigationMenuContent>
                     <div className="w-72 p-2">
-                      <Link href="/services/ccm">
+                      <Link href="/ccm">
                         <div className="block px-4 py-3 text-sm hover:bg-gray-50 rounded-md cursor-pointer">
                           <div className="font-medium">Chronic Care Management</div>
                           <div className="text-xs text-muted-foreground mt-1">
@@ -62,7 +62,7 @@ export default function Header() {
                           </div>
                         </div>
                       </Link>
-                      <Link href="/services/monitoring">
+                      <Link href="/monitoring">
                         <div className="block px-4 py-3 text-sm hover:bg-gray-50 rounded-md cursor-pointer">
                           <div className="font-medium">Remote Patient Monitoring</div>
                           <div className="text-xs text-muted-foreground mt-1">
@@ -70,7 +70,7 @@ export default function Header() {
                           </div>
                         </div>
                       </Link>
-                      <Link href="/services/rtm">
+                      <Link href="/rtm">
                         <div className="block px-4 py-3 text-sm hover:bg-gray-50 rounded-md cursor-pointer">
                           <div className="font-medium">Remote Therapeutic Monitoring</div>
                           <div className="text-xs text-muted-foreground mt-1">
@@ -78,7 +78,7 @@ export default function Header() {
                           </div>
                         </div>
                       </Link>
-                      <Link href="/services/apcm">
+                      <Link href="/apcm">
                         <div className="block px-4 py-3 text-sm hover:bg-gray-50 rounded-md cursor-pointer">
                           <div className="font-medium">Advanced Primary Care Management</div>
                           <div className="text-xs text-muted-foreground mt-1">
@@ -86,7 +86,7 @@ export default function Header() {
                           </div>
                         </div>
                       </Link>
-                      <Link href="/services/bhi">
+                      <Link href="/bhi">
                         <div className="block px-4 py-3 text-sm hover:bg-gray-50 rounded-md cursor-pointer">
                           <div className="font-medium">Behavioral Health Integration</div>
                           <div className="text-xs text-muted-foreground mt-1">
@@ -154,23 +154,23 @@ export default function Header() {
                    onClick={() => setMobileMenuOpen(false)}>
                   About
               </Link>
-              <Link href="/services/ccm" className="block px-3 py-2 pl-6 text-sm font-medium text-muted-foreground hover:text-healthcare-primary"
+              <Link href="/ccm" className="block px-3 py-2 pl-6 text-sm font-medium text-muted-foreground hover:text-healthcare-primary"
                    onClick={() => setMobileMenuOpen(false)}>
                   Chronic Care Management
               </Link>
-              <Link href="/services/monitoring" className="block px-3 py-2 pl-6 text-sm font-medium text-muted-foreground hover:text-healthcare-primary"
+              <Link href="/monitoring" className="block px-3 py-2 pl-6 text-sm font-medium text-muted-foreground hover:text-healthcare-primary"
                    onClick={() => setMobileMenuOpen(false)}>
                   Remote Patient Monitoring
               </Link>
-              <Link href="/services/rtm" className="block px-3 py-2 pl-6 text-sm font-medium text-muted-foreground hover:text-healthcare-primary"
+              <Link href="/rtm" className="block px-3 py-2 pl-6 text-sm font-medium text-muted-foreground hover:text-healthcare-primary"
                    onClick={() => setMobileMenuOpen(false)}>
                   Remote Therapeutic Monitoring
               </Link>
-              <Link href="/services/apcm" className="block px-3 py-2 pl-6 text-sm font-medium text-muted-foreground hover:text-healthcare-primary"
+              <Link href="/apcm" className="block px-3 py-2 pl-6 text-sm font-medium text-muted-foreground hover:text-healthcare-primary"
                    onClick={() => setMobileMenuOpen(false)}>
                   Advanced Primary Care Management
               </Link>
-              <Link href="/services/bhi" className="block px-3 py-2 pl-6 text-sm font-medium text-muted-foreground hover:text-healthcare-primary"
+              <Link href="/bhi" className="block px-3 py-2 pl-6 text-sm font-medium text-muted-foreground hover:text-healthcare-primary"
                    onClick={() => setMobileMenuOpen(false)}>
                   Behavioral Health Integration
               </Link>
