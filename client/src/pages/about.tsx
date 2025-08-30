@@ -1,5 +1,6 @@
 import { Link } from "wouter";
 import { Button } from "@/components/ui/button";
+import { Heart, Shield, Lightbulb, Users, Stethoscope, TrendingUp } from "lucide-react";
 
 export default function About() {
   return (
@@ -54,17 +55,17 @@ export default function About() {
         {/* Floating Icons */}
         <div className="absolute top-1/4 left-8 animate-bounce delay-300">
           <div className="w-12 h-12 bg-primary/20 rounded-full flex items-center justify-center">
-            <i className="fas fa-heart text-primary"></i>
+            <Heart className="text-primary w-6 h-6" />
           </div>
         </div>
         <div className="absolute top-1/3 right-12 animate-bounce delay-700">
           <div className="w-10 h-10 bg-secondary/20 rounded-full flex items-center justify-center">
-            <i className="fas fa-stethoscope text-secondary"></i>
+            <Stethoscope className="text-secondary w-5 h-5" />
           </div>
         </div>
         <div className="absolute bottom-1/4 right-8 animate-bounce delay-500">
           <div className="w-14 h-14 bg-secondary/20 rounded-full flex items-center justify-center">
-            <i className="fas fa-chart-line text-secondary"></i>
+            <TrendingUp className="text-secondary w-7 h-7" />
           </div>
         </div>
       </section>
@@ -246,7 +247,7 @@ export default function About() {
           <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
             <div className="text-center">
               <div className="w-16 h-16 bg-white/20 rounded-full flex items-center justify-center mx-auto mb-4">
-                <i className="fas fa-heart text-2xl"></i>
+                <Heart className="text-white w-8 h-8" />
               </div>
               <h3 className="text-xl font-semibold mb-3">Compassion</h3>
               <p className="text-blue-100">Every interaction is guided by empathy and understanding for patients and their families.</p>
@@ -254,7 +255,7 @@ export default function About() {
             
             <div className="text-center">
               <div className="w-16 h-16 bg-white/20 rounded-full flex items-center justify-center mx-auto mb-4">
-                <i className="fas fa-shield-alt text-2xl"></i>
+                <Shield className="text-white w-8 h-8" />
               </div>
               <h3 className="text-xl font-semibold mb-3">Integrity</h3>
               <p className="text-blue-100">We maintain the highest ethical standards in all our clinical and business practices.</p>
@@ -262,7 +263,7 @@ export default function About() {
             
             <div className="text-center">
               <div className="w-16 h-16 bg-white/20 rounded-full flex items-center justify-center mx-auto mb-4">
-                <i className="fas fa-lightbulb text-2xl"></i>
+                <Lightbulb className="text-white w-8 h-8" />
               </div>
               <h3 className="text-xl font-semibold mb-3">Innovation</h3>
               <p className="text-blue-100">Continuously improving our services through technology and evidence-based practices.</p>
@@ -270,7 +271,7 @@ export default function About() {
             
             <div className="text-center">
               <div className="w-16 h-16 bg-white/20 rounded-full flex items-center justify-center mx-auto mb-4">
-                <i className="fas fa-users text-2xl"></i>
+                <Users className="text-white w-8 h-8" />
               </div>
               <h3 className="text-xl font-semibold mb-3">Partnership</h3>
               <p className="text-blue-100">Building collaborative relationships that benefit patients, providers, and communities.</p>
