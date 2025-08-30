@@ -1,5 +1,6 @@
 import { Link } from "wouter";
 import { Button } from "@/components/ui/button";
+import { Building2, Stethoscope, Heart, UserCheck } from "lucide-react";
 import Hero from "@/components/sections/hero";
 import Stats from "@/components/sections/stats";
 import Testimonials from "@/components/sections/testimonials";
@@ -25,16 +26,16 @@ export default function Home() {
           
           <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
             <div className="text-center group">
-              <div className="w-16 h-16 bg-healthcare-primary/10 rounded-full flex items-center justify-center mx-auto mb-4 group-hover:bg-healthcare-primary/20 transition-colors">
-                <i className="fas fa-hospital text-healthcare-primary text-2xl"></i>
+              <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4 group-hover:bg-primary/20 transition-colors">
+                <Building2 className="text-primary w-8 h-8" />
               </div>
               <h3 className="text-xl font-semibold text-foreground mb-2">Hospitals</h3>
               <p className="text-muted-foreground">Reduce readmissions and improve patient outcomes with comprehensive care coordination.</p>
             </div>
             
             <div className="text-center group">
-              <div className="w-16 h-16 bg-healthcare-secondary/10 rounded-full flex items-center justify-center mx-auto mb-4 group-hover:bg-healthcare-secondary/20 transition-colors">
-                <i className="fas fa-clinic-medical text-healthcare-secondary text-2xl"></i>
+              <div className="w-16 h-16 bg-secondary/10 rounded-full flex items-center justify-center mx-auto mb-4 group-hover:bg-secondary/20 transition-colors">
+                <Stethoscope className="text-secondary w-8 h-8" />
               </div>
               <h3 className="text-xl font-semibold text-foreground mb-2">Clinics</h3>
               <p className="text-muted-foreground">Expand your care capabilities with our nurse-led chronic care management programs.</p>
@@ -42,15 +43,15 @@ export default function Home() {
             
             <div className="text-center group">
               <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4 group-hover:bg-primary/20 transition-colors">
-                <i className="fas fa-heart text-primary text-2xl"></i>
+                <Heart className="text-primary w-8 h-8" />
               </div>
               <h3 className="text-xl font-semibold text-foreground mb-2">FQHCs</h3>
               <p className="text-muted-foreground">Serve underserved populations with culturally competent care coordination services.</p>
             </div>
             
             <div className="text-center group">
-              <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4 group-hover:bg-blue-200 transition-colors">
-                <i className="fas fa-user-md text-blue-600 text-2xl"></i>
+              <div className="w-16 h-16 bg-secondary/10 rounded-full flex items-center justify-center mx-auto mb-4 group-hover:bg-secondary/20 transition-colors">
+                <UserCheck className="text-secondary w-8 h-8" />
               </div>
               <h3 className="text-xl font-semibold text-foreground mb-2">Private Practice</h3>
               <p className="text-muted-foreground">Enhance patient care while generating additional revenue through CMS-covered services.</p>
