@@ -62,7 +62,7 @@ export default function APCM() {
                   </Button>
                 </Link>
                 <Link href="/calculator">
-                  <Button size="lg" variant="outline" className="border-white/20 text-white hover:bg-white/10">
+                  <Button size="lg" variant="outline" className="border-2 border-white text-white hover:bg-white hover:text-primary">
                     <DollarSign className="mr-2 h-5 w-5" />
                     Calculate Revenue
                   </Button>
