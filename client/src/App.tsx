@@ -6,30 +6,22 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { useScrollToTop } from "@/hooks/use-scroll-to-top";
 import Header from "@/components/layout/header";
 import Footer from "@/components/layout/footer";
-import { lazy, Suspense } from "react";
 
-// Lazy load pages for better performance
-const Home = lazy(() => import("@/pages/home"));
-const About = lazy(() => import("@/pages/about"));
-const CCM = lazy(() => import("@/pages/ccm"));
-const Monitoring = lazy(() => import("@/pages/monitoring"));
-const RTM = lazy(() => import("@/pages/rtm"));
-const APCM = lazy(() => import("@/pages/apcm"));
-const BHI = lazy(() => import("@/pages/bhi"));
-const HowItWorks = lazy(() => import("@/pages/how-it-works"));
-const Resources = lazy(() => import("@/pages/resources"));
-const Privacy = lazy(() => import("@/pages/privacy"));
-const Calculator = lazy(() => import("@/pages/calculator"));
-const BlogPost = lazy(() => import("@/pages/blog-post"));
-const Contact = lazy(() => import("@/pages/contact"));
-const NotFound = lazy(() => import("@/pages/not-found"));
-
-// Loading component
-const PageLoader = () => (
-  <div className="flex items-center justify-center min-h-[50vh]">
-    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-  </div>
-);
+// Import pages directly instead of lazy loading to avoid issues
+import Home from "@/pages/home";
+import About from "@/pages/about";
+import CCM from "@/pages/ccm";
+import Monitoring from "@/pages/monitoring";
+import RTM from "@/pages/rtm";
+import APCM from "@/pages/apcm";
+import BHI from "@/pages/bhi";
+import HowItWorks from "@/pages/how-it-works";
+import Resources from "@/pages/resources";
+import Privacy from "@/pages/privacy";
+import Calculator from "@/pages/calculator";
+import BlogPost from "@/pages/blog-post";
+import Contact from "@/pages/contact";
+import NotFound from "@/pages/not-found";
 
 function Router() {
   // Scroll to top when navigating between pages
@@ -39,24 +31,22 @@ function Router() {
     <div className="min-h-screen flex flex-col">
       <Header />
       <main className="flex-1">
-        <Suspense fallback={<PageLoader />}>
-          <Switch>
-            <Route path="/" component={Home} />
-            <Route path="/about" component={About} />
-            <Route path="/services/ccm" component={CCM} />
-            <Route path="/services/monitoring" component={Monitoring} />
-            <Route path="/services/rtm" component={RTM} />
-            <Route path="/services/apcm" component={APCM} />
-            <Route path="/services/bhi" component={BHI} />
-            <Route path="/how-it-works" component={HowItWorks} />
-            <Route path="/resources" component={Resources} />
-            <Route path="/blog/:slug" component={BlogPost} />
-            <Route path="/calculator" component={Calculator} />
-            <Route path="/contact" component={Contact} />
-            <Route path="/privacy" component={Privacy} />
-            <Route component={NotFound} />
-          </Switch>
-        </Suspense>
+        <Switch>
+          <Route path="/" component={Home} />
+          <Route path="/about" component={About} />
+          <Route path="/ccm" component={CCM} />
+          <Route path="/monitoring" component={Monitoring} />
+          <Route path="/rtm" component={RTM} />
+          <Route path="/apcm" component={APCM} />
+          <Route path="/bhi" component={BHI} />
+          <Route path="/how-it-works" component={HowItWorks} />
+          <Route path="/resources" component={Resources} />
+          <Route path="/privacy" component={Privacy} />
+          <Route path="/calculator" component={Calculator} />
+          <Route path="/blog/:slug" component={BlogPost} />
+          <Route path="/contact" component={Contact} />
+          <Route component={NotFound} />
+        </Switch>
       </main>
       <Footer />
     </div>
@@ -67,8 +57,8 @@ function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <TooltipProvider>
-        <Toaster />
         <Router />
+        <Toaster />
       </TooltipProvider>
     </QueryClientProvider>
   );
