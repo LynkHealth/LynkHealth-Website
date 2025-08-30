@@ -1,9 +1,11 @@
+import { Shield, CheckCircle, Award, Lock, TrendingUp, Heart, Rocket, Building2, Pill, Users } from "lucide-react";
+
 const provenResults = [
   {
     metric: "$2,457",
     label: "Average Annual Cost Reduction",
     description: "Per patient through improved care coordination and reduced hospitalizations",
-    icon: "fas fa-chart-line",
+    icon: TrendingUp,
     color: "text-amber-600",
     bgColor: "bg-amber-50"
   },
@@ -11,7 +13,7 @@ const provenResults = [
     metric: "90%+",
     label: "Patient Retention Rate",
     description: "Industry-leading engagement with dedicated nurse relationships",
-    icon: "fas fa-heart",
+    icon: Heart,
     color: "text-amber-600", 
     bgColor: "bg-amber-50"
   },
@@ -19,7 +21,7 @@ const provenResults = [
     metric: "4-6 Weeks",
     label: "Implementation Timeline",
     description: "From contract signing to first patient enrolled and generating revenue",
-    icon: "fas fa-rocket",
+    icon: Rocket,
     color: "text-blue-600",
     bgColor: "bg-blue-50"
   },
@@ -27,7 +29,7 @@ const provenResults = [
     metric: "35%",
     label: "Reduction in ER Visits",
     description: "Through proactive monitoring and early intervention protocols",
-    icon: "fas fa-hospital",
+    icon: Building2,
     color: "text-purple-600",
     bgColor: "bg-purple-50"
   },
@@ -35,7 +37,7 @@ const provenResults = [
     metric: "86%",
     label: "Medication Adherence",
     description: "Improved compliance through consistent nurse follow-up and education",
-    icon: "fas fa-pills",
+    icon: Pill,
     color: "text-amber-600",
     bgColor: "bg-amber-50"
   },
@@ -43,7 +45,7 @@ const provenResults = [
     metric: "45%",
     label: "Average Enrollment Rate",
     description: "Of eligible patients choose to participate in care coordination programs",
-    icon: "fas fa-users",
+    icon: Users,
     color: "text-teal-600",
     bgColor: "bg-teal-50"
   }
@@ -64,7 +66,7 @@ export default function Testimonials() {
           {provenResults.map((result, index) => (
             <div key={index} className="bg-slate-50 rounded-2xl p-8 border border-slate-200 hover:shadow-lg transition-shadow">
               <div className={`w-16 h-16 ${result.bgColor} rounded-2xl flex items-center justify-center mb-6`}>
-                <i className={`${result.icon} ${result.color} text-2xl`}></i>
+                <result.icon className={`${result.color} w-8 h-8`} />
               </div>
               <div className={`text-4xl font-bold ${result.color} mb-2`}>
                 {result.metric}
@@ -91,7 +93,7 @@ export default function Testimonials() {
           <div className="grid md:grid-cols-4 gap-8">
             <div className="text-center">
               <div className="w-16 h-16 bg-white rounded-xl flex items-center justify-center mx-auto mb-4 shadow-sm">
-                <i className="fas fa-shield-alt text-primary text-2xl"></i>
+                <Shield className="text-primary w-8 h-8" />
               </div>
               <h4 className="font-semibold text-foreground mb-2">HIPAA Compliant</h4>
               <p className="text-sm text-muted-foreground">Enterprise-grade security and privacy protection</p>
@@ -99,7 +101,7 @@ export default function Testimonials() {
             
             <div className="text-center">
               <div className="w-16 h-16 bg-white rounded-xl flex items-center justify-center mx-auto mb-4 shadow-sm">
-                <i className="fas fa-check-circle text-secondary text-2xl"></i>
+                <CheckCircle className="text-secondary w-8 h-8" />
               </div>
               <h4 className="font-semibold text-foreground mb-2">CMS Approved</h4>
               <p className="text-sm text-muted-foreground">All programs meet Medicare billing requirements</p>
@@ -107,7 +109,7 @@ export default function Testimonials() {
             
             <div className="text-center">
               <div className="w-16 h-16 bg-white rounded-xl flex items-center justify-center mx-auto mb-4 shadow-sm">
-                <i className="fas fa-award text-accent text-2xl"></i>
+                <Award className="text-accent w-8 h-8" />
               </div>
               <h4 className="font-semibold text-foreground mb-2">Joint Commission</h4>
               <p className="text-sm text-muted-foreground">Quality and safety standards certification</p>
@@ -115,7 +117,7 @@ export default function Testimonials() {
             
             <div className="text-center">
               <div className="w-16 h-16 bg-white rounded-xl flex items-center justify-center mx-auto mb-4 shadow-sm">
-                <i className="fas fa-lock text-primary text-2xl"></i>
+                <Lock className="text-primary w-8 h-8" />
               </div>
               <h4 className="font-semibold text-foreground mb-2">SOC 2 Type II</h4>
               <p className="text-sm text-muted-foreground">Third-party verified security controls</p>
