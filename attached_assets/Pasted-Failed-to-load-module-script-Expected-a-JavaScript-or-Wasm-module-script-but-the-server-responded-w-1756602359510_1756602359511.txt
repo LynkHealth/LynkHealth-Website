@@ -1,0 +1,51 @@
+Failed to load module script: Expected a JavaScript-or-Wasm module script but the server responded with a MIME type of "text/html". Strict MIME type checking is enforced for module scripts per HTML spec.Understand this error
+vendors.bundle.js:2 Download the React DevTools for a better development experience: https://reactjs.org/link/react-devtools
+chunk-mgcl-PMCJQIUH.js:16 @import rules are not allowed here. See https://github.com/WICG/construct-stylesheets/issues/119#issuecomment-588352418.
+(anonymous) @ chunk-mgcl-PMCJQIUH.js:16
+await in (anonymous)
+(anonymous) @ chunk-mgcl-PMCJQIUH.js:16
+(anonymous) @ chunk-mgcl-WQN5JPZJ.js:1
+(anonymous) @ chunk-mgcl-WQN5JPZJ.js:1
+vl @ chunk-mgcl-DT437CWL.js:8
+qn @ chunk-mgcl-DT437CWL.js:8
+ms @ chunk-mgcl-DT437CWL.js:8
+vn @ chunk-mgcl-DT437CWL.js:6
+Te @ chunk-mgcl-DT437CWL.js:8
+ad @ chunk-mgcl-DT437CWL.js:6
+next @ chunk-mgcl-X3BOXWJK.js:1
+r.next @ chunk-mgcl-52COTP23.js:3
+e._next @ chunk-mgcl-52COTP23.js:3
+e.next @ chunk-mgcl-52COTP23.js:3
+(anonymous) @ chunk-mgcl-52COTP23.js:3
+p._next @ chunk-mgcl-52COTP23.js:3
+e.next @ chunk-mgcl-52COTP23.js:3
+(anonymous) @ chunk-mgcl-TOM47X52.js:1
+(anonymous) @ chunk-mgcl-TOM47X52.js:1
+Promise.then
+ft @ chunk-mgcl-TOM47X52.js:1
+(anonymous) @ chunk-mgcl-TOM47X52.js:1
+r._trySubscribe @ chunk-mgcl-52COTP23.js:3
+(anonymous) @ chunk-mgcl-52COTP23.js:3
+K @ chunk-mgcl-52COTP23.js:3
+r.subscribe @ chunk-mgcl-52COTP23.js:3
+(anonymous) @ chunk-mgcl-52COTP23.js:3
+(anonymous) @ chunk-mgcl-52COTP23.js:3
+(anonymous) @ chunk-mgcl-52COTP23.js:3
+K @ chunk-mgcl-52COTP23.js:3
+r.subscribe @ chunk-mgcl-52COTP23.js:3
+(anonymous) @ chunk-mgcl-X3BOXWJK.js:1
+vl @ chunk-mgcl-DT437CWL.js:8
+qn @ chunk-mgcl-DT437CWL.js:8
+zn @ chunk-mgcl-DT437CWL.js:8
+Id @ chunk-mgcl-DT437CWL.js:8
+kl @ chunk-mgcl-DT437CWL.js:8
+ve.render @ chunk-mgcl-DT437CWL.js:8
+O3 @ chunk-mgcl-PMCJQIUH.js:16
+F3 @ chunk-mgcl-PMCJQIUH.js:16
+await in F3
+(anonymous) @ chunk-mgcl-PMCJQIUH.js:16Understand this warning
+read.js:2530 READ - Host validation failed: {hostName: '', hostType: undefined}
+content.js:2524 Host is not supported
+content.js:2526 Host is not valid or supported
+content.js:2526 Host is not in insights whitelist
+(index):1 The resource https://lynk.health/images/AdobeStock_616281927_1751485954823.jpeg was preloaded using link preload but not used within a few seconds from the window's load event. Please make sure it has an appropriate `as` value and it is preloaded intentionally.Understand this warning
