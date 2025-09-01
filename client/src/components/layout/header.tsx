@@ -8,6 +8,7 @@ import {
   NavigationMenuList,
   NavigationMenuTrigger,
 } from "@/components/ui/navigation-menu";
+import { Menu, X } from "lucide-react";
 import lynkHealthLogo from "@assets/LOGO-Lynk_Health_1749182161866.png";
 
 export default function Header() {
@@ -136,8 +137,13 @@ export default function Header() {
               variant="ghost"
               size="sm"
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+              className="text-foreground"
             >
-              <i className="fas fa-bars text-xl"></i>
+              {mobileMenuOpen ? (
+                <X className="h-6 w-6" />
+              ) : (
+                <Menu className="h-6 w-6" />
+              )}
             </Button>
           </div>
         </div>
