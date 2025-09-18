@@ -1,5 +1,6 @@
 import { Link } from "wouter";
 import { Button } from "@/components/ui/button";
+import { ClipboardList, Users, Link as LinkIcon, Rocket, Check } from "lucide-react";
 
 export default function HowItWorks() {
   return (
@@ -108,7 +109,7 @@ export default function HowItWorks() {
             <div className="space-y-6">
               <div className="flex items-start">
                 <div className="w-12 h-12 bg-healthcare-primary/10 rounded-lg flex items-center justify-center mr-4 flex-shrink-0">
-                  <i className="fas fa-clipboard-list text-healthcare-primary"></i>
+                  <ClipboardList className="w-6 h-6 text-healthcare-primary" />
                 </div>
                 <div>
                   <h3 className="text-xl font-semibold text-foreground mb-2">Initial Assessment</h3>
@@ -120,7 +121,7 @@ export default function HowItWorks() {
 
               <div className="flex items-start">
                 <div className="w-12 h-12 bg-healthcare-secondary/10 rounded-lg flex items-center justify-center mr-4 flex-shrink-0">
-                  <i className="fas fa-users-cog text-healthcare-secondary"></i>
+                  <Users className="w-6 h-6 text-healthcare-secondary" />
                 </div>
                 <div>
                   <h3 className="text-xl font-semibold text-foreground mb-2">Staff Training</h3>
@@ -132,7 +133,7 @@ export default function HowItWorks() {
 
               <div className="flex items-start">
                 <div className="w-12 h-12 bg-healthcare-accent/10 rounded-lg flex items-center justify-center mr-4 flex-shrink-0">
-                  <i className="fas fa-link text-healthcare-accent"></i>
+                  <LinkIcon className="w-6 h-6 text-healthcare-accent" />
                 </div>
                 <div>
                   <h3 className="text-xl font-semibold text-foreground mb-2">System Integration</h3>
@@ -144,7 +145,7 @@ export default function HowItWorks() {
 
               <div className="flex items-start">
                 <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center mr-4 flex-shrink-0">
-                  <i className="fas fa-rocket text-blue-600"></i>
+                  <Rocket className="w-6 h-6 text-blue-600" />
                 </div>
                 <div>
                   <h3 className="text-xl font-semibold text-foreground mb-2">Program Launch</h3>
@@ -159,27 +160,27 @@ export default function HowItWorks() {
               <h3 className="text-2xl font-bold text-foreground mb-6">What You Get</h3>
               <ul className="space-y-4">
                 <li className="flex items-center text-muted-foreground">
-                  <i className="fas fa-check text-healthcare-secondary mr-3"></i>
+                  <Check className="w-4 h-4 text-healthcare-secondary mr-3" />
                   Dedicated implementation manager
                 </li>
                 <li className="flex items-center text-muted-foreground">
-                  <i className="fas fa-check text-healthcare-secondary mr-3"></i>
+                  <Check className="w-4 h-4 text-healthcare-secondary mr-3" />
                   Custom workflow development
                 </li>
                 <li className="flex items-center text-muted-foreground">
-                  <i className="fas fa-check text-healthcare-secondary mr-3"></i>
+                  <Check className="w-4 h-4 text-healthcare-secondary mr-3" />
                   EHR integration and setup
                 </li>
                 <li className="flex items-center text-muted-foreground">
-                  <i className="fas fa-check text-healthcare-secondary mr-3"></i>
+                  <Check className="w-4 h-4 text-healthcare-secondary mr-3" />
                   Staff training and certification
                 </li>
                 <li className="flex items-center text-muted-foreground">
-                  <i className="fas fa-check text-healthcare-secondary mr-3"></i>
+                  <Check className="w-4 h-4 text-healthcare-secondary mr-3" />
                   Marketing materials for patients
                 </li>
                 <li className="flex items-center text-muted-foreground">
-                  <i className="fas fa-check text-healthcare-secondary mr-3"></i>
+                  <Check className="w-4 h-4 text-healthcare-secondary mr-3" />
                   Ongoing support and optimization
                 </li>
               </ul>

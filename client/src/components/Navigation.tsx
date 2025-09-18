@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { Link, useLocation } from "wouter";
+import { Heart, ChevronDown, Menu } from "lucide-react";
 
 export function Navigation() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -33,7 +34,7 @@ export function Navigation() {
           <div className="flex items-center">
             <Link href="/" className="flex-shrink-0">
               <div className="text-2xl font-bold text-primary">
-                <i className="fas fa-heartbeat mr-2"></i>
+                <Heart className="mr-2" size={20} />
                 Lynk Health
               </div>
             </Link>
@@ -55,7 +56,7 @@ export function Navigation() {
               {/* Services Dropdown */}
               <div className="relative group">
                 <button className="text-slate-600 hover:text-primary px-3 py-2 text-sm font-medium transition-colors flex items-center">
-                  Services <i className="fas fa-chevron-down ml-1 text-xs group-hover:rotate-180 transition-transform"></i>
+                  Services <ChevronDown className="ml-1 text-xs group-hover:rotate-180 transition-transform" size={12} />
                 </button>
                 <div className="absolute top-full left-0 mt-2 w-72 bg-white rounded-lg shadow-xl border border-gray-100 py-2 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200">
                   {serviceLinks.map((service) => (
@@ -89,7 +90,7 @@ export function Navigation() {
               onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
               className="text-slate-700 hover:text-primary p-2"
             >
-              <i className="fas fa-bars text-xl"></i>
+              <Menu className="text-xl" size={24} />
             </button>
           </div>
         </div>

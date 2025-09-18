@@ -1,4 +1,5 @@
 import ContactForm from "@/components/forms/contact-form";
+import { DollarSign, UserCheck, Settings, Phone, Mail, MailOpen, MapPin, Clock, Download, Calculator, Calendar, HelpCircle, ExternalLink, Headphones, Users } from "lucide-react";
 
 export default function Contact() {
   return (
@@ -70,7 +71,7 @@ export default function Contact() {
           <div className="grid md:grid-cols-3 gap-8 mb-16">
             <div className="text-center p-6 bg-slate-50 rounded-2xl hover:shadow-lg transition-shadow">
               <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4">
-                <i className="fas fa-dollar-sign text-primary text-2xl"></i>
+                <DollarSign className="w-8 h-8 text-primary" />
               </div>
               <h3 className="text-xl font-bold text-foreground mb-3">Immediate Revenue</h3>
               <p className="text-muted-foreground">Start generating $42-$110 per patient monthly with CMS-approved Medicare programs. No upfront investment required.</p>
@@ -78,7 +79,7 @@ export default function Contact() {
             
             <div className="text-center p-6 bg-slate-50 rounded-2xl hover:shadow-lg transition-shadow">
               <div className="w-16 h-16 bg-secondary/10 rounded-full flex items-center justify-center mx-auto mb-4">
-                <i className="fas fa-user-nurse text-secondary text-2xl"></i>
+                <UserCheck className="w-8 h-8 text-secondary" />
               </div>
               <h3 className="text-xl font-bold text-foreground mb-3">Local Nurses</h3>
               <p className="text-muted-foreground">Dedicated nursing teams who understand your community - never call centers. Build authentic patient relationships.</p>
@@ -86,7 +87,7 @@ export default function Contact() {
             
             <div className="text-center p-6 bg-slate-50 rounded-2xl hover:shadow-lg transition-shadow">
               <div className="w-16 h-16 bg-accent/10 rounded-full flex items-center justify-center mx-auto mb-4">
-                <i className="fas fa-cogs text-accent text-2xl"></i>
+                <Settings className="w-8 h-8 text-accent" />
               </div>
               <h3 className="text-xl font-bold text-foreground mb-3">Flexible Integration</h3>
               <p className="text-muted-foreground">Optional EHR integration or independent workflow - the choice is yours. Minimal disruption, maximum flexibility.</p>
@@ -114,7 +115,7 @@ export default function Contact() {
                 <div className="space-y-6">
                   <div className="flex items-start">
                     <div className="w-12 h-12 bg-healthcare-primary/10 rounded-lg flex items-center justify-center mr-4 flex-shrink-0">
-                      <i className="fas fa-phone text-healthcare-primary"></i>
+                      <Phone className="w-5 h-5 text-healthcare-primary" />
                     </div>
                     <div className="flex-1">
                       <h4 className="font-semibold text-foreground mb-1">Phone</h4>
@@ -122,7 +123,7 @@ export default function Contact() {
                         href="tel:+16018594342" 
                         className="inline-flex items-center text-healthcare-primary hover:text-healthcare-primary/80 font-medium transition-colors mb-2"
                       >
-                        <i className="fas fa-phone-alt mr-2"></i>
+                        <Phone className="w-4 h-4 mr-2" />
                         (601) 859-4342
                       </a>
                       <p className="text-muted-foreground text-sm">Available Monday - Friday, 8 AM - 6 PM CST</p>
@@ -131,7 +132,7 @@ export default function Contact() {
 
                   <div className="flex items-start">
                     <div className="w-12 h-12 bg-healthcare-secondary/10 rounded-lg flex items-center justify-center mr-4 flex-shrink-0">
-                      <i className="fas fa-envelope text-healthcare-secondary"></i>
+                      <Mail className="w-5 h-5 text-healthcare-secondary" />
                     </div>
                     <div className="flex-1">
                       <h4 className="font-semibold text-foreground mb-1">Email</h4>
@@ -139,7 +140,7 @@ export default function Contact() {
                         href="mailto:info@lynkhealthcare.com" 
                         className="inline-flex items-center text-healthcare-secondary hover:text-healthcare-secondary/80 font-medium transition-colors mb-2"
                       >
-                        <i className="fas fa-envelope-open mr-2"></i>
+                        <MailOpen className="w-4 h-4 mr-2" />
                         info@lynkhealthcare.com
                       </a>
                       <p className="text-muted-foreground text-sm">We respond within 24 hours</p>
@@ -148,7 +149,7 @@ export default function Contact() {
 
                   <div className="flex items-start">
                     <div className="w-12 h-12 bg-healthcare-accent/10 rounded-lg flex items-center justify-center mr-4 flex-shrink-0">
-                      <i className="fas fa-map-marker-alt text-healthcare-accent"></i>
+                      <MapPin className="w-5 h-5 text-healthcare-accent" />
                     </div>
                     <div>
                       <h4 className="font-semibold text-foreground mb-1">Headquarters</h4>
@@ -161,7 +162,7 @@ export default function Contact() {
 
                   <div className="flex items-start">
                     <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center mr-4 flex-shrink-0">
-                      <i className="fas fa-clock text-blue-600"></i>
+                      <Clock className="w-5 h-5 text-blue-600" />
                     </div>
                     <div>
                       <h4 className="font-semibold text-foreground mb-1">Business Hours</h4>
@@ -180,19 +181,19 @@ export default function Contact() {
                 <h3 className="text-xl font-bold text-foreground mb-6">Quick Links</h3>
                 <div className="space-y-3">
                   <a href="#" className="flex items-center text-muted-foreground hover:text-healthcare-primary transition-colors">
-                    <i className="fas fa-download mr-3 text-healthcare-primary"></i>
+                    <Download className="w-4 h-4 mr-3 text-healthcare-primary" />
                     Download our Services Overview (PDF)
                   </a>
                   <a href="#" className="flex items-center text-muted-foreground hover:text-healthcare-primary transition-colors">
-                    <i className="fas fa-calculator mr-3 text-healthcare-primary"></i>
+                    <Calculator className="w-4 h-4 mr-3 text-healthcare-primary" />
                     ROI Calculator Tool
                   </a>
                   <a href="#" className="flex items-center text-muted-foreground hover:text-healthcare-primary transition-colors">
-                    <i className="fas fa-calendar mr-3 text-healthcare-primary"></i>
+                    <Calendar className="w-4 h-4 mr-3 text-healthcare-primary" />
                     Schedule a Demo
                   </a>
                   <a href="#" className="flex items-center text-muted-foreground hover:text-healthcare-primary transition-colors">
-                    <i className="fas fa-question-circle mr-3 text-healthcare-primary"></i>
+                    <HelpCircle className="w-4 h-4 mr-3 text-healthcare-primary" />
                     Frequently Asked Questions
                   </a>
                 </div>
@@ -220,7 +221,7 @@ export default function Contact() {
                     rel="noopener noreferrer"
                     className="inline-flex items-center text-healthcare-primary hover:text-blue-700 font-medium text-sm"
                   >
-                    <i className="fas fa-external-link-alt mr-2"></i>
+                    <ExternalLink className="w-4 h-4 mr-2" />
                     Open in Google Maps
                   </a>
                 </div>
@@ -243,7 +244,7 @@ export default function Contact() {
           <div className="grid md:grid-cols-3 gap-8">
             <div className="text-center p-6 bg-slate-50 rounded-2xl">
               <div className="w-16 h-16 bg-healthcare-primary/10 rounded-full flex items-center justify-center mx-auto mb-4">
-                <i className="fas fa-calendar-alt text-healthcare-primary text-2xl"></i>
+                <Calendar className="w-8 h-8 text-healthcare-primary" />
               </div>
               <h3 className="text-xl font-semibold text-foreground mb-3">Schedule a Demo</h3>
               <p className="text-muted-foreground mb-4">
@@ -256,7 +257,7 @@ export default function Contact() {
 
             <div className="text-center p-6 bg-slate-50 rounded-2xl">
               <div className="w-16 h-16 bg-healthcare-secondary/10 rounded-full flex items-center justify-center mx-auto mb-4">
-                <i className="fas fa-headset text-healthcare-secondary text-2xl"></i>
+                <Headphones className="w-8 h-8 text-healthcare-secondary" />
               </div>
               <h3 className="text-xl font-semibold text-foreground mb-3">Customer Support</h3>
               <p className="text-muted-foreground mb-4">
@@ -269,7 +270,7 @@ export default function Contact() {
 
             <div className="text-center p-6 bg-slate-50 rounded-2xl">
               <div className="w-16 h-16 bg-healthcare-accent/10 rounded-full flex items-center justify-center mx-auto mb-4">
-                <i className="fas fa-users text-healthcare-accent text-2xl"></i>
+                <Users className="w-8 h-8 text-healthcare-accent" />
               </div>
               <h3 className="text-xl font-semibold text-foreground mb-3">Training & Education</h3>
               <p className="text-muted-foreground mb-4">
@@ -320,7 +321,7 @@ export default function Contact() {
             
             <div className="text-center">
               <div className="w-16 h-16 bg-accent/90 rounded-full flex items-center justify-center mx-auto mb-4">
-                <i className="fas fa-dollar-sign text-xl"></i>
+                <DollarSign className="w-6 h-6" />
               </div>
               <h3 className="text-lg font-semibold mb-2">Weeks 5-6</h3>
               <p className="text-blue-100 text-sm">First revenue generated, full program launch</p>
@@ -329,7 +330,7 @@ export default function Contact() {
           
           <div className="text-center mt-12">
             <div className="inline-flex items-center px-6 py-3 bg-white/20 backdrop-blur-sm rounded-full mb-6">
-              <i className="fas fa-phone mr-2"></i>
+              <Phone className="w-4 h-4 mr-2" />
               <span className="font-semibold">24/7 Clinical Support: (601) 859-4342</span>
             </div>
             <p className="text-blue-100">

@@ -1,5 +1,6 @@
 import { Link } from "wouter";
 import { SEOHead } from "@/components/SEOHead";
+import LazyImage from "@/components/LazyImage";
 
 export default function MonitoringPage() {
   return (
@@ -25,7 +26,7 @@ export default function MonitoringPage() {
                 </Link>
               </div>
               <div>
-                <img src="/images/AdobeStock_39976543_1751485954824.jpeg" alt="Senior patient using remote monitoring device for health tracking" className="rounded-2xl shadow-2xl" />
+                <LazyImage src="/images/AdobeStock_39976543_1751485954824.jpeg" alt="Senior patient using remote monitoring device for health tracking" className="rounded-2xl shadow-2xl" />
               </div>
             </div>
           </div>
@@ -251,7 +252,7 @@ export default function MonitoringPage() {
               </div>
               
               <div>
-                <img src="https://images.pexels.com/photos/7578826/pexels-photo-7578826.jpeg?auto=compress&cs=tinysrgb&w=800&h=600" alt="Healthcare data dashboard showing patient monitoring metrics" className="rounded-2xl shadow-lg" />
+                <LazyImage src="https://images.pexels.com/photos/7578826/pexels-photo-7578826.jpeg?auto=compress&cs=tinysrgb&w=800&h=600" alt="Healthcare data dashboard showing patient monitoring metrics" className="rounded-2xl shadow-lg" />
               </div>
             </div>
           </div>

@@ -1,6 +1,7 @@
 import { Link } from "wouter";
 import { Button } from "@/components/ui/button";
-import { Heart, Shield, Lightbulb, Users, Stethoscope, TrendingUp } from "lucide-react";
+import { Heart, Shield, Lightbulb, Users, Stethoscope, TrendingUp, Award, Handshake } from "lucide-react";
+import LazyImage from "@/components/LazyImage";
 
 export default function About() {
   return (
@@ -89,7 +90,7 @@ export default function About() {
               </Link>
             </div>
             <div>
-              <img
+              <LazyImage
                 src="/images/AdobeStock_212104037_1751485954798.jpeg"
                 alt="Healthcare team collaborating on patient care"
                 className="rounded-2xl shadow-xl"
@@ -104,7 +105,7 @@ export default function About() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid lg:grid-cols-2 gap-12 items-center">
             <div className="order-2 lg:order-1">
-              <img
+              <LazyImage
                 src="/images/AdobeStock_279901729_1751485954797.jpeg"
                 alt="Professional nurse providing comprehensive remote care coordination services"
                 className="rounded-2xl shadow-xl"
@@ -121,7 +122,7 @@ export default function About() {
               <div className="grid md:grid-cols-2 gap-6">
                 <div className="flex items-start">
                   <div className="w-12 h-12 bg-healthcare-primary/10 rounded-lg flex items-center justify-center mr-4 flex-shrink-0">
-                    <i className="fas fa-award text-healthcare-primary"></i>
+                    <Award className="w-6 h-6 text-healthcare-primary" />
                   </div>
                   <div>
                     <h4 className="font-semibold text-foreground mb-2">Excellence in Care</h4>
@@ -130,7 +131,7 @@ export default function About() {
                 </div>
                 <div className="flex items-start">
                   <div className="w-12 h-12 bg-healthcare-secondary/10 rounded-lg flex items-center justify-center mr-4 flex-shrink-0">
-                    <i className="fas fa-handshake text-healthcare-secondary"></i>
+                    <Handshake className="w-6 h-6 text-healthcare-secondary" />
                   </div>
                   <div>
                     <h4 className="font-semibold text-foreground mb-2">Trusted Partnerships</h4>

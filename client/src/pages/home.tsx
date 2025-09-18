@@ -1,6 +1,7 @@
 import { Link } from "wouter";
 import { Button } from "@/components/ui/button";
-import { Building2, Stethoscope, Heart, UserCheck } from "lucide-react";
+import { Building2, Stethoscope, Heart, UserCheck, Check, ArrowRight, Handshake, TrendingUp, Phone, Mail, MapPin, CheckCircle } from "lucide-react";
+import LazyImage from "@/components/LazyImage";
 import Hero from "@/components/sections/hero";
 import Stats from "@/components/sections/stats";
 import Testimonials from "@/components/sections/testimonials";
@@ -73,7 +74,7 @@ export default function Home() {
           <div className="grid lg:grid-cols-2 gap-12 items-center">
             {/* Main Care Image - Optimized loading */}
             <div className="relative rounded-3xl overflow-hidden shadow-2xl">
-              <img
+              <LazyImage
                 src="/images/elderly-patient-care.jpeg"
                 alt="Professional nurse providing care coordination to elderly patient"
                 className="w-full h-[400px] object-cover"
@@ -89,7 +90,7 @@ export default function Home() {
             {/* Care Services Grid */}
             <div className="grid grid-cols-2 gap-4">
               <div className="relative rounded-2xl overflow-hidden shadow-lg group hover:shadow-xl transition-shadow">
-                <img
+                <LazyImage
                   src="/images/AdobeStock_133178564_1751485954798.jpeg"
                   alt="Advanced remote patient monitoring devices and technology for chronic care"
                   className="w-full h-48 object-cover group-hover:scale-105 transition-transform duration-300"
@@ -103,7 +104,7 @@ export default function Home() {
               </div>
               
               <div className="relative rounded-2xl overflow-hidden shadow-lg group hover:shadow-xl transition-shadow">
-                <img
+                <LazyImage
                   src="/images/AdobeStock_400007631_1751485954795.jpeg"
                   alt="Behavioral health integration and mental health support services"
                   className="w-full h-48 object-cover group-hover:scale-105 transition-transform duration-300"
@@ -117,7 +118,7 @@ export default function Home() {
               </div>
               
               <div className="relative rounded-2xl overflow-hidden shadow-lg group hover:shadow-xl transition-shadow">
-                <img
+                <LazyImage
                   src="/images/AdobeStock_429992249_1751485954795.jpeg"
                   alt="Professional nurse providing chronic care management services"
                   className="w-full h-48 object-cover group-hover:scale-105 transition-transform duration-300"
@@ -131,7 +132,7 @@ export default function Home() {
               </div>
               
               <div className="relative rounded-2xl overflow-hidden shadow-lg group hover:shadow-xl transition-shadow">
-                <img
+                <LazyImage
                   src="/images/AdobeStock_226055713_1751485954796.jpeg"
                   alt="Healthcare technology integration and EHR connectivity solutions"
                   className="w-full h-48 object-cover group-hover:scale-105 transition-transform duration-300"
@@ -162,7 +163,7 @@ export default function Home() {
             {/* CCM Program Card */}
             <div className="bg-white rounded-2xl p-6 shadow-lg hover:shadow-xl transition-shadow">
               <div className="relative w-full h-32 mb-4 rounded-lg overflow-hidden">
-                <img 
+                <LazyImage 
                   src="/images/elderly-patient-care.jpeg"
                   alt="Elderly patient receiving chronic care management from a registered nurse"
                   className="w-full h-full object-cover"
@@ -175,27 +176,27 @@ export default function Home() {
               </p>
               <ul className="space-y-2 mb-4">
                 <li className="flex items-center text-muted-foreground text-sm">
-                  <i className="fas fa-check text-healthcare-secondary mr-2"></i>
+                  <Check className="w-4 h-4 text-healthcare-secondary mr-2" />
                   24/7 care team availability
                 </li>
                 <li className="flex items-center text-muted-foreground text-sm">
-                  <i className="fas fa-check text-healthcare-secondary mr-2"></i>
+                  <Check className="w-4 h-4 text-healthcare-secondary mr-2" />
                   $50+ per patient/month
                 </li>
                 <li className="flex items-center text-muted-foreground text-sm">
-                  <i className="fas fa-check text-healthcare-secondary mr-2"></i>
+                  <Check className="w-4 h-4 text-healthcare-secondary mr-2" />
                   20+ minutes monthly
                 </li>
               </ul>
               <Link href="/services/ccm" className="inline-flex items-center text-healthcare-primary font-semibold hover:text-blue-700 text-sm">
-                Learn More <i className="fas fa-arrow-right ml-2"></i>
+                Learn More <ArrowRight className="w-4 h-4 ml-2" />
               </Link>
             </div>
             
             {/* RPM Program Card */}
             <div className="bg-white rounded-2xl p-6 shadow-lg hover:shadow-xl transition-shadow">
               <div className="relative w-full h-32 mb-4 rounded-lg overflow-hidden">
-                <img 
+                <LazyImage 
                   src="/images/elderly-monitoring.jpeg"
                   alt="Elderly patient using remote patient monitoring device at home"
                   className="w-full h-full object-cover"
@@ -208,27 +209,27 @@ export default function Home() {
               </p>
               <ul className="space-y-2 mb-4">
                 <li className="flex items-center text-muted-foreground text-sm">
-                  <i className="fas fa-check text-healthcare-secondary mr-2"></i>
+                  <Check className="w-4 h-4 text-healthcare-secondary mr-2" />
                   FDA-approved devices
                 </li>
                 <li className="flex items-center text-muted-foreground text-sm">
-                  <i className="fas fa-check text-healthcare-secondary mr-2"></i>
+                  <Check className="w-4 h-4 text-healthcare-secondary mr-2" />
                   $58+ per patient/month
                 </li>
                 <li className="flex items-center text-muted-foreground text-sm">
-                  <i className="fas fa-check text-healthcare-secondary mr-2"></i>
+                  <Check className="w-4 h-4 text-healthcare-secondary mr-2" />
                   16-day data requirement
                 </li>
               </ul>
               <Link href="/services/monitoring" className="inline-flex items-center text-healthcare-primary font-semibold hover:text-blue-700 text-sm">
-                Learn More <i className="fas fa-arrow-right ml-2"></i>
+                Learn More <ArrowRight className="w-4 h-4 ml-2" />
               </Link>
             </div>
             
             {/* RTM Program Card */}
             <div className="bg-white rounded-2xl p-6 shadow-lg hover:shadow-xl transition-shadow">
               <div className="relative w-full h-32 mb-4 rounded-lg overflow-hidden">
-                <img 
+                <LazyImage 
                   src="/images/AdobeStock_400007631_1751485954795.jpeg"
                   alt="Remote therapeutic monitoring for rehabilitation and therapy"
                   className="w-full h-full object-cover"
@@ -241,27 +242,27 @@ export default function Home() {
               </p>
               <ul className="space-y-2 mb-4">
                 <li className="flex items-center text-muted-foreground text-sm">
-                  <i className="fas fa-check text-healthcare-secondary mr-2"></i>
+                  <Check className="w-4 h-4 text-healthcare-secondary mr-2" />
                   Therapy monitoring
                 </li>
                 <li className="flex items-center text-muted-foreground text-sm">
-                  <i className="fas fa-check text-healthcare-secondary mr-2"></i>
+                  <Check className="w-4 h-4 text-healthcare-secondary mr-2" />
                   $78+ per patient/month
                 </li>
                 <li className="flex items-center text-muted-foreground text-sm">
-                  <i className="fas fa-check text-healthcare-secondary mr-2"></i>
+                  <Check className="w-4 h-4 text-healthcare-secondary mr-2" />
                   No prior relationship required
                 </li>
               </ul>
               <Link href="/services/rtm" className="inline-flex items-center text-healthcare-primary font-semibold hover:text-blue-700 text-sm">
-                Learn More <i className="fas fa-arrow-right ml-2"></i>
+                Learn More <ArrowRight className="w-4 h-4 ml-2" />
               </Link>
             </div>
 
             {/* APCM Program Card */}
             <div className="bg-white rounded-2xl p-6 shadow-lg hover:shadow-xl transition-shadow">
               <div className="relative w-full h-32 mb-4 rounded-lg overflow-hidden">
-                <img 
+                <LazyImage 
                   src="/images/AdobeStock_279901729_1751485954797.jpeg"
                   alt="Advanced primary care management comprehensive coordination"
                   className="w-full h-full object-cover"
@@ -274,20 +275,20 @@ export default function Home() {
               </p>
               <ul className="space-y-2 mb-4">
                 <li className="flex items-center text-muted-foreground text-sm">
-                  <i className="fas fa-check text-healthcare-secondary mr-2"></i>
+                  <Check className="w-4 h-4 text-healthcare-secondary mr-2" />
                   24/7 access capability
                 </li>
                 <li className="flex items-center text-muted-foreground text-sm">
-                  <i className="fas fa-check text-healthcare-secondary mr-2"></i>
+                  <Check className="w-4 h-4 text-healthcare-secondary mr-2" />
                   $15-$110 per patient/month
                 </li>
                 <li className="flex items-center text-muted-foreground text-sm">
-                  <i className="fas fa-check text-healthcare-secondary mr-2"></i>
+                  <Check className="w-4 h-4 text-healthcare-secondary mr-2" />
                   No time requirements
                 </li>
               </ul>
               <Link href="/services/apcm" className="inline-flex items-center text-healthcare-primary font-semibold hover:text-blue-700 text-sm">
-                Learn More <i className="fas fa-arrow-right ml-2"></i>
+                Learn More <ArrowRight className="w-4 h-4 ml-2" />
               </Link>
             </div>
 
@@ -307,20 +308,20 @@ export default function Home() {
               </p>
               <ul className="space-y-2 mb-4">
                 <li className="flex items-center text-muted-foreground text-sm">
-                  <i className="fas fa-check text-healthcare-secondary mr-2"></i>
+                  <Check className="w-4 h-4 text-healthcare-secondary mr-2" />
                   Depression screening
                 </li>
                 <li className="flex items-center text-muted-foreground text-sm">
-                  <i className="fas fa-check text-healthcare-secondary mr-2"></i>
+                  <Check className="w-4 h-4 text-healthcare-secondary mr-2" />
                   $42+ per patient/month
                 </li>
                 <li className="flex items-center text-muted-foreground text-sm">
-                  <i className="fas fa-check text-healthcare-secondary mr-2"></i>
+                  <Check className="w-4 h-4 text-healthcare-secondary mr-2" />
                   Crisis intervention
                 </li>
               </ul>
               <Link href="/services/bhi" className="inline-flex items-center text-healthcare-primary font-semibold hover:text-blue-700 text-sm">
-                Learn More <i className="fas fa-arrow-right ml-2"></i>
+                Learn More <ArrowRight className="w-4 h-4 ml-2" />
               </Link>
             </div>
           </div>
@@ -355,7 +356,7 @@ export default function Home() {
               <div className="space-y-4 mb-8">
                 <div className="flex items-start gap-4">
                   <div className="w-8 h-8 bg-primary/10 rounded-full flex items-center justify-center flex-shrink-0 mt-1">
-                    <i className="fas fa-heart text-primary text-sm"></i>
+                    <Heart className="w-4 h-4 text-primary" />
                   </div>
                   <div>
                     <h4 className="font-semibold text-foreground mb-1">Authentic Connection</h4>
@@ -364,7 +365,7 @@ export default function Home() {
                 </div>
                 <div className="flex items-start gap-4">
                   <div className="w-8 h-8 bg-secondary/10 rounded-full flex items-center justify-center flex-shrink-0 mt-1">
-                    <i className="fas fa-handshake text-secondary text-sm"></i>
+                    <Handshake className="w-4 h-4 text-secondary" />
                   </div>
                   <div>
                     <h4 className="font-semibold text-foreground mb-1">Trust & Comfort</h4>
@@ -373,7 +374,7 @@ export default function Home() {
                 </div>
                 <div className="flex items-start gap-4">
                   <div className="w-8 h-8 bg-accent/10 rounded-full flex items-center justify-center flex-shrink-0 mt-1">
-                    <i className="fas fa-chart-line text-accent text-sm"></i>
+                    <TrendingUp className="w-4 h-4 text-accent" />
                   </div>
                   <div>
                     <h4 className="font-semibold text-foreground mb-1">Better Outcomes</h4>
@@ -448,7 +449,7 @@ export default function Home() {
                 <div className="space-y-6">
                   <div className="flex items-start">
                     <div className="w-12 h-12 bg-primary/10 rounded-lg flex items-center justify-center mr-4 flex-shrink-0">
-                      <i className="fas fa-phone text-primary"></i>
+                      <Phone className="w-5 h-5 text-primary" />
                     </div>
                     <div>
                       <h4 className="font-semibold text-foreground mb-1">Phone</h4>
@@ -459,7 +460,7 @@ export default function Home() {
 
                   <div className="flex items-start">
                     <div className="w-12 h-12 bg-secondary/10 rounded-lg flex items-center justify-center mr-4 flex-shrink-0">
-                      <i className="fas fa-envelope text-secondary"></i>
+                      <Mail className="w-5 h-5 text-secondary" />
                     </div>
                     <div>
                       <h4 className="font-semibold text-foreground mb-1">Email</h4>
@@ -470,7 +471,7 @@ export default function Home() {
 
                   <div className="flex items-start">
                     <div className="w-12 h-12 bg-accent/10 rounded-lg flex items-center justify-center mr-4 flex-shrink-0">
-                      <i className="fas fa-map-marker-alt text-accent"></i>
+                      <MapPin className="w-5 h-5 text-accent" />
                     </div>
                     <div>
                       <h4 className="font-semibold text-foreground mb-1">Headquarters</h4>
@@ -487,19 +488,19 @@ export default function Home() {
                 <h4 className="text-xl font-bold mb-4">Why Partner With Lynk Health?</h4>
                 <ul className="space-y-3 text-white/90">
                   <li className="flex items-center">
-                    <i className="fas fa-check-circle mr-3 text-white"></i>
+                    <CheckCircle className="w-5 h-5 mr-3 text-white" />
                     Zero upfront costs
                   </li>
                   <li className="flex items-center">
-                    <i className="fas fa-check-circle mr-3 text-white"></i>
+                    <CheckCircle className="w-5 h-5 mr-3 text-white" />
                     4-6 week implementation
                   </li>
                   <li className="flex items-center">
-                    <i className="fas fa-check-circle mr-3 text-white"></i>
+                    <CheckCircle className="w-5 h-5 mr-3 text-white" />
                     CMS compliant programs
                   </li>
                   <li className="flex items-center">
-                    <i className="fas fa-check-circle mr-3 text-white"></i>
+                    <CheckCircle className="w-5 h-5 mr-3 text-white" />
                     Local nurses, no call centers
                   </li>
                 </ul>

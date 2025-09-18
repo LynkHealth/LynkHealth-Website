@@ -1,5 +1,6 @@
 import { Link } from "wouter";
 import { SEOHead } from "@/components/SEOHead";
+import LazyImage from "@/components/LazyImage";
 
 export default function CCMPage() {
   return (
@@ -25,7 +26,7 @@ export default function CCMPage() {
                 </Link>
               </div>
               <div>
-                <img src="/images/image_1756413884888.png" alt="Chronic Care Management Excellence - Professional nursing care delivering measurable health outcomes for Medicare patients" className="rounded-2xl shadow-2xl" />
+                <LazyImage src="/images/image_1756413884888.png" alt="Chronic Care Management Excellence - Professional nursing care delivering measurable health outcomes for Medicare patients" className="rounded-2xl shadow-2xl" />
               </div>
             </div>
           </div>
@@ -120,7 +121,7 @@ export default function CCMPage() {
               </div>
               
               <div>
-                <img src="https://images.pexels.com/photos/7578815/pexels-photo-7578815.jpeg?auto=compress&cs=tinysrgb&w=800&h=600" alt="Healthcare provider discussing chronic care management with patient" className="rounded-2xl shadow-lg" />
+                <LazyImage src="https://images.pexels.com/photos/7578815/pexels-photo-7578815.jpeg?auto=compress&cs=tinysrgb&w=800&h=600" alt="Healthcare provider discussing chronic care management with patient" className="rounded-2xl shadow-lg" />
               </div>
             </div>
           </div>

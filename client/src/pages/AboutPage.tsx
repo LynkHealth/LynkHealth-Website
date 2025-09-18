@@ -1,4 +1,5 @@
 import { SEOHead } from "@/components/SEOHead";
+import LazyImage from "@/components/LazyImage";
 
 export default function AboutPage() {
   return (
@@ -36,7 +37,7 @@ export default function AboutPage() {
                 </p>
               </div>
               <div>
-                <img src="/images/AdobeStock_671445453 (1)_1751485954796.jpeg" alt="Senior patient receiving comprehensive care at home" className="rounded-2xl shadow-lg" />
+                <LazyImage src="/images/AdobeStock_671445453 (1)_1751485954796.jpeg" alt="Senior patient receiving comprehensive care at home" className="rounded-2xl shadow-lg" />
               </div>
             </div>
           </div>
@@ -47,7 +48,7 @@ export default function AboutPage() {
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="grid lg:grid-cols-2 gap-12 items-center">
               <div className="order-2 lg:order-1">
-                <img src="/images/AdobeStock_400795942_1751485954824.jpeg" alt="Healthcare technology enabling better patient care outcomes" className="rounded-2xl shadow-lg" />
+                <LazyImage src="/images/AdobeStock_400795942_1751485954824.jpeg" alt="Healthcare technology enabling better patient care outcomes" className="rounded-2xl shadow-lg" />
               </div>
               <div className="order-1 lg:order-2">
                 <h2 className="text-3xl font-bold text-slate-900 mb-6">Our Vision</h2>

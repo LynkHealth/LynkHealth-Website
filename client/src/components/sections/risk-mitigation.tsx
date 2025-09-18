@@ -1,9 +1,11 @@
+import { RefreshCw, Handshake, BarChart3, Shield } from "lucide-react";
+
 const riskMitigationPoints = [
   {
     concern: "Will this disrupt our current workflow?",
     solution: "Zero disruption implementation",
     details: "We adapt to your existing workflow, with optional EHR integration available. No required new software, minimal staff training, and flexible implementation. Your team continues working as they prefer.",
-    icon: "fas fa-sync-alt",
+    icon: RefreshCw,
     color: "text-blue-600",
     bgColor: "bg-blue-50"
   },
@@ -11,7 +13,7 @@ const riskMitigationPoints = [
     concern: "What if patients don't engage?",
     solution: "90%+ retention guarantee",
     details: "Our dedicated nurses build authentic relationships that patients trust. Unlike call centers, our approach generates industry-leading engagement rates.",
-    icon: "fas fa-handshake",
+    icon: Handshake,
     color: "text-amber-600",
     bgColor: "bg-amber-50"
   },
@@ -19,7 +21,7 @@ const riskMitigationPoints = [
     concern: "How do we ensure quality oversight?",
     solution: "Complete transparency & control",
     details: "Real-time dashboard access, monthly quality reports, and direct communication channels. You maintain full oversight of patient care decisions.",
-    icon: "fas fa-chart-bar",
+    icon: BarChart3,
     color: "text-purple-600",
     bgColor: "bg-purple-50"
   },
@@ -27,7 +29,7 @@ const riskMitigationPoints = [
     concern: "What about compliance risks?",
     solution: "Enterprise-grade compliance",
     details: "SOC 2 Type II certified, HIPAA compliant, CMS approved programs. Our compliance team handles all regulatory requirements and documentation.",
-    icon: "fas fa-shield-alt",
+    icon: Shield,
     color: "text-amber-600",
     bgColor: "bg-amber-50"
   }
@@ -55,7 +57,7 @@ export default function RiskMitigation() {
             <div key={index} className="bg-white rounded-2xl p-8 shadow-sm border border-slate-200">
               <div className="flex items-start gap-6">
                 <div className={`w-16 h-16 ${point.bgColor} rounded-2xl flex items-center justify-center flex-shrink-0`}>
-                  <i className={`${point.icon} ${point.color} text-2xl`}></i>
+                  <point.icon className={`w-8 h-8 ${point.color}`} />
                 </div>
                 <div className="flex-1">
                   <h3 className="text-lg font-semibold text-muted-foreground mb-2 italic">

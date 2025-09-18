@@ -30,7 +30,7 @@ export function usePerformance() {
     }
 
     // Add service worker for caching if available
-    if ('serviceWorker' in navigator && process.env.NODE_ENV === 'production') {
+    if ('serviceWorker' in navigator && import.meta.env.PROD) {
       navigator.serviceWorker.register('/sw.js').catch(() => {
         // Service worker registration failed, continue without it
       });

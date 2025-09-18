@@ -1,4 +1,6 @@
 import { Link } from "wouter";
+import { Phone, Mail, MapPin } from "lucide-react";
+import { SiLinkedin, SiX, SiFacebook } from "react-icons/si";
 
 export default function Footer() {
   return (
@@ -20,13 +22,13 @@ export default function Footer() {
             </p>
             <div className="flex space-x-4">
               <a href="#" className="w-10 h-10 bg-slate-800 rounded-full flex items-center justify-center hover:bg-primary transition-colors">
-                <i className="fab fa-linkedin"></i>
+                <SiLinkedin className="w-5 h-5" />
               </a>
               <a href="#" className="w-10 h-10 bg-slate-800 rounded-full flex items-center justify-center hover:bg-secondary transition-colors">
-                <i className="fab fa-twitter"></i>
+                <SiX className="w-5 h-5" />
               </a>
               <a href="#" className="w-10 h-10 bg-slate-800 rounded-full flex items-center justify-center hover:bg-primary transition-colors">
-                <i className="fab fa-facebook"></i>
+                <SiFacebook className="w-5 h-5" />
               </a>
             </div>
           </div>
@@ -86,15 +88,15 @@ export default function Footer() {
             <h4 className="text-lg font-semibold mb-4">Contact</h4>
             <div className="space-y-2 text-slate-400">
               <div className="flex items-center">
-                <i className="fas fa-phone mr-3 text-healthcare-primary"></i>
+                <Phone className="w-4 h-4 mr-3 text-healthcare-primary" />
                 <span>(601) 859-4342</span>
               </div>
               <div className="flex items-center">
-                <i className="fas fa-envelope mr-3 text-healthcare-primary"></i>
+                <Mail className="w-4 h-4 mr-3 text-healthcare-primary" />
                 <span>info@lynkhealthcare.com</span>
               </div>
               <div className="flex items-start">
-                <i className="fas fa-map-marker-alt mr-3 text-healthcare-primary mt-1"></i>
+                <MapPin className="w-4 h-4 mr-3 text-healthcare-primary mt-1" />
                 <span>200 Trace Colony Park Dr, Suite C<br />Ridgeland, MS 39157</span>
               </div>
             </div>

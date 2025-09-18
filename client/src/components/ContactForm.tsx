@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useForm } from "react-hook-form";
+import { Check, Loader2 } from "lucide-react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation } from "@tanstack/react-query";
 import { z } from "zod";
@@ -76,7 +77,7 @@ export default function ContactForm() {
     return (
       <div className="bg-white rounded-2xl p-8 shadow-lg text-center">
         <div className="w-16 h-16 bg-secondary/10 rounded-full flex items-center justify-center mx-auto mb-6">
-          <i className="fas fa-check text-secondary text-2xl"></i>
+          <Check className="w-8 h-8 text-secondary" />
         </div>
         <h3 className="text-2xl font-bold text-foreground mb-4">Thank You!</h3>
         <p className="text-muted-foreground mb-6">
@@ -207,7 +208,7 @@ export default function ContactForm() {
           >
             {contactMutation.isPending ? (
               <>
-                <i className="fas fa-spinner fa-spin mr-2"></i>
+                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
                 Sending...
               </>
             ) : (

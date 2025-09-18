@@ -19,7 +19,6 @@ export function optimizeFonts() {
   const style = document.createElement('style');
   style.textContent = `
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
-    @import url('https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css');
   `;
   document.head.appendChild(style);
 }
@@ -29,9 +28,7 @@ export function addResourceHints() {
   const hints = [
     { rel: 'preconnect', href: 'https://fonts.googleapis.com' },
     { rel: 'preconnect', href: 'https://fonts.gstatic.com', crossorigin: 'true' },
-    { rel: 'dns-prefetch', href: 'https://lynk.health' },
-    { rel: 'dns-prefetch', href: 'https://cdnjs.cloudflare.com' }
-  ];
+    { rel: 'dns-prefetch', href: 'https://lynk.health' }  ];
 
   hints.forEach(hint => {
     const link = document.createElement('link');
