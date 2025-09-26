@@ -192,7 +192,7 @@ export default function OvernightOnCallCoverage() {
                   <div className="bg-white/95 backdrop-blur-sm rounded-2xl p-6 shadow-lg">
                     <h3 className="text-lg font-bold text-foreground mb-2 flex items-center">
                       <Moon className="mr-2 h-5 w-5 text-primary" />
-                      24/7 Night Coverage
+                      After-Hours Coverage
                     </h3>
                     <p className="text-sm text-muted-foreground mb-4">
                       Our licensed clinicians provide reliable overnight support for hospitals, SNFs, and clinics nationwide.
