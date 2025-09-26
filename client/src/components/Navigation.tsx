@@ -27,6 +27,7 @@ export function Navigation() {
     { href: "/overnight-on-call", label: "Overnight On-Call Coverage", description: "Remote nocturnist and after-hours coverage" },
   ];
 
+
   return (
     <header className="fixed top-0 left-0 right-0 bg-white/95 backdrop-blur-sm border-b border-gray-100 z-50 shadow-sm">
       <nav className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
