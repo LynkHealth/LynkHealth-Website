@@ -15,6 +15,7 @@ import { z } from "zod";
 import { Moon, Clock, Hospital, Users, DollarSign, CheckCircle, Phone, Calendar, Shield, Heart, Stethoscope, Activity, AlertTriangle, TrendingUp } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
+import { SEOHead } from "@/components/SEOHead";
 
 const nightCoverageFormSchema = z.object({
   organizationName: z.string().min(1, "Organization name is required"),
@@ -148,8 +149,11 @@ export default function OvernightOnCallCoverage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-slate-50 to-white">
-      <title>Overnight On-Call Coverage | Lynk Health</title>
-      <meta name="description" content="Remote nocturnist and after-hours coverage for hospitals, LTACHs, SNFs, and clinics. Admissions, cross-coverage, consults, and orders—cost-effective, reliable night operations." />
+      <SEOHead
+        title="Overnight On-Call Coverage | Lynk Health"
+        description="Remote nocturnist and after-hours coverage for hospitals, LTACHs, SNFs, and clinics. Admissions, cross-coverage, consults, and orders—cost-effective, reliable night operations."
+        keywords="overnight on-call coverage, nocturnist services, after-hours coverage, telehospitalist, remote physician coverage, hospital night coverage, SNF coverage, LTACH coverage"
+      />
 
       {/* Hero Section */}
       <section className="pt-32 pb-20">
