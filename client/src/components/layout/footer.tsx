@@ -38,23 +38,33 @@ export default function Footer() {
             <h4 className="text-lg font-semibold mb-4">Services</h4>
             <ul className="space-y-2 text-slate-400">
               <li>
-                <Link href="/services/ccm" className="hover:text-white transition-colors">
+                <Link href="/ccm" className="hover:text-white transition-colors">
                   Chronic Care Management
                 </Link>
               </li>
               <li>
-                <Link href="/services/monitoring" className="hover:text-white transition-colors">
-                  In-Home Monitoring
+                <Link href="/monitoring" className="hover:text-white transition-colors">
+                  Remote Patient Monitoring
                 </Link>
               </li>
               <li>
-                <Link href="/services/bhi" className="hover:text-white transition-colors">
+                <Link href="/rtm" className="hover:text-white transition-colors">
+                  Remote Therapeutic Monitoring
+                </Link>
+              </li>
+              <li>
+                <Link href="/apcm" className="hover:text-white transition-colors">
+                  Advanced Primary Care Management
+                </Link>
+              </li>
+              <li>
+                <Link href="/bhi" className="hover:text-white transition-colors">
                   Behavioral Health Integration
                 </Link>
               </li>
               <li>
-                <Link href="/how-it-works" className="hover:text-white transition-colors">
-                  How It Works
+                <Link href="/overnight-on-call" className="hover:text-white transition-colors">
+                  Overnight On-Call Coverage
                 </Link>
               </li>
             </ul>
@@ -88,15 +98,15 @@ export default function Footer() {
             <h4 className="text-lg font-semibold mb-4">Contact</h4>
             <div className="space-y-2 text-slate-400">
               <div className="flex items-center">
-                <Phone className="w-4 h-4 mr-3 text-healthcare-primary" />
-                <span>(601) 859-4342</span>
+                <Phone className="w-4 h-4 mr-3 text-primary" />
+                <a href="tel:+16018594342" className="hover:text-white transition-colors">(601) 859-4342</a>
               </div>
               <div className="flex items-center">
-                <Mail className="w-4 h-4 mr-3 text-healthcare-primary" />
-                <span>info@lynkhealthcare.com</span>
+                <Mail className="w-4 h-4 mr-3 text-primary" />
+                <a href="mailto:info@lynkhealthcare.com" className="hover:text-white transition-colors">info@lynkhealthcare.com</a>
               </div>
               <div className="flex items-start">
-                <MapPin className="w-4 h-4 mr-3 text-healthcare-primary mt-1" />
+                <MapPin className="w-4 h-4 mr-3 text-primary mt-1" />
                 <span>200 Trace Colony Park Dr, Suite C<br />Ridgeland, MS 39157</span>
               </div>
             </div>
