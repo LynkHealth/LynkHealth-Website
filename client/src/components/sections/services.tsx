@@ -1,7 +1,7 @@
 import { Link } from "wouter";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Stethoscope, Activity, Heart, ArrowRight, Check } from "lucide-react";
+import { Stethoscope, Activity, Heart, Moon, ArrowRight, Check } from "lucide-react";
 
 export default function ServicesSection() {
   const services = [
@@ -43,6 +43,19 @@ export default function ServicesSection() {
       ],
       link: "/bhi",
       cta: "Explore BHI Services"
+    },
+    {
+      icon: <Moon className="h-8 w-8" />,
+      title: "Overnight On-Call Coverage",
+      description: "Remote nocturnist coverage for hospitals, LTACHs, SNFs, and clinics—admissions, consults, and orders handled after-hours by our experienced clinicians.",
+      features: [
+        "24/7 after-hours coverage",
+        "Licensed NPs and MDs",
+        "EMR integration support",
+        "Scalable coverage models"
+      ],
+      link: "/overnight-on-call",
+      cta: "Explore Coverage"
     }
   ];
 
