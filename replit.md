@@ -83,6 +83,17 @@ User interaction on the website leads to client-side form validation, API commun
   - Maintained collaborative care management codes as secondary reference section
   - All CPT code sections now clearly identify Lynk Health team's core billing services
 
+- September 26, 2025: Implemented new "Overnight On-Call Coverage" service with complete functionality
+  - Created comprehensive service page (/overnight-on-call) with hero section, benefits, features, FAQ accordion, and specialized contact form
+  - Added specialized database schema (nightCoverageInquiries table) with fields for organization details, care setting, and expected volume
+  - Implemented dedicated API endpoint (POST /api/contact-night-coverage) with Zod validation and database storage
+  - Updated navigation dropdown to include new service with Moon icon, ensuring proper routing consistency
+  - Added service tile to Services index page matching existing design patterns
+  - Implemented SEO optimization using SEOHead component with OpenGraph and Twitter Card meta tags
+  - Fixed critical navigation routing mismatch between serviceLinks and App routes (removed /services/ prefix from all navigation links)
+  - Form uses shared insertNightCoverageInquirySchema for consistency with backend validation
+  - Successfully tested end-to-end: navigation, page load, form submission, API integration, and success feedback
+
 ## External Dependencies
 - **Database**: `@neondatabase/serverless` (Neon Database), `drizzle-orm`.
 - **Frontend State & Validation**: `@tanstack/react-query`, `@hookform/resolvers`, `zod`.

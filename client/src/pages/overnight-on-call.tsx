@@ -16,17 +16,9 @@ import { Moon, Clock, Hospital, Users, DollarSign, CheckCircle, Phone, Calendar,
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 import { SEOHead } from "@/components/SEOHead";
+import { insertNightCoverageInquirySchema } from "@shared/schema";
 
-const nightCoverageFormSchema = z.object({
-  organizationName: z.string().min(1, "Organization name is required"),
-  contactName: z.string().min(1, "Contact name is required"),
-  role: z.string().min(1, "Role is required"),
-  email: z.string().email("Valid email address is required"),
-  phone: z.string().optional(),
-  careSetting: z.string().min(1, "Care setting is required"),
-  expectedVolume: z.string().min(1, "Expected volume is required"),
-  message: z.string().optional(),
-});
+const nightCoverageFormSchema = insertNightCoverageInquirySchema;
 
 type NightCoverageForm = z.infer<typeof nightCoverageFormSchema>;
 

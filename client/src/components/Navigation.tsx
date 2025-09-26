@@ -19,12 +19,12 @@ export function Navigation() {
   ];
 
   const serviceLinks = [
-    { href: "/services/ccm", label: "Chronic Care Management", description: "CCM services for chronic conditions" },
-    { href: "/services/monitoring", label: "Remote Patient Monitoring", description: "RPM physiological monitoring" },
-    { href: "/services/rtm", label: "Remote Therapeutic Monitoring", description: "RTM non-physiological monitoring" },
-    { href: "/services/apcm", label: "Advanced Primary Care Management", description: "APCM comprehensive care coordination" },
-    { href: "/services/bhi", label: "Behavioral Health Integration", description: "Mental health support services" },
-    { href: "/services/overnight-on-call", label: "Overnight On-Call Coverage", description: "Remote nocturnist and after-hours coverage" },
+    { href: "/ccm", label: "Chronic Care Management", description: "CCM services for chronic conditions" },
+    { href: "/monitoring", label: "Remote Patient Monitoring", description: "RPM physiological monitoring" },
+    { href: "/rtm", label: "Remote Therapeutic Monitoring", description: "RTM non-physiological monitoring" },
+    { href: "/apcm", label: "Advanced Primary Care Management", description: "APCM comprehensive care coordination" },
+    { href: "/bhi", label: "Behavioral Health Integration", description: "Mental health support services" },
+    { href: "/overnight-on-call", label: "Overnight On-Call Coverage", description: "Remote nocturnist and after-hours coverage" },
   ];
 
   return (
