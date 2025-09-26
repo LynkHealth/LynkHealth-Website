@@ -24,6 +24,7 @@ export function Navigation() {
     { href: "/services/rtm", label: "Remote Therapeutic Monitoring", description: "RTM non-physiological monitoring" },
     { href: "/services/apcm", label: "Advanced Primary Care Management", description: "APCM comprehensive care coordination" },
     { href: "/services/bhi", label: "Behavioral Health Integration", description: "Mental health support services" },
+    { href: "/services/overnight-on-call", label: "Overnight On-Call Coverage", description: "Remote nocturnist and after-hours coverage" },
   ];
 
   return (

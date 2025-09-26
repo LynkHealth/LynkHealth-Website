@@ -1,4 +1,4 @@
-import { users, contactInquiries, type User, type InsertUser, type ContactInquiry, type InsertContactInquiry } from "@shared/schema";
+import { users, contactInquiries, nightCoverageInquiries, type User, type InsertUser, type ContactInquiry, type InsertContactInquiry, type NightCoverageInquiry, type InsertNightCoverageInquiry } from "@shared/schema";
 import { db } from "./db";
 import { eq } from "drizzle-orm";
 
@@ -8,6 +8,8 @@ export interface IStorage {
   createUser(user: InsertUser): Promise<User>;
   createContactInquiry(inquiry: InsertContactInquiry): Promise<ContactInquiry>;
   getContactInquiries(): Promise<ContactInquiry[]>;
+  createNightCoverageInquiry(inquiry: InsertNightCoverageInquiry): Promise<NightCoverageInquiry>;
+  getNightCoverageInquiries(): Promise<NightCoverageInquiry[]>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -42,6 +44,21 @@ export class DatabaseStorage implements IStorage {
       .select()
       .from(contactInquiries)
       .orderBy(contactInquiries.createdAt);
+  }
+
+  async createNightCoverageInquiry(insertInquiry: InsertNightCoverageInquiry): Promise<NightCoverageInquiry> {
+    const [inquiry] = await db
+      .insert(nightCoverageInquiries)
+      .values(insertInquiry)
+      .returning();
+    return inquiry;
+  }
+
+  async getNightCoverageInquiries(): Promise<NightCoverageInquiry[]> {
+    return await db
+      .select()
+      .from(nightCoverageInquiries)
+      .orderBy(nightCoverageInquiries.createdAt);
   }
 }
 

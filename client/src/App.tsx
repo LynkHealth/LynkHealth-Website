@@ -15,6 +15,7 @@ import Monitoring from "@/pages/monitoring";
 import RTM from "@/pages/rtm";
 import APCM from "@/pages/apcm";
 import BHI from "@/pages/bhi";
+import OvernightOnCall from "@/pages/overnight-on-call";
 import HowItWorks from "@/pages/how-it-works";
 import Resources from "@/pages/resources";
 import Privacy from "@/pages/privacy";
@@ -39,6 +40,7 @@ function Router() {
           <Route path="/rtm" component={RTM} />
           <Route path="/apcm" component={APCM} />
           <Route path="/bhi" component={BHI} />
+          <Route path="/overnight-on-call" component={OvernightOnCall} />
           <Route path="/how-it-works" component={HowItWorks} />
           <Route path="/resources" component={Resources} />
           <Route path="/privacy" component={Privacy} />

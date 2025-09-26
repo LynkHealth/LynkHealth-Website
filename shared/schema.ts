@@ -21,6 +21,28 @@ export const insertContactInquirySchema = createInsertSchema(contactInquiries).o
 export type InsertContactInquiry = z.infer<typeof insertContactInquirySchema>;
 export type ContactInquiry = typeof contactInquiries.$inferSelect;
 
+// Night coverage inquiry table for overnight on-call service
+export const nightCoverageInquiries = pgTable("night_coverage_inquiries", {
+  id: serial("id").primaryKey(),
+  organizationName: text("organization_name").notNull(),
+  contactName: text("contact_name").notNull(),
+  role: text("role").notNull(),
+  email: text("email").notNull(),
+  phone: text("phone"),
+  careSetting: text("care_setting").notNull(),
+  expectedVolume: text("expected_volume").notNull(),
+  message: text("message"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+export const insertNightCoverageInquirySchema = createInsertSchema(nightCoverageInquiries).omit({
+  id: true,
+  createdAt: true,
+});
+
+export type InsertNightCoverageInquiry = z.infer<typeof insertNightCoverageInquirySchema>;
+export type NightCoverageInquiry = typeof nightCoverageInquiries.$inferSelect;
+
 // Keep existing users table for compatibility
 export const users = pgTable("users", {
   id: serial("id").primaryKey(),
