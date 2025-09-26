@@ -1,0 +1,104 @@
+Goal: Add a new service to my existing Lynk Health website called “Overnight On-Call Coverage”. This is a flexible program where our licensed clinicians (nurse practitioners and physicians) provide remote after-hours or nighttime coverage for hospitals, LTACHs, SNFs, and large clinics. It’s broader than just “telehospitalist” — it’s a nocturnist call program for any care setting that needs support during nights or after-hours.
+
+Do not change or remove existing content/features. Chronic Care Management (CCM) and care coordination remain the primary focus elsewhere.
+
+⸻
+
+Deliverables
+	1.	New service detail page
+	•	Route: /services/overnight-on-call (or follow existing convention).
+	•	Include all page sections listed below under Page Content.
+	2.	Services index tile/card
+	•	Add “Overnight On-Call Coverage” to the Services page alongside CCM, RPM, etc.
+	•	Match style and layout of existing cards.
+	3.	Navigation
+	•	If Services are in the nav dropdown, add “Overnight On-Call Coverage.”
+	4.	Inquiry form on new page
+	•	Headline CTA: “Discuss Night Coverage.”
+	•	Fields: Organization name, Contact name, Role, Email, Phone (optional), Care setting (Hospitals, LTACH/Rehab, SNF/Nursing Home, Outpatient Clinic), Expected nightly volume, Message.
+	•	On submit: If existing mailer is configured, use it. Otherwise POST to a new /api/contact-night-coverage and fallback to mailto:hello@lynk.health with form values encoded.
+	•	Success message inline + simple analytics event (night_coverage_inquiry_submitted).
+	5.	SEO basics
+	•	Title: “Overnight On-Call Coverage | Lynk Health”
+	•	Meta description: “Remote nocturnist and after-hours coverage for hospitals, LTACHs, SNFs, and clinics. Admissions, cross-coverage, consults, and orders—cost-effective, reliable night operations.”
+	•	Match existing OpenGraph/Twitter patterns.
+
+⸻
+
+Page Content (Use verbatim unless style guide overrides)
+
+Hero
+	•	H1: Overnight On-Call Coverage
+	•	Subhead: Flexible nocturnist support across hospitals, SNFs, and clinics—admissions, cross-coverage, consults, and orders when you need them most.
+	•	CTA Primary: Discuss Night Coverage
+
+⸻
+
+Section: What Is Nocturnist Coverage?
+Nocturnist coverage refers to after-hours or overnight clinical support provided by licensed nurse practitioners and physicians who focus specifically on night shifts. Instead of requiring in-house staff to remain on call, facilities can rely on Lynk Health’s remote team to handle admissions, calls, consults, and urgent orders during the night. This reduces burnout for daytime providers and ensures continuous, high-quality patient care.
+
+⸻
+
+Section: Who We Support
+	•	Hospitals: Admissions, cross-coverage calls, consults, and order requests
+	•	LTACHs & Rehab Facilities: After-hours patient management and urgent orders
+	•	Skilled Nursing Facilities (SNFs): Reduce avoidable ER transfers with timely interventions
+	•	Large Outpatient Clinics: Offload after-hours patient calls and triage needs
+
+⸻
+
+Section: Why Choose Lynk Health
+	•	Cost-effective alternative to in-house night staffing
+	•	Reduces provider burnout and turnover
+	•	Reliable response times with experienced clinicians
+	•	Seamless EMR integration and workflow alignment
+	•	Scalable: full overnight coverage or supplemental backup
+
+⸻
+
+Section: Telehospitalist Services (Legacy Offering)
+Our telehospitalist program is a proven model for hospitals needing dependable inpatient night coverage. We manage admissions, cross-coverage, consults, and orders, acting as a natural extension of your team. This service remains part of our broader nocturnist program.
+
+⸻
+
+Section: Coverage Options
+	•	Full Overnight Coverage: Continuous after-hours support
+	•	Supplemental Coverage: Backup for peak or high-volume nights
+	•	Rapid Start: Credentialing and EMR setup support
+	•	Custom Models: Tailored to census size and facility needs
+
+⸻
+
+Section: Results That Matter
+	•	Faster response times for overnight calls
+	•	Fewer unnecessary transfers in SNF/LTACH settings
+	•	Improved retention of daytime providers
+	•	Predictable costs vs. full in-house staffing
+
+⸻
+
+FAQ (Accordion)
+	•	Q: What is nocturnist coverage?
+A: It’s dedicated clinical support during overnight or after-hours shifts, typically provided remotely by licensed nurse practitioners or physicians.
+	•	Q: Who provides the coverage?
+A: Experienced NPs and physicians credentialed and trained in inpatient and after-hours workflows.
+	•	Q: Can we start with backup coverage?
+A: Yes, many partners begin with supplemental support and expand as needed.
+	•	Q: How do you bill?
+A: Flexible models: hourly coverage or per-encounter, depending on census.
+	•	Q: Do you integrate with our EMR?
+A: Yes—we work within your EMR whenever possible to keep workflows seamless.
+
+⸻
+
+Services Index Tile
+
+Title: Overnight On-Call Coverage
+Blurb: Remote nocturnist coverage for hospitals, LTACHs, SNFs, and clinics—admissions, consults, and orders handled after-hours by our experienced clinicians.
+CTA: Explore Coverage
+
+⸻
+
+✅ Scope: Add this new service and page, keep all other site functionality untouched.
+✅ Style: Match existing theme (colors, typography, spacing, buttons).
+✅ No references to fixed “7 PM – 7 AM.” Coverage should be described as overnight or after-hours.
