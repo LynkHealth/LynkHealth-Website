@@ -43,6 +43,31 @@ export const insertNightCoverageInquirySchema = createInsertSchema(nightCoverage
 export type InsertNightCoverageInquiry = z.infer<typeof insertNightCoverageInquirySchema>;
 export type NightCoverageInquiry = typeof nightCoverageInquiries.$inferSelect;
 
+// Wound care referrals table for chronic wound management service
+export const woundCareReferrals = pgTable("wound_care_referrals", {
+  id: serial("id").primaryKey(),
+  providerName: text("provider_name").notNull(),
+  organization: text("organization").notNull(),
+  role: text("role"),
+  email: text("email").notNull(),
+  phone: text("phone"),
+  patientName: text("patient_name").notNull(),
+  patientDob: text("patient_dob").notNull(),
+  diagnosisWoundType: text("diagnosis_wound_type").notNull(),
+  careSetting: text("care_setting").notNull(),
+  urgency: text("urgency").notNull(),
+  notes: text("notes"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+export const insertWoundCareReferralSchema = createInsertSchema(woundCareReferrals).omit({
+  id: true,
+  createdAt: true,
+});
+
+export type InsertWoundCareReferral = z.infer<typeof insertWoundCareReferralSchema>;
+export type WoundCareReferral = typeof woundCareReferrals.$inferSelect;
+
 // Keep existing users table for compatibility
 export const users = pgTable("users", {
   id: serial("id").primaryKey(),
