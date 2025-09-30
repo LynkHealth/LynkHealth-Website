@@ -154,7 +154,6 @@ export default function ChronicWoundManagement() {
       <SEOHead
         title="Chronic Wound Management | Lynk Health"
         description="Referral-driven wound program powered by remote monitoring and CCM—coordinating conservative supplies and advanced therapies through our partner network."
-        canonicalPath="/chronic-wound-management"
       />
 
       <div className="min-h-screen bg-gradient-to-b from-slate-50 to-white">

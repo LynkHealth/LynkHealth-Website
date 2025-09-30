@@ -1,7 +1,7 @@
 import { Link } from "wouter";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Stethoscope, Activity, Heart, Moon, ArrowRight, Check } from "lucide-react";
+import { Stethoscope, Activity, Heart, Moon, Bandage, ArrowRight, Check } from "lucide-react";
 
 export default function ServicesSection() {
   const services = [
@@ -56,6 +56,19 @@ export default function ServicesSection() {
       ],
       link: "/overnight-on-call",
       cta: "Explore Coverage"
+    },
+    {
+      icon: <Bandage className="h-8 w-8" />,
+      title: "Chronic Wound Management",
+      description: "Referral-driven wound program powered by remote monitoring and CCM—coordinating conservative supplies and advanced therapies through Lynk's partner network.",
+      features: [
+        "Care coordination + CCM",
+        "Remote wound monitoring",
+        "Conservative supplies",
+        "Advanced therapies"
+      ],
+      link: "/chronic-wound-management",
+      cta: "Refer a Patient"
     }
   ];
 
