@@ -40,6 +40,11 @@ User interaction on the website leads to client-side form validation, API commun
 - Enhanced local nurse messaging to differentiate from call centers and emphasize authentic connections.
 
 ## Recent Changes
+- September 30, 2025: Added 3 new blog posts to resources page
+  - "Chronic Wound Management: Why Longitudinal Support Outperforms Episodic Care" - comprehensive 14-min post highlighting longitudinal care model superiority over episodic care, featuring conservative/advanced therapies, remote monitoring, and CCM integration with 85%+ healing rates
+  - "Behavioral Health Integration: The Complete Guide to CoCM and BHI Programs" - 12-min guide covering CoCM implementation, billing codes, and mental health integration strategies
+  - "Medicare Advantage Star Ratings: Proven Strategies to Improve Your Scores" - 13-min strategic guide on Star Rating optimization through care coordination with ROI analysis
+  - All posts include authentic statistics, implementation frameworks, and internal links to service pages
 - January 30, 2025: Updated color scheme throughout the site
   - Replaced orange accent color with golden amber (35 84% 56%) for warm, optimistic appeal
   - Updated all color references including buttons, icons, and UI elements
