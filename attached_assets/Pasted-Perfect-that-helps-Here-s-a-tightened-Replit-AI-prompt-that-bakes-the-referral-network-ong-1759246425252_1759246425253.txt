@@ -1,0 +1,115 @@
+Perfect—that helps. Here’s a tightened **Replit AI prompt** that bakes the *referral network* + *ongoing remote monitoring/CCM support* into the positioning and copy, while still adding the new page safely without touching the rest of your site.
+
+---
+
+# 🔧 REPLIT PROMPT — Add “Chronic Wound Management” (Referral Network + Ongoing Monitoring)
+
+**Goal:** Add a new service page to the existing Lynk Health site called **“Chronic Wound Management.”** Tone: we are building a **referral network** that “lynks” providers, patients, and product partners, with **remote monitoring and Chronic Care Management (CCM)** as the backbone for ongoing support. Keep all existing routes/styles/content intact.
+
+## Respect the Current Stack
+
+* Auto-detect framework/routing and reuse shared layout, typography, buttons, and components.
+* No breaking changes. Don’t rename or move existing files.
+
+## Create / Update (scoped)
+
+1. **New page route**: `/services/chronic-wound-management` (or match repo convention).
+2. **Services index tile/card**: add “Chronic Wound Management” pointing to the new route.
+3. **Nav**: if Services dropdown exists, add the new item.
+4. **Referral form on-page** (validated server-side):
+
+   * Fields: Referring provider name (req), Organization (req), Role, Email (req), Phone, Patient name (req), DOB (req), Diagnosis/wound type (req), Care setting (Practice, Specialty Clinic, SNF, Hospital, Home Health, Other), Urgency (Routine/Priority/Urgent), Notes.
+   * Submit: reuse existing mailer/API if present; else create `/api/referrals/wound-care` (log + email to `hello@lynk.health` if mailer exists) and graceful `mailto:` fallback.
+   * Inline success state (no navigation).
+   * Analytics: `wound_referral_cta_clicked`, `wound_referral_submitted` (non-PII metadata only).
+
+## SEO (page-scoped)
+
+* Title: **Chronic Wound Management | Lynk Health**
+* Meta: **Referral-driven wound program powered by remote monitoring and CCM—coordinating conservative supplies and advanced therapies through our partner network.**
+* Use existing OG/Twitter patterns; canonical only if other service pages use it.
+
+## Page Content (use verbatim unless house style forces micro-edits)
+
+**Hero**
+
+* H1: Chronic Wound Management
+* Subhead: A referral-first wound care network powered by remote monitoring and CCM—linking providers, patients, and product partners through one coordinated platform.
+* Primary CTA: Refer a Patient
+
+**Section: The Problem We Solve**
+Chronic wounds demand consistent, longitudinal care. Practices often juggle supplies, advanced therapies, and follow-up without a simple way to keep everyone aligned. The result: delays, complications, and avoidable hospitalizations. **Lynk Health** fixes that by building a **referral network** with **remote monitoring and CCM** at its core.
+
+**Section: Our Referral Network (We’re the “Lynk”)**
+With a single referral, Lynk coordinates the entire wound pathway and keeps it connected over time:
+
+* **Care Coordination + CCM Backbone** — Dedicated care managers, monthly CCM touchpoints, structured education, medication and comorbidity support, and closed-loop updates to the referring provider.
+* **Remote Monitoring of Wound Progress** — Secure check-ins, photo/measurement capture (where supported), adherence tracking, escalation rules, and summary reports.
+* **Conservative Wound Care Products** — Dressings, wraps, and DME delivered fast, with usage guidance and re-supply coordination.
+* **Advanced Wound Therapies** — Skin substitutes, grafts, and biologics via our partner network when wounds require escalation.
+
+**Section: How It Works**
+
+1. **Refer** — Submit a secure referral to Lynk.
+2. **Assess & Plan** — We coordinate an initial wound assessment and plan of care.
+3. **Supply & Educate** — Conservative products shipped with training; adherence reinforced in CCM.
+4. **Escalate When Needed** — Non-healing wounds are triaged for advanced therapies through partners.
+5. **Monitor & Report** — Ongoing remote monitoring + CCM follow-ups; structured reports to providers; clear escalation pathways.
+
+**Section: Why Providers Choose Lynk**
+
+* One referral → end-to-end pathway (supplies, advanced therapies, monitoring, CCM)
+* Less administrative burden; better continuity between visits
+* Closed-loop communication and data summaries for your EMR/workflows
+* Reimbursement guidance for eligible services and products
+
+**Section: Why Patients Benefit**
+
+* Faster access to the right products and therapies
+* Continuous support between visits (CCM + remote monitoring)
+* Fewer ER visits/hospitalizations; better adherence and education
+* Clear escalation if healing stalls
+
+**Section: Who We Serve**
+
+* Primary Care & Specialty Clinics (Endocrinology, Vascular, Podiatry)
+* Hospitals (post-discharge/transitional wound care)
+* Skilled Nursing & Long-Term Care Facilities
+* Home Health Agencies
+
+**Section: Results That Matter**
+
+* Faster wound healing, fewer complications and readmissions
+* Consistent longitudinal support via CCM + remote monitoring
+* Lower workload for clinic teams; better patient experience
+* Predictable, compliant reimbursement pathways
+
+**FAQ (Accordion)**
+
+* **How do I refer a patient?** Use the secure referral form—Lynk coordinates the rest.
+* **Do you support remote monitoring?** Yes. We track wound progress, adherence, and red flags, and summarize for providers.
+* **How does this tie into CCM?** CCM is the backbone of our longitudinal support, keeping patients engaged and closing the loop monthly.
+* **What products are included?** Conservative supplies (dressings, wraps, NPWT/DME) and advanced therapies (skin substitutes, grafts, biologics) via partners.
+* **Eligible patients/settings?** Chronic or non-healing wounds across outpatient, SNF, home health, and post-discharge settings.
+* **Billing support?** We provide coding and reimbursement guidance for eligible services and products.
+
+**CTA + Referral Form**
+
+* Headline: Ready to refer a wound care patient?
+* Button: Refer a Patient (scrolls to validated form described above)
+
+## Services Index Tile (≤30 words)
+
+* **Title:** Chronic Wound Management
+* **Blurb:** Referral-driven wound program powered by remote monitoring and CCM—coordinating conservative supplies and advanced therapies through Lynk’s partner network.
+* **CTA:** Refer a Patient
+
+## Acceptance Criteria
+
+* New page renders with existing styles/components.
+* Services card and nav item added without layout breakage.
+* Form validates and shows success inline; analytics events fire.
+* No regressions to performance/accessibility; build passes.
+* All changes scoped only to this feature.
+
+**Ambiguity rule:** infer from existing patterns and proceed; do not refactor unrelated code.
