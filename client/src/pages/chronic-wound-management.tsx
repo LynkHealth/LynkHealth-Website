@@ -8,7 +8,7 @@ import { SEOHead } from "@/components/SEOHead";
 export default function ChronicWoundManagement() {
   const services = [
     {
-      image: "/images/AdobeStock_212104037_1751485954798.jpeg",
+      image: "/images/AdobeStock_637319296_1759255044613.jpeg",
       title: "Conservative Wound Care Products",
       description: "Accelerate wound healing with our comprehensive portfolio of proven wound care supplies and dressings. From standard dressings to advanced NPWT/DME, we deliver the right products fast with usage guidance and seamless re-supply coordination. Our clinical experts guide your staff through every application, ensuring optimal outcomes while minimizing infection risk and reducing overall treatment costs.",
       benefits: [
@@ -22,7 +22,7 @@ export default function ChronicWoundManagement() {
       icon: <Package className="h-6 w-6" />
     },
     {
-      image: "/images/AdobeStock_133178564_1751485954798.jpeg",
+      image: "/images/AdobeStock_331325674_1759255044614.jpeg",
       title: "Advanced Wound Therapies",
       description: "Transform patient outcomes with access to cutting-edge biologic skin grafts, substitutes, and advanced healing solutions through our trusted partner network. When conservative care isn't enough, we coordinate rapid access to skin substitutes, grafts, and biologics that promote tissue regeneration and accelerate closure. Complete with clear escalation pathways and reimbursement guidance to ensure every patient gets the advanced care they need.",
       benefits: [
@@ -36,7 +36,7 @@ export default function ChronicWoundManagement() {
       icon: <Microscope className="h-6 w-6" />
     },
     {
-      image: "/images/AdobeStock_429992249_1751485954795.jpeg",
+      image: "/images/AdobeStock_1526048895_1759255044615.jpeg",
       title: "Remote Wound Monitoring",
       description: "Keep wounds on track between visits with comprehensive remote monitoring that tracks progress, adherence, and warning signs. Our secure platform enables photo/measurement capture, adherence tracking, and real-time escalation when healing stalls. Structured summary reports integrate seamlessly with your EMR workflows while reducing avoidable office visits and complications.",
       benefits: [
