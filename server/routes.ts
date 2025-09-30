@@ -1,7 +1,7 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
-import { insertContactInquirySchema, insertNightCoverageInquirySchema } from "@shared/schema";
+import { insertContactInquirySchema, insertNightCoverageInquirySchema, insertWoundCareReferralSchema } from "@shared/schema";
 import { z } from "zod";
 // @ts-ignore - No type definitions available for this package
 import mailchimp from "@mailchimp/mailchimp_marketing";
@@ -119,6 +119,36 @@ export async function registerRoutes(app: Express): Promise<Server> {
         });
       } else {
         console.error("Night coverage form error:", error);
+        res.status(500).json({ 
+          success: false, 
+          message: "We're experiencing technical difficulties. Please try again later or contact us directly at hello@lynk.health" 
+        });
+      }
+    }
+  });
+
+  // Wound care referral submission endpoint
+  app.post("/api/referrals/wound-care", async (req, res) => {
+    try {
+      const validatedData = insertWoundCareReferralSchema.parse(req.body);
+      
+      // Store in database
+      const referral = await storage.createWoundCareReferral(validatedData);
+      
+      res.json({ 
+        success: true, 
+        message: "Thank you for your referral! We will contact you within 1 business day to coordinate the patient's wound care pathway.",
+        id: referral.id 
+      });
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        res.status(400).json({ 
+          success: false, 
+          message: "Please check your form data and try again.",
+          errors: error.errors 
+        });
+      } else {
+        console.error("Wound care referral form error:", error);
         res.status(500).json({ 
           success: false, 
           message: "We're experiencing technical difficulties. Please try again later or contact us directly at hello@lynk.health" 

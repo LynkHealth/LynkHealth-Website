@@ -1,4 +1,4 @@
-import { users, contactInquiries, nightCoverageInquiries, type User, type InsertUser, type ContactInquiry, type InsertContactInquiry, type NightCoverageInquiry, type InsertNightCoverageInquiry } from "@shared/schema";
+import { users, contactInquiries, nightCoverageInquiries, woundCareReferrals, type User, type InsertUser, type ContactInquiry, type InsertContactInquiry, type NightCoverageInquiry, type InsertNightCoverageInquiry, type WoundCareReferral, type InsertWoundCareReferral } from "@shared/schema";
 import { db } from "./db";
 import { eq } from "drizzle-orm";
 
@@ -10,6 +10,8 @@ export interface IStorage {
   getContactInquiries(): Promise<ContactInquiry[]>;
   createNightCoverageInquiry(inquiry: InsertNightCoverageInquiry): Promise<NightCoverageInquiry>;
   getNightCoverageInquiries(): Promise<NightCoverageInquiry[]>;
+  createWoundCareReferral(referral: InsertWoundCareReferral): Promise<WoundCareReferral>;
+  getWoundCareReferrals(): Promise<WoundCareReferral[]>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -59,6 +61,21 @@ export class DatabaseStorage implements IStorage {
       .select()
       .from(nightCoverageInquiries)
       .orderBy(nightCoverageInquiries.createdAt);
+  }
+
+  async createWoundCareReferral(insertReferral: InsertWoundCareReferral): Promise<WoundCareReferral> {
+    const [referral] = await db
+      .insert(woundCareReferrals)
+      .values(insertReferral)
+      .returning();
+    return referral;
+  }
+
+  async getWoundCareReferrals(): Promise<WoundCareReferral[]> {
+    return await db
+      .select()
+      .from(woundCareReferrals)
+      .orderBy(woundCareReferrals.createdAt);
   }
 }
 
