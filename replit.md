@@ -40,6 +40,15 @@ User interaction on the website leads to client-side form validation, API commun
 - Enhanced local nurse messaging to differentiate from call centers and emphasize authentic connections.
 
 ## Recent Changes
+- September 30, 2025: Enhanced chronic wound management page with detailed Tiger Wound Care and Surgenex product information
+  - Added comprehensive "Technology & Quality Standards" section highlighting CAMPs Technology, Excellion® Process, and evidence-based research
+  - Updated Tiger Wound Care products with detailed descriptions: ACAPatch (Q4325), alloPLY (Q4323), caregraFT (Q4322) including shelf stability and clinical indications
+  - Enhanced Surgenex products section with SurGraft® Series, NeoStim Series, and SurMatrix® orthobiologic allografts
+  - Integrated authentic marketing copy from tigerwoundcare.com emphasizing placental tissue technology, ECM preservation, and ongoing RCTs
+  - Integrated authentic details from surgenex.com highlighting patented Excellion® process, FDA registered tissue banks, and third-party serological testing
+  - Reorganized HCPCS Q Codes section with product groupings and detailed technology footnotes
+  - Added quality differentiators: extended shelf stability (2-5 years), rigorous donor screening, and controlled storage environments
+  
 - September 30, 2025: Added 3 new blog posts to resources page
   - "Chronic Wound Management: Why Longitudinal Support Outperforms Episodic Care" - comprehensive 14-min post highlighting longitudinal care model superiority over episodic care, featuring conservative/advanced therapies, remote monitoring, and CCM integration with 85%+ healing rates
   - "Behavioral Health Integration: The Complete Guide to CoCM and BHI Programs" - 12-min guide covering CoCM implementation, billing codes, and mental health integration strategies

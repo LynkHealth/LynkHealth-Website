@@ -2,7 +2,7 @@ import { Link } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Bandage, Activity, Package, Microscope, Shield, Users, Phone, Mail, CheckCircle, Heart, Clock, Hospital, Stethoscope, TrendingUp, ArrowRight } from "lucide-react";
+import { Bandage, Activity, Package, Microscope, Shield, Users, Phone, Mail, CheckCircle, Heart, Clock, Hospital, Stethoscope, TrendingUp, ArrowRight, Award, FlaskConical } from "lucide-react";
 import { SEOHead } from "@/components/SEOHead";
 
 export default function ChronicWoundManagement() {
@@ -337,6 +337,106 @@ export default function ChronicWoundManagement() {
           </div>
         </section>
 
+        {/* Technology & Quality Standards */}
+        <section className="py-16 lg:py-24 bg-slate-50">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="text-center mb-12">
+              <h2 className="text-3xl md:text-4xl font-bold mb-4 text-slate-900">
+                Technology & Quality Standards
+              </h2>
+              <p className="text-lg text-slate-600 max-w-3xl mx-auto">
+                Our partner network delivers cutting-edge tissue technologies backed by rigorous quality processes
+              </p>
+            </div>
+
+            <div className="grid md:grid-cols-3 gap-8">
+              <Card className="border-2 border-primary/20 hover:shadow-lg transition-shadow">
+                <CardContent className="pt-8">
+                  <div className="flex items-center mb-4">
+                    <div className="p-3 bg-primary/10 text-primary rounded-lg mr-3">
+                      <Microscope className="h-6 w-6" />
+                    </div>
+                    <h3 className="text-xl font-bold text-slate-900">CAMPs Technology</h3>
+                  </div>
+                  <p className="text-slate-600 mb-4">
+                    Cellular, Acellular, and Matrix-like Products leveraging placental tissue to support regeneration and promote tissue repair.
+                  </p>
+                  <ul className="space-y-2">
+                    <li className="flex items-start text-sm">
+                      <CheckCircle className="w-4 h-4 text-primary flex-shrink-0 mr-2 mt-0.5" />
+                      <span className="text-slate-600">Preserves native ECM characteristics</span>
+                    </li>
+                    <li className="flex items-start text-sm">
+                      <CheckCircle className="w-4 h-4 text-primary flex-shrink-0 mr-2 mt-0.5" />
+                      <span className="text-slate-600">Maximum collagen density</span>
+                    </li>
+                    <li className="flex items-start text-sm">
+                      <CheckCircle className="w-4 h-4 text-primary flex-shrink-0 mr-2 mt-0.5" />
+                      <span className="text-slate-600">Extended shelf stability (2-5 years)</span>
+                    </li>
+                  </ul>
+                </CardContent>
+              </Card>
+
+              <Card className="border-2 border-secondary/20 hover:shadow-lg transition-shadow">
+                <CardContent className="pt-8">
+                  <div className="flex items-center mb-4">
+                    <div className="p-3 bg-secondary/10 text-secondary rounded-lg mr-3">
+                      <Award className="h-6 w-6" />
+                    </div>
+                    <h3 className="text-xl font-bold text-slate-900">Excellion® Process</h3>
+                  </div>
+                  <p className="text-slate-600 mb-4">
+                    Patented process using tightly controlled surgical procedures to produce the highest quality allograft tissues.
+                  </p>
+                  <ul className="space-y-2">
+                    <li className="flex items-start text-sm">
+                      <CheckCircle className="w-4 h-4 text-secondary flex-shrink-0 mr-2 mt-0.5" />
+                      <span className="text-slate-600">FDA registered tissue banks</span>
+                    </li>
+                    <li className="flex items-start text-sm">
+                      <CheckCircle className="w-4 h-4 text-secondary flex-shrink-0 mr-2 mt-0.5" />
+                      <span className="text-slate-600">Third-party serological testing</span>
+                    </li>
+                    <li className="flex items-start text-sm">
+                      <CheckCircle className="w-4 h-4 text-secondary flex-shrink-0 mr-2 mt-0.5" />
+                      <span className="text-slate-600">Exceeds regulatory safety standards</span>
+                    </li>
+                  </ul>
+                </CardContent>
+              </Card>
+
+              <Card className="border-2 border-accent/20 hover:shadow-lg transition-shadow">
+                <CardContent className="pt-8">
+                  <div className="flex items-center mb-4">
+                    <div className="p-3 bg-accent/10 text-accent rounded-lg mr-3">
+                      <FlaskConical className="h-6 w-6" />
+                    </div>
+                    <h3 className="text-xl font-bold text-slate-900">Evidence-Based</h3>
+                  </div>
+                  <p className="text-slate-600 mb-4">
+                    All products backed by ongoing randomized controlled trials (RCTs) and scientific research to validate effectiveness.
+                  </p>
+                  <ul className="space-y-2">
+                    <li className="flex items-start text-sm">
+                      <CheckCircle className="w-4 h-4 text-accent flex-shrink-0 mr-2 mt-0.5" />
+                      <span className="text-slate-600">Ongoing clinical evaluation</span>
+                    </li>
+                    <li className="flex items-start text-sm">
+                      <CheckCircle className="w-4 h-4 text-accent flex-shrink-0 mr-2 mt-0.5" />
+                      <span className="text-slate-600">Controlled environment storage</span>
+                    </li>
+                    <li className="flex items-start text-sm">
+                      <CheckCircle className="w-4 h-4 text-accent flex-shrink-0 mr-2 mt-0.5" />
+                      <span className="text-slate-600">Extensive donor screening</span>
+                    </li>
+                  </ul>
+                </CardContent>
+              </Card>
+            </div>
+          </div>
+        </section>
+
         {/* HCPCS Q Codes Section */}
         <section className="py-16 lg:py-24 bg-white">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -350,142 +450,172 @@ export default function ChronicWoundManagement() {
             </div>
 
             <div className="grid lg:grid-cols-2 gap-8">
-              {/* Tiger Biosciences Products */}
+              {/* Tiger Wound Care Products */}
               <Card className="border-2 border-primary/20">
                 <CardContent className="pt-8">
-                  <div className="flex items-center mb-6">
-                    <div className="p-3 bg-primary/10 text-primary rounded-lg mr-4">
-                      <Microscope className="h-6 w-6" />
+                  <div className="mb-6">
+                    <div className="flex items-center mb-2">
+                      <div className="p-3 bg-primary/10 text-primary rounded-lg mr-4">
+                        <Microscope className="h-6 w-6" />
+                      </div>
+                      <h3 className="text-2xl font-bold text-slate-900">Tiger Wound Care</h3>
                     </div>
-                    <h3 className="text-2xl font-bold text-slate-900">Tiger Biosciences</h3>
+                    <p className="text-sm text-slate-600 ml-16">CAMPs Technology - Placental Tissue Allografts</p>
                   </div>
-                  <div className="space-y-3">
-                    <div className="flex items-start">
-                      <CheckCircle className="w-5 h-5 text-primary flex-shrink-0 mr-3 mt-0.5" />
-                      <div>
-                        <span className="font-semibold text-slate-900">Q4325</span>
-                        <span className="text-slate-600"> - ACA Patch</span>
+                  <div className="space-y-4">
+                    <div className="bg-slate-50 rounded-lg p-3">
+                      <div className="flex items-start">
+                        <CheckCircle className="w-5 h-5 text-primary flex-shrink-0 mr-3 mt-0.5" />
+                        <div className="flex-1">
+                          <div className="mb-1">
+                            <span className="font-semibold text-slate-900">Q4325 - ACAPatch</span>
+                            <span className="text-xs text-slate-500 ml-2">(Amnion-Chorion-Amnion)</span>
+                          </div>
+                          <p className="text-sm text-slate-600">
+                            Thickest placental membrane delivering maximum ECM content and collagen density for demanding wounds. 5-year shelf stability.
+                          </p>
+                        </div>
                       </div>
                     </div>
-                    <div className="flex items-start">
-                      <CheckCircle className="w-5 h-5 text-primary flex-shrink-0 mr-3 mt-0.5" />
-                      <div>
-                        <span className="font-semibold text-slate-900">Q4323</span>
-                        <span className="text-slate-600"> - alloPLY</span>
+                    <div className="bg-slate-50 rounded-lg p-3">
+                      <div className="flex items-start">
+                        <CheckCircle className="w-5 h-5 text-primary flex-shrink-0 mr-3 mt-0.5" />
+                        <div className="flex-1">
+                          <div className="mb-1">
+                            <span className="font-semibold text-slate-900">Q4323 - alloPLY</span>
+                            <span className="text-xs text-slate-500 ml-2">(Dual Layer Amniotic)</span>
+                          </div>
+                          <p className="text-sm text-slate-600">
+                            Collagen-rich, flexible amnion allograft preserving key ECM components. For standard wounds. 2-year shelf stability.
+                          </p>
+                        </div>
                       </div>
                     </div>
-                    <div className="flex items-start">
-                      <CheckCircle className="w-5 h-5 text-primary flex-shrink-0 mr-3 mt-0.5" />
-                      <div>
-                        <span className="font-semibold text-slate-900">Q4322</span>
-                        <span className="text-slate-600"> - caregraFT</span>
+                    <div className="bg-slate-50 rounded-lg p-3">
+                      <div className="flex items-start">
+                        <CheckCircle className="w-5 h-5 text-primary flex-shrink-0 mr-3 mt-0.5" />
+                        <div className="flex-1">
+                          <div className="mb-1">
+                            <span className="font-semibold text-slate-900">Q4322 - caregraFT</span>
+                            <span className="text-xs text-slate-500 ml-2">(Full Thickness Placental)</span>
+                          </div>
+                          <p className="text-sm text-slate-600">
+                            Robust full thickness placental membrane with native ECM characteristics. For complex wounds. 5-year shelf stability.
+                          </p>
+                        </div>
                       </div>
                     </div>
                     <div className="flex items-start">
                       <CheckCircle className="w-5 h-5 text-primary flex-shrink-0 mr-3 mt-0.5" />
                       <div>
                         <span className="font-semibold text-slate-900">A2024</span>
-                        <span className="text-slate-600"> - Resolve Matrix 510K Graft (Extremity Care)</span>
+                        <span className="text-slate-600"> - Resolve Matrix 510K Graft</span>
                       </div>
                     </div>
                     <div className="flex items-start">
                       <CheckCircle className="w-5 h-5 text-primary flex-shrink-0 mr-3 mt-0.5" />
                       <div>
-                        <span className="font-semibold text-slate-900">A6023</span>
-                        <span className="text-slate-600"> - Encore Surgical Dressings</span>
+                        <span className="font-semibold text-slate-900">A6023, A6010</span>
+                        <span className="text-slate-600"> - HealPACK Wound Dressings</span>
                       </div>
                     </div>
-                    <div className="flex items-start">
-                      <CheckCircle className="w-5 h-5 text-primary flex-shrink-0 mr-3 mt-0.5" />
-                      <div>
-                        <span className="font-semibold text-slate-900">A6010</span>
-                        <span className="text-slate-600"> - Encore Surgical Dressings</span>
-                      </div>
-                    </div>
+                  </div>
+                  <div className="mt-4 pt-4 border-t border-slate-200">
+                    <p className="text-xs text-slate-500 italic">
+                      Science-driven tissue technologies for repair, reconstruction, and supplementation. Ongoing RCTs validate effectiveness.
+                    </p>
                   </div>
                 </CardContent>
               </Card>
 
-              {/* SurgeneX Products */}
+              {/* Surgenex Products */}
               <Card className="border-2 border-secondary/20">
                 <CardContent className="pt-8">
-                  <div className="flex items-center mb-6">
-                    <div className="p-3 bg-secondary/10 text-secondary rounded-lg mr-4">
-                      <Microscope className="h-6 w-6" />
+                  <div className="mb-6">
+                    <div className="flex items-center mb-2">
+                      <div className="p-3 bg-secondary/10 text-secondary rounded-lg mr-4">
+                        <Microscope className="h-6 w-6" />
+                      </div>
+                      <h3 className="text-2xl font-bold text-slate-900">Surgenex</h3>
                     </div>
-                    <h3 className="text-2xl font-bold text-slate-900">SurgeneX</h3>
+                    <p className="text-sm text-slate-600 ml-16">Excellion® Process - Birth Tissue Allografts</p>
                   </div>
-                  <div className="space-y-3">
-                    <div className="flex items-start">
-                      <CheckCircle className="w-5 h-5 text-secondary flex-shrink-0 mr-3 mt-0.5" />
-                      <div>
-                        <span className="font-semibold text-slate-900">Q4320</span>
-                        <span className="text-slate-600"> - Pellograft</span>
+                  <div className="space-y-4">
+                    <div className="bg-slate-50 rounded-lg p-3">
+                      <div className="mb-2 font-semibold text-slate-900">SurGraft® Series - Amniotic Membrane Allografts</div>
+                      <div className="space-y-2 ml-4">
+                        <div className="flex items-start">
+                          <CheckCircle className="w-4 h-4 text-secondary flex-shrink-0 mr-2 mt-0.5" />
+                          <div className="text-sm">
+                            <span className="font-medium text-slate-900">Q4269</span>
+                            <span className="text-slate-600"> - SurGraft XT</span>
+                          </div>
+                        </div>
+                        <div className="flex items-start">
+                          <CheckCircle className="w-4 h-4 text-secondary flex-shrink-0 mr-2 mt-0.5" />
+                          <div className="text-sm">
+                            <span className="font-medium text-slate-900">Q4268</span>
+                            <span className="text-slate-600"> - SurGraft FT</span>
+                          </div>
+                        </div>
+                        <div className="flex items-start">
+                          <CheckCircle className="w-4 h-4 text-secondary flex-shrink-0 mr-2 mt-0.5" />
+                          <div className="text-sm">
+                            <span className="font-medium text-slate-900">Q4263</span>
+                            <span className="text-slate-600"> - SurGraft TL</span>
+                          </div>
+                        </div>
+                      </div>
+                      <p className="text-xs text-slate-600 mt-2">
+                        Dehydrated, terminally irradiated membranes preserving natural amniotic properties for therapeutic applications.
+                      </p>
+                    </div>
+                    <div className="bg-slate-50 rounded-lg p-3">
+                      <div className="mb-2 font-semibold text-slate-900">NeoStim Series - Enhanced Regenerative</div>
+                      <div className="space-y-2 ml-4">
+                        <div className="flex items-start">
+                          <CheckCircle className="w-4 h-4 text-secondary flex-shrink-0 mr-2 mt-0.5" />
+                          <div className="text-sm">
+                            <span className="font-medium text-slate-900">Q4265</span>
+                            <span className="text-slate-600"> - NeoStim TL</span>
+                          </div>
+                        </div>
+                        <div className="flex items-start">
+                          <CheckCircle className="w-4 h-4 text-secondary flex-shrink-0 mr-2 mt-0.5" />
+                          <div className="text-sm">
+                            <span className="font-medium text-slate-900">Q4266</span>
+                            <span className="text-slate-600"> - NeoStim</span>
+                          </div>
+                        </div>
+                        <div className="flex items-start">
+                          <CheckCircle className="w-4 h-4 text-secondary flex-shrink-0 mr-2 mt-0.5" />
+                          <div className="text-sm">
+                            <span className="font-medium text-slate-900">Q4267</span>
+                            <span className="text-slate-600"> - NeoStim DL</span>
+                          </div>
+                        </div>
                       </div>
                     </div>
-                    <div className="flex items-start">
-                      <CheckCircle className="w-5 h-5 text-secondary flex-shrink-0 mr-3 mt-0.5" />
-                      <div>
-                        <span className="font-semibold text-slate-900">Q4321</span>
-                        <span className="text-slate-600"> - Renograft</span>
+                    <div className="bg-slate-50 rounded-lg p-3">
+                      <div className="mb-2 font-semibold text-slate-900">Orthobiologic Allografts</div>
+                      <div className="space-y-2 ml-4">
+                        <div className="flex items-start">
+                          <CheckCircle className="w-4 h-4 text-secondary flex-shrink-0 mr-2 mt-0.5" />
+                          <div className="text-sm">
+                            <span className="font-medium text-slate-900">Q4320, Q4321, Q4319, Q4317</span>
+                            <span className="text-slate-600"> - Various Grafts</span>
+                          </div>
+                        </div>
                       </div>
+                      <p className="text-xs text-slate-600 mt-2">
+                        SurMatrix® - Orthobiologic allografts preserving native biomechanical structure for bone formation.
+                      </p>
                     </div>
-                    <div className="flex items-start">
-                      <CheckCircle className="w-5 h-5 text-secondary flex-shrink-0 mr-3 mt-0.5" />
-                      <div>
-                        <span className="font-semibold text-slate-900">Q4319</span>
-                        <span className="text-slate-600"> - Sanograft</span>
-                      </div>
-                    </div>
-                    <div className="flex items-start">
-                      <CheckCircle className="w-5 h-5 text-secondary flex-shrink-0 mr-3 mt-0.5" />
-                      <div>
-                        <span className="font-semibold text-slate-900">Q4317</span>
-                        <span className="text-slate-600"> - Vitograft</span>
-                      </div>
-                    </div>
-                    <div className="flex items-start">
-                      <CheckCircle className="w-5 h-5 text-secondary flex-shrink-0 mr-3 mt-0.5" />
-                      <div>
-                        <span className="font-semibold text-slate-900">Q4269</span>
-                        <span className="text-slate-600"> - Surgraft XT</span>
-                      </div>
-                    </div>
-                    <div className="flex items-start">
-                      <CheckCircle className="w-5 h-5 text-secondary flex-shrink-0 mr-3 mt-0.5" />
-                      <div>
-                        <span className="font-semibold text-slate-900">Q4268</span>
-                        <span className="text-slate-600"> - Surgraft FT</span>
-                      </div>
-                    </div>
-                    <div className="flex items-start">
-                      <CheckCircle className="w-5 h-5 text-secondary flex-shrink-0 mr-3 mt-0.5" />
-                      <div>
-                        <span className="font-semibold text-slate-900">Q4263</span>
-                        <span className="text-slate-600"> - Surgraft TL</span>
-                      </div>
-                    </div>
-                    <div className="flex items-start">
-                      <CheckCircle className="w-5 h-5 text-secondary flex-shrink-0 mr-3 mt-0.5" />
-                      <div>
-                        <span className="font-semibold text-slate-900">Q4265</span>
-                        <span className="text-slate-600"> - NeoStim TL</span>
-                      </div>
-                    </div>
-                    <div className="flex items-start">
-                      <CheckCircle className="w-5 h-5 text-secondary flex-shrink-0 mr-3 mt-0.5" />
-                      <div>
-                        <span className="font-semibold text-slate-900">Q4266</span>
-                        <span className="text-slate-600"> - NeoStim</span>
-                      </div>
-                    </div>
-                    <div className="flex items-start">
-                      <CheckCircle className="w-5 h-5 text-secondary flex-shrink-0 mr-3 mt-0.5" />
-                      <div>
-                        <span className="font-semibold text-slate-900">Q4267</span>
-                        <span className="text-slate-600"> - NeoStim DL</span>
-                      </div>
-                    </div>
+                  </div>
+                  <div className="mt-4 pt-4 border-t border-slate-200">
+                    <p className="text-xs text-slate-500 italic">
+                      Patented Excellion® process with FDA registered tissue banks. Rigorous quality and third-party serological testing.
+                    </p>
                   </div>
                 </CardContent>
               </Card>
