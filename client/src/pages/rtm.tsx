@@ -82,22 +82,22 @@ export default function RTM() {
                 <h3 className="text-xl font-semibold mb-6">RTM Revenue Potential</h3>
                 <div className="grid grid-cols-2 gap-6">
                   <div className="text-center">
-                    <div className="text-3xl font-bold text-secondary mb-2">$78</div>
+                    <div className="text-3xl font-bold text-amber-400 mb-2">$78</div>
                     <div className="text-sm text-white/80">Per Patient/Month</div>
                     <div className="text-xs text-white/60">Treatment Management</div>
                   </div>
                   <div className="text-center">
-                    <div className="text-3xl font-bold text-secondary mb-2">$65</div>
+                    <div className="text-3xl font-bold text-amber-400 mb-2">$65</div>
                     <div className="text-sm text-white/80">Per Patient/Month</div>
                     <div className="text-xs text-white/60">Device Supply</div>
                   </div>
                   <div className="text-center">
-                    <div className="text-3xl font-bold text-secondary mb-2">$56</div>
+                    <div className="text-3xl font-bold text-amber-400 mb-2">$56</div>
                     <div className="text-sm text-white/80">Per Setup</div>
                     <div className="text-xs text-white/60">Initial Education</div>
                   </div>
                   <div className="text-center">
-                    <div className="text-3xl font-bold text-secondary mb-2">16</div>
+                    <div className="text-3xl font-bold text-amber-400 mb-2">16</div>
                     <div className="text-sm text-white/80">Days Minimum</div>
                     <div className="text-xs text-white/60">Data Collection</div>
                   </div>
@@ -604,7 +604,7 @@ export default function RTM() {
               </Button>
             </Link>
             <Link href="/calculator">
-              <Button size="lg" variant="outline" className="border-white/20 text-white hover:bg-white/10">
+              <Button size="lg" variant="outline" className="border-2 border-white text-white hover:bg-white hover:text-primary">
                 <DollarSign className="mr-2 h-5 w-5" />
                 Calculate RTM Revenue
               </Button>
