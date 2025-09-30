@@ -103,6 +103,14 @@ export default function Header() {
                           </div>
                         </div>
                       </Link>
+                      <Link href="/chronic-wound-management">
+                        <div className="block px-4 py-3 text-sm hover:bg-gray-50 rounded-md cursor-pointer">
+                          <div className="font-medium">Chronic Wound Management</div>
+                          <div className="text-xs text-muted-foreground mt-1">
+                            Referral-driven wound care network
+                          </div>
+                        </div>
+                      </Link>
                     </div>
                   </NavigationMenuContent>
                 </NavigationMenuItem>
@@ -191,6 +199,10 @@ export default function Header() {
               <Link href="/overnight-on-call" className="block px-3 py-2 pl-6 text-sm font-medium text-muted-foreground hover:text-healthcare-primary"
                    onClick={() => setMobileMenuOpen(false)}>
                   Overnight On-Call Coverage
+              </Link>
+              <Link href="/chronic-wound-management" className="block px-3 py-2 pl-6 text-sm font-medium text-muted-foreground hover:text-healthcare-primary"
+                   onClick={() => setMobileMenuOpen(false)}>
+                  Chronic Wound Management
               </Link>
               <Link href="/how-it-works" className="block px-3 py-2 text-base font-medium text-muted-foreground hover:text-healthcare-primary"
                    onClick={() => setMobileMenuOpen(false)}>
