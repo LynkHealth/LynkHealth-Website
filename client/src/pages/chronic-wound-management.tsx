@@ -8,7 +8,7 @@ import { SEOHead } from "@/components/SEOHead";
 export default function ChronicWoundManagement() {
   const services = [
     {
-      image: "/images/elderly-patient-care.jpeg",
+      image: "/images/AdobeStock_212104037_1751485954798.jpeg",
       title: "Conservative Wound Care Products",
       description: "Accelerate wound healing with our comprehensive portfolio of proven wound care supplies and dressings. From standard dressings to advanced NPWT/DME, we deliver the right products fast with usage guidance and seamless re-supply coordination. Our clinical experts guide your staff through every application, ensuring optimal outcomes while minimizing infection risk and reducing overall treatment costs.",
       benefits: [
@@ -22,7 +22,7 @@ export default function ChronicWoundManagement() {
       icon: <Package className="h-6 w-6" />
     },
     {
-      image: "/images/AdobeStock_419808796_1751485954770.jpeg",
+      image: "/images/AdobeStock_133178564_1751485954798.jpeg",
       title: "Advanced Wound Therapies",
       description: "Transform patient outcomes with access to cutting-edge biologic skin grafts, substitutes, and advanced healing solutions through our trusted partner network. When conservative care isn't enough, we coordinate rapid access to skin substitutes, grafts, and biologics that promote tissue regeneration and accelerate closure. Complete with clear escalation pathways and reimbursement guidance to ensure every patient gets the advanced care they need.",
       benefits: [
@@ -36,7 +36,7 @@ export default function ChronicWoundManagement() {
       icon: <Microscope className="h-6 w-6" />
     },
     {
-      image: "/images/AdobeStock_400007631_1751485954795.jpeg",
+      image: "/images/AdobeStock_429992249_1751485954795.jpeg",
       title: "Remote Wound Monitoring",
       description: "Keep wounds on track between visits with comprehensive remote monitoring that tracks progress, adherence, and warning signs. Our secure platform enables photo/measurement capture, adherence tracking, and real-time escalation when healing stalls. Structured summary reports integrate seamlessly with your EMR workflows while reducing avoidable office visits and complications.",
       benefits: [
@@ -50,7 +50,7 @@ export default function ChronicWoundManagement() {
       icon: <Activity className="h-6 w-6" />
     },
     {
-      image: "/images/elderly-behavioral-health.jpeg",
+      image: "/images/AdobeStock_616281927_1751485954823.jpeg",
       title: "Chronic Care Management (CCM) for Wound Patients",
       description: "Support longitudinal healing with Medicare-covered CCM services that keep patients engaged and compliant between appointments. Our dedicated care managers provide monthly touchpoints, medication management, comorbidity support, and patient education—all while keeping you in the loop with structured provider updates. This turnkey solution is 100% Medicare reimbursable with no cost to your practice.",
       benefits: [
@@ -107,7 +107,7 @@ export default function ChronicWoundManagement() {
       <div className="min-h-screen bg-gradient-to-b from-slate-50 to-white">
         {/* Hero Section */}
         <section className="relative py-20 lg:py-28 bg-gradient-to-r from-primary to-secondary overflow-hidden">
-          <div className="absolute inset-0 bg-[url('/images/elderly-patient-care.jpeg')] opacity-10 bg-cover bg-center"></div>
+          <div className="absolute inset-0 bg-[url('/images/elderly-hero-image.jpeg')] opacity-10 bg-cover bg-center"></div>
           <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="text-center">
               <Badge className="mb-6 bg-white/20 text-white border-white/30" data-testid="badge-wound-care">
@@ -131,8 +131,7 @@ export default function ChronicWoundManagement() {
                 </Button>
                 <Button
                   size="lg"
-                  variant="outline"
-                  className="border-white text-white hover:bg-white/10 font-semibold px-8 py-6 text-lg"
+                  className="bg-white text-primary hover:bg-white/90 hover:text-primary/90 font-semibold px-8 py-6 text-lg"
                   asChild
                   data-testid="button-learn-more"
                 >
