@@ -63,6 +63,11 @@ export default function Footer() {
                 </Link>
               </li>
               <li>
+                <Link href="/chronic-wound-management" className="hover:text-white transition-colors">
+                  Chronic Wound Management
+                </Link>
+              </li>
+              <li>
                 <Link href="/overnight-on-call" className="hover:text-white transition-colors">
                   Overnight On-Call Coverage
                 </Link>
