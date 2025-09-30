@@ -106,7 +106,7 @@ export default function About() {
           <div className="grid lg:grid-cols-2 gap-12 items-center">
             <div className="order-2 lg:order-1">
               <LazyImage
-                src="/images/AdobeStock_279901729_1751485954797.jpeg"
+                src="/images/AdobeStock_1607240563_1759253647283.jpeg"
                 alt="Professional nurse providing comprehensive remote care coordination services"
                 className="rounded-2xl shadow-xl"
               />

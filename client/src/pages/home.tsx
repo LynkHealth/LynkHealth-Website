@@ -75,7 +75,7 @@ export default function Home() {
             {/* Main Care Image - Optimized loading */}
             <div className="relative rounded-3xl overflow-hidden shadow-2xl">
               <LazyImage
-                src="/images/elderly-patient-care.jpeg"
+                src="/images/AdobeStock_818521694_1759253647285.jpeg"
                 alt="Professional nurse providing care coordination to elderly patient"
                 className="w-full h-[400px] object-cover"
               />
@@ -91,7 +91,7 @@ export default function Home() {
             <div className="grid grid-cols-2 gap-4">
               <div className="relative rounded-2xl overflow-hidden shadow-lg group hover:shadow-xl transition-shadow">
                 <LazyImage
-                  src="/images/AdobeStock_133178564_1751485954798.jpeg"
+                  src="/images/AdobeStock_569656987_1759253647285.jpeg"
                   alt="Advanced remote patient monitoring devices and technology for chronic care"
                   className="w-full h-48 object-cover group-hover:scale-105 transition-transform duration-300"
                 />
@@ -105,7 +105,7 @@ export default function Home() {
               
               <div className="relative rounded-2xl overflow-hidden shadow-lg group hover:shadow-xl transition-shadow">
                 <LazyImage
-                  src="/images/AdobeStock_400007631_1751485954795.jpeg"
+                  src="/images/AdobeStock_585799196_1759253647286.jpeg"
                   alt="Behavioral health integration and mental health support services"
                   className="w-full h-48 object-cover group-hover:scale-105 transition-transform duration-300"
                 />
@@ -119,7 +119,7 @@ export default function Home() {
               
               <div className="relative rounded-2xl overflow-hidden shadow-lg group hover:shadow-xl transition-shadow">
                 <LazyImage
-                  src="/images/AdobeStock_429992249_1751485954795.jpeg"
+                  src="/images/AdobeStock_525854378_1759253647287.jpeg"
                   alt="Professional nurse providing chronic care management services"
                   className="w-full h-48 object-cover group-hover:scale-105 transition-transform duration-300"
                 />

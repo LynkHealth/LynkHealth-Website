@@ -99,7 +99,7 @@ export default function CCM() {
             <div className="relative">
               <div className="relative rounded-3xl overflow-hidden shadow-2xl">
                 <img
-                  src="/images/AdobeStock_279901729_1751485954797.jpeg"
+                  src="/images/AdobeStock_608138220_1759253647284.jpeg"
                   alt="Professional nurse providing comprehensive chronic care management to Medicare patient"
                   className="w-full h-[400px] object-cover"
                 />
