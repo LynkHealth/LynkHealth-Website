@@ -24,6 +24,13 @@ import Calculator from "@/pages/calculator";
 import BlogPost from "@/pages/blog-post";
 import Contact from "@/pages/contact";
 import NotFound from "@/pages/not-found";
+// Who We Work With pages
+import PrimaryCarePage from "@/pages/who-we-work-with/primary-care";
+import SpecialtyPracticesPage from "@/pages/who-we-work-with/specialty-practices";
+import HospitalsPage from "@/pages/who-we-work-with/hospitals";
+import FQHCsPage from "@/pages/who-we-work-with/fqhcs";
+import SNFPage from "@/pages/who-we-work-with/snf";
+import HomeHealthPage from "@/pages/who-we-work-with/home-health";
 
 function Router() {
   // Scroll to top when navigating between pages
@@ -49,6 +56,13 @@ function Router() {
           <Route path="/calculator" component={Calculator} />
           <Route path="/blog/:slug" component={BlogPost} />
           <Route path="/contact" component={Contact} />
+          {/* Who We Work With routes */}
+          <Route path="/primary-care" component={PrimaryCarePage} />
+          <Route path="/specialty-practices" component={SpecialtyPracticesPage} />
+          <Route path="/hospitals" component={HospitalsPage} />
+          <Route path="/fqhcs" component={FQHCsPage} />
+          <Route path="/snf" component={SNFPage} />
+          <Route path="/home-health" component={HomeHealthPage} />
           <Route component={NotFound} />
         </Switch>
       </main>

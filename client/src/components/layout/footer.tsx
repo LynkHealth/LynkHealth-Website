@@ -33,6 +33,43 @@ export default function Footer() {
             </div>
           </div>
 
+          {/* Who We Work With */}
+          <div>
+            <h4 className="text-lg font-semibold mb-4">Who We Work With</h4>
+            <ul className="space-y-2 text-slate-400">
+              <li>
+                <Link href="/primary-care" className="hover:text-white transition-colors">
+                  Primary Care Practices
+                </Link>
+              </li>
+              <li>
+                <Link href="/specialty-practices" className="hover:text-white transition-colors">
+                  Specialty Practices
+                </Link>
+              </li>
+              <li>
+                <Link href="/hospitals" className="hover:text-white transition-colors">
+                  Hospitals & Health Systems
+                </Link>
+              </li>
+              <li>
+                <Link href="/fqhcs" className="hover:text-white transition-colors">
+                  FQHCs
+                </Link>
+              </li>
+              <li>
+                <Link href="/snf" className="hover:text-white transition-colors">
+                  Skilled Nursing Facilities
+                </Link>
+              </li>
+              <li>
+                <Link href="/home-health" className="hover:text-white transition-colors">
+                  Home Health Agencies
+                </Link>
+              </li>
+            </ul>
+          </div>
+
           {/* Services */}
           <div>
             <h4 className="text-lg font-semibold mb-4">Services</h4>
