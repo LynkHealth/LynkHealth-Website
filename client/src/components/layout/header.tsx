@@ -46,6 +46,69 @@ export default function Header() {
                 About
             </Link>
 
+            {/* Who We Work With Dropdown */}
+            <NavigationMenu>
+              <NavigationMenuList>
+                <NavigationMenuItem>
+                  <NavigationMenuTrigger className="text-sm font-medium">
+                    Who We Work With
+                  </NavigationMenuTrigger>
+                  <NavigationMenuContent>
+                    <div className="w-72 p-2">
+                      <Link href="/primary-care">
+                        <div className="block px-4 py-3 text-sm hover:bg-gray-50 rounded-md cursor-pointer">
+                          <div className="font-medium">Primary Care Practices</div>
+                          <div className="text-xs text-muted-foreground mt-1">
+                            Comprehensive care coordination solutions
+                          </div>
+                        </div>
+                      </Link>
+                      <Link href="/specialty-practices">
+                        <div className="block px-4 py-3 text-sm hover:bg-gray-50 rounded-md cursor-pointer">
+                          <div className="font-medium">Specialty Practices</div>
+                          <div className="text-xs text-muted-foreground mt-1">
+                            Cardiology, endocrinology, podiatry & more
+                          </div>
+                        </div>
+                      </Link>
+                      <Link href="/hospitals">
+                        <div className="block px-4 py-3 text-sm hover:bg-gray-50 rounded-md cursor-pointer">
+                          <div className="font-medium">Hospitals & Health Systems</div>
+                          <div className="text-xs text-muted-foreground mt-1">
+                            Reduce readmissions and improve outcomes
+                          </div>
+                        </div>
+                      </Link>
+                      <Link href="/fqhcs">
+                        <div className="block px-4 py-3 text-sm hover:bg-gray-50 rounded-md cursor-pointer">
+                          <div className="font-medium">FQHCs</div>
+                          <div className="text-xs text-muted-foreground mt-1">
+                            Serve underserved populations effectively
+                          </div>
+                        </div>
+                      </Link>
+                      <Link href="/snf">
+                        <div className="block px-4 py-3 text-sm hover:bg-gray-50 rounded-md cursor-pointer">
+                          <div className="font-medium">Skilled Nursing Facilities</div>
+                          <div className="text-xs text-muted-foreground mt-1">
+                            Post-acute and long-term care support
+                          </div>
+                        </div>
+                      </Link>
+                      <Link href="/home-health">
+                        <div className="block px-4 py-3 text-sm hover:bg-gray-50 rounded-md cursor-pointer">
+                          <div className="font-medium">Home Health Agencies</div>
+                          <div className="text-xs text-muted-foreground mt-1">
+                            In-home coordination and monitoring
+                          </div>
+                        </div>
+                      </Link>
+                    </div>
+                  </NavigationMenuContent>
+                </NavigationMenuItem>
+              </NavigationMenuList>
+            </NavigationMenu>
+
             {/* Services Dropdown */}
             <NavigationMenu>
               <NavigationMenuList>
@@ -176,6 +239,32 @@ export default function Header() {
                    onClick={() => setMobileMenuOpen(false)}>
                   About
               </Link>
+              <div className="px-3 py-2 text-sm font-semibold text-slate-900">Who We Work With</div>
+              <Link href="/primary-care" className="block px-3 py-2 pl-6 text-sm font-medium text-muted-foreground hover:text-healthcare-primary"
+                   onClick={() => setMobileMenuOpen(false)}>
+                  Primary Care Practices
+              </Link>
+              <Link href="/specialty-practices" className="block px-3 py-2 pl-6 text-sm font-medium text-muted-foreground hover:text-healthcare-primary"
+                   onClick={() => setMobileMenuOpen(false)}>
+                  Specialty Practices
+              </Link>
+              <Link href="/hospitals" className="block px-3 py-2 pl-6 text-sm font-medium text-muted-foreground hover:text-healthcare-primary"
+                   onClick={() => setMobileMenuOpen(false)}>
+                  Hospitals & Health Systems
+              </Link>
+              <Link href="/fqhcs" className="block px-3 py-2 pl-6 text-sm font-medium text-muted-foreground hover:text-healthcare-primary"
+                   onClick={() => setMobileMenuOpen(false)}>
+                  FQHCs
+              </Link>
+              <Link href="/snf" className="block px-3 py-2 pl-6 text-sm font-medium text-muted-foreground hover:text-healthcare-primary"
+                   onClick={() => setMobileMenuOpen(false)}>
+                  Skilled Nursing Facilities
+              </Link>
+              <Link href="/home-health" className="block px-3 py-2 pl-6 text-sm font-medium text-muted-foreground hover:text-healthcare-primary"
+                   onClick={() => setMobileMenuOpen(false)}>
+                  Home Health Agencies
+              </Link>
+              <div className="px-3 py-2 text-sm font-semibold text-slate-900 mt-2">Services</div>
               <Link href="/ccm" className="block px-3 py-2 pl-6 text-sm font-medium text-muted-foreground hover:text-healthcare-primary"
                    onClick={() => setMobileMenuOpen(false)}>
                   Chronic Care Management
