@@ -40,6 +40,18 @@ User interaction on the website leads to client-side form validation, API commun
 - Enhanced local nurse messaging to differentiate from call centers and emphasize authentic connections.
 
 ## Recent Changes
+- October 24, 2025: Added comprehensive "Who We Work With" section targeting 6 specialty practice types
+  - Created navigation dropdown in header (desktop and mobile) positioned between "About" and "Services"
+  - Built 6 dedicated specialty pages with consistent structure: Primary Care Practices, Specialty Practices, Hospitals & Health Systems, FQHCs, Skilled Nursing Facilities, Home Health Agencies
+  - Each page features hero section, stats cards, services breakdown, "Why Choose Lynk" section, and specialty-specific content
+  - Routes implemented at root level (/primary-care, /specialty-practices, /hospitals, /fqhcs, /snf, /home-health)
+  - Updated footer with new "Who We Work With" section containing all 6 specialty links
+  - All interactive elements include proper data-testid attributes for testing (header dropdown, mobile menu, footer links)
+  - Cross-linking between specialty pages and service pages (CCM, RPM, BHI, etc.) for comprehensive navigation
+  - SEO optimization with unique meta descriptions and Open Graph tags for each specialty page
+  - Consistent design using primary blue, secondary teal, and golden amber accent colors
+  - Successfully tested end-to-end with all navigation flows validated
+
 - September 30, 2025: Enhanced chronic wound management page with detailed Tiger Wound Care and Surgenex product information
   - Added comprehensive "Technology & Quality Standards" section highlighting CAMPs Technology, Excellion® Process, and evidence-based research
   - Updated Tiger Wound Care products with detailed descriptions: ACAPatch (Q4325), alloPLY (Q4323), caregraFT (Q4322) including shelf stability and clinical indications
