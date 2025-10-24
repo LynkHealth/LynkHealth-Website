@@ -38,32 +38,32 @@ export default function Footer() {
             <h4 className="text-lg font-semibold mb-4">Who We Work With</h4>
             <ul className="space-y-2 text-slate-400">
               <li>
-                <Link href="/primary-care" className="hover:text-white transition-colors">
+                <Link href="/primary-care" className="hover:text-white transition-colors" data-testid="link-footer-primary-care">
                   Primary Care Practices
                 </Link>
               </li>
               <li>
-                <Link href="/specialty-practices" className="hover:text-white transition-colors">
+                <Link href="/specialty-practices" className="hover:text-white transition-colors" data-testid="link-footer-specialty-practices">
                   Specialty Practices
                 </Link>
               </li>
               <li>
-                <Link href="/hospitals" className="hover:text-white transition-colors">
+                <Link href="/hospitals" className="hover:text-white transition-colors" data-testid="link-footer-hospitals">
                   Hospitals & Health Systems
                 </Link>
               </li>
               <li>
-                <Link href="/fqhcs" className="hover:text-white transition-colors">
+                <Link href="/fqhcs" className="hover:text-white transition-colors" data-testid="link-footer-fqhcs">
                   FQHCs
                 </Link>
               </li>
               <li>
-                <Link href="/snf" className="hover:text-white transition-colors">
+                <Link href="/snf" className="hover:text-white transition-colors" data-testid="link-footer-snf">
                   Skilled Nursing Facilities
                 </Link>
               </li>
               <li>
-                <Link href="/home-health" className="hover:text-white transition-colors">
+                <Link href="/home-health" className="hover:text-white transition-colors" data-testid="link-footer-home-health">
                   Home Health Agencies
                 </Link>
               </li>

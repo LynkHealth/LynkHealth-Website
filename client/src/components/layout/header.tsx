@@ -55,7 +55,7 @@ export default function Header() {
                   </NavigationMenuTrigger>
                   <NavigationMenuContent>
                     <div className="w-72 p-2">
-                      <Link href="/primary-care">
+                      <Link href="/primary-care" data-testid="link-primary-care">
                         <div className="block px-4 py-3 text-sm hover:bg-gray-50 rounded-md cursor-pointer">
                           <div className="font-medium">Primary Care Practices</div>
                           <div className="text-xs text-muted-foreground mt-1">
@@ -63,7 +63,7 @@ export default function Header() {
                           </div>
                         </div>
                       </Link>
-                      <Link href="/specialty-practices">
+                      <Link href="/specialty-practices" data-testid="link-specialty-practices">
                         <div className="block px-4 py-3 text-sm hover:bg-gray-50 rounded-md cursor-pointer">
                           <div className="font-medium">Specialty Practices</div>
                           <div className="text-xs text-muted-foreground mt-1">
@@ -71,7 +71,7 @@ export default function Header() {
                           </div>
                         </div>
                       </Link>
-                      <Link href="/hospitals">
+                      <Link href="/hospitals" data-testid="link-hospitals">
                         <div className="block px-4 py-3 text-sm hover:bg-gray-50 rounded-md cursor-pointer">
                           <div className="font-medium">Hospitals & Health Systems</div>
                           <div className="text-xs text-muted-foreground mt-1">
@@ -79,7 +79,7 @@ export default function Header() {
                           </div>
                         </div>
                       </Link>
-                      <Link href="/fqhcs">
+                      <Link href="/fqhcs" data-testid="link-fqhcs">
                         <div className="block px-4 py-3 text-sm hover:bg-gray-50 rounded-md cursor-pointer">
                           <div className="font-medium">FQHCs</div>
                           <div className="text-xs text-muted-foreground mt-1">
@@ -87,7 +87,7 @@ export default function Header() {
                           </div>
                         </div>
                       </Link>
-                      <Link href="/snf">
+                      <Link href="/snf" data-testid="link-snf">
                         <div className="block px-4 py-3 text-sm hover:bg-gray-50 rounded-md cursor-pointer">
                           <div className="font-medium">Skilled Nursing Facilities</div>
                           <div className="text-xs text-muted-foreground mt-1">
@@ -95,7 +95,7 @@ export default function Header() {
                           </div>
                         </div>
                       </Link>
-                      <Link href="/home-health">
+                      <Link href="/home-health" data-testid="link-home-health">
                         <div className="block px-4 py-3 text-sm hover:bg-gray-50 rounded-md cursor-pointer">
                           <div className="font-medium">Home Health Agencies</div>
                           <div className="text-xs text-muted-foreground mt-1">
@@ -241,27 +241,27 @@ export default function Header() {
               </Link>
               <div className="px-3 py-2 text-sm font-semibold text-slate-900">Who We Work With</div>
               <Link href="/primary-care" className="block px-3 py-2 pl-6 text-sm font-medium text-muted-foreground hover:text-healthcare-primary"
-                   onClick={() => setMobileMenuOpen(false)}>
+                   onClick={() => setMobileMenuOpen(false)} data-testid="link-mobile-primary-care">
                   Primary Care Practices
               </Link>
               <Link href="/specialty-practices" className="block px-3 py-2 pl-6 text-sm font-medium text-muted-foreground hover:text-healthcare-primary"
-                   onClick={() => setMobileMenuOpen(false)}>
+                   onClick={() => setMobileMenuOpen(false)} data-testid="link-mobile-specialty-practices">
                   Specialty Practices
               </Link>
               <Link href="/hospitals" className="block px-3 py-2 pl-6 text-sm font-medium text-muted-foreground hover:text-healthcare-primary"
-                   onClick={() => setMobileMenuOpen(false)}>
+                   onClick={() => setMobileMenuOpen(false)} data-testid="link-mobile-hospitals">
                   Hospitals & Health Systems
               </Link>
               <Link href="/fqhcs" className="block px-3 py-2 pl-6 text-sm font-medium text-muted-foreground hover:text-healthcare-primary"
-                   onClick={() => setMobileMenuOpen(false)}>
+                   onClick={() => setMobileMenuOpen(false)} data-testid="link-mobile-fqhcs">
                   FQHCs
               </Link>
               <Link href="/snf" className="block px-3 py-2 pl-6 text-sm font-medium text-muted-foreground hover:text-healthcare-primary"
-                   onClick={() => setMobileMenuOpen(false)}>
+                   onClick={() => setMobileMenuOpen(false)} data-testid="link-mobile-snf">
                   Skilled Nursing Facilities
               </Link>
               <Link href="/home-health" className="block px-3 py-2 pl-6 text-sm font-medium text-muted-foreground hover:text-healthcare-primary"
-                   onClick={() => setMobileMenuOpen(false)}>
+                   onClick={() => setMobileMenuOpen(false)} data-testid="link-mobile-home-health">
                   Home Health Agencies
               </Link>
               <div className="px-3 py-2 text-sm font-semibold text-slate-900 mt-2">Services</div>
