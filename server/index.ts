@@ -10,8 +10,8 @@ app.use(express.urlencoded({ extended: false }));
 app.use((req, res, next) => {
   const requestPath = req.path;
   
-  // Service worker and manifest should never be cached
-  if (requestPath === '/sw.js' || requestPath === '/manifest.json') {
+  // Service worker, version.json, and manifest should never be cached
+  if (requestPath === '/sw.js' || requestPath === '/version.json' || requestPath === '/manifest.json') {
     res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
     res.setHeader('Pragma', 'no-cache');
     res.setHeader('Expires', '0');

@@ -1,6 +1,6 @@
 // Service Worker for caching optimization with build-time cache versioning
 // BUILD_TIMESTAMP will be replaced at build time
-const CACHE_VERSION = 'dev-1.0.0';
+const CACHE_VERSION = '__BUILD_TIMESTAMP__';
 const CACHE_NAME = `lynk-health-v${CACHE_VERSION}`;
 
 const STATIC_CACHE = [
