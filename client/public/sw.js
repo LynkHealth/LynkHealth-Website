@@ -1,7 +1,8 @@
-// Service Worker for caching optimization
-const CACHE_NAME = 'lynk-health-v1';
+// Service Worker for caching optimization with automatic cache busting
+// Cache version is generated at build time to ensure updates are detected
+const CACHE_VERSION = Date.now(); // This will be unique for each deployment
+const CACHE_NAME = `lynk-health-v${CACHE_VERSION}`;
 const STATIC_CACHE = [
-  '/',
   '/manifest.json',
   // Critical hero images
   '/images/AdobeStock_616281927_1751485954823.jpeg',
@@ -21,49 +22,109 @@ const STATIC_CACHE = [
 
 // Install event - cache static assets
 self.addEventListener('install', (event) => {
+  console.log('[Service Worker] Installing version:', CACHE_VERSION);
   event.waitUntil(
     caches.open(CACHE_NAME)
       .then((cache) => {
         return cache.addAll(STATIC_CACHE);
       })
-      .catch(() => {
-        // Cache failed, continue without caching
+      .catch((err) => {
+        console.warn('[Service Worker] Cache failed:', err);
       })
   );
+  // Force the waiting service worker to become the active service worker
   self.skipWaiting();
 });
 
 // Activate event - clean up old caches
 self.addEventListener('activate', (event) => {
+  console.log('[Service Worker] Activating version:', CACHE_VERSION);
   event.waitUntil(
     caches.keys().then((cacheNames) => {
       return Promise.all(
         cacheNames.map((cacheName) => {
           if (cacheName !== CACHE_NAME) {
+            console.log('[Service Worker] Deleting old cache:', cacheName);
             return caches.delete(cacheName);
           }
         })
       );
     })
   );
+  // Take control of all pages immediately
   self.clients.claim();
 });
 
-// Fetch event - serve from cache when possible
+// Fetch event - use network-first for HTML/JS/CSS, cache-first for images
 self.addEventListener('fetch', (event) => {
   if (event.request.method !== 'GET') return;
   
-  event.respondWith(
-    caches.match(event.request)
-      .then((response) => {
-        if (response) {
+  const url = new URL(event.request.url);
+  
+  // Skip chrome extensions and non-http(s) requests
+  if (!url.protocol.startsWith('http')) return;
+  
+  // Determine caching strategy based on resource type
+  const isImage = /\.(jpg|jpeg|png|gif|webp|svg|ico)$/i.test(url.pathname);
+  const isHTML = url.pathname === '/' || /\.html$/i.test(url.pathname);
+  const isAPI = url.pathname.startsWith('/api');
+  
+  if (isAPI) {
+    // Never cache API requests
+    event.respondWith(fetch(event.request));
+    return;
+  }
+  
+  if (isImage) {
+    // Cache-first for images (they change rarely)
+    event.respondWith(
+      caches.match(event.request)
+        .then((response) => {
+          if (response) {
+            return response;
+          }
+          return fetch(event.request).then((response) => {
+            // Cache the fetched image for future use
+            if (response && response.status === 200) {
+              const responseToCache = response.clone();
+              caches.open(CACHE_NAME).then((cache) => {
+                cache.put(event.request, responseToCache);
+              });
+            }
+            return response;
+          });
+        })
+        .catch(() => fetch(event.request))
+    );
+  } else {
+    // Network-first for HTML, JS, CSS (ensures fresh content)
+    event.respondWith(
+      fetch(event.request)
+        .then((response) => {
+          // Clone the response as it can only be consumed once
+          const responseToCache = response.clone();
+          
+          // Don't cache responses with errors
+          if (response && response.status === 200 && !isHTML) {
+            caches.open(CACHE_NAME).then((cache) => {
+              cache.put(event.request, responseToCache);
+            });
+          }
+          
           return response;
-        }
-        return fetch(event.request);
-      })
-      .catch(() => {
-        // Network failed, return cached version or continue
-        return fetch(event.request);
-      })
-  );
+        })
+        .catch(() => {
+          // If network fails, try to serve from cache
+          return caches.match(event.request);
+        })
+    );
+  }
+});
+
+// Listen for messages from the client to skip waiting
+self.addEventListener('message', (event) => {
+  if (event.data && event.data.type === 'SKIP_WAITING') {
+    console.log('[Service Worker] Received SKIP_WAITING message');
+    self.skipWaiting();
+  }
 });

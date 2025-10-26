@@ -6,6 +6,34 @@ const app = express();
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 
+// Cache-control headers middleware for static assets
+app.use((req, res, next) => {
+  const requestPath = req.path;
+  
+  // Service worker and manifest should never be cached
+  if (requestPath === '/sw.js' || requestPath === '/manifest.json') {
+    res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+    res.setHeader('Pragma', 'no-cache');
+    res.setHeader('Expires', '0');
+  }
+  // Cache static assets with hashed filenames for 1 year
+  else if (requestPath.match(/\.(js|css)$/) && requestPath.includes('-')) {
+    res.setHeader('Cache-Control', 'public, max-age=31536000, immutable');
+  }
+  // Cache images and fonts for 1 year
+  else if (requestPath.match(/\.(jpg|jpeg|png|gif|webp|ico|woff2?|ttf|eot|svg)$/)) {
+    res.setHeader('Cache-Control', 'public, max-age=31536000, immutable');
+  }
+  // Don't cache HTML files and API responses
+  else if (requestPath.match(/\.html$/) || requestPath === '/' || requestPath.startsWith('/api')) {
+    res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+    res.setHeader('Pragma', 'no-cache');
+    res.setHeader('Expires', '0');
+  }
+  
+  next();
+});
+
 app.use((req, res, next) => {
   const start = Date.now();
   const path = req.path;
