@@ -1,12 +1,22 @@
 // Performance utilities for load time optimization
 
-// Dynamic version based on build timestamp
-// In development, use a static version to avoid infinite reloads
-// In production, use build timestamp to ensure cache is cleared on deployment
-const APP_VERSION = import.meta.env.MODE === 'production' 
-  ? (import.meta.env.VITE_BUILD_TIMESTAMP || '1.0.0')
-  : 'dev-1.0.0';
 const VERSION_KEY = 'lynk-health-app-version';
+let APP_VERSION = 'loading';
+
+// Fetch build version from version.json
+async function fetchAppVersion(): Promise<string> {
+  try {
+    const response = await fetch('/version.json');
+    const data = await response.json();
+    return data.buildTimestamp;
+  } catch (err) {
+    console.warn('[Cache] Failed to fetch version, using fallback');
+    // Fallback to mode-based versioning
+    return import.meta.env.MODE === 'production' 
+      ? (import.meta.env.VITE_BUILD_TIMESTAMP || '1.0.0')
+      : 'dev-1.0.0';
+  }
+}
 
 // Register and update service worker
 export function registerServiceWorker() {
@@ -52,7 +62,8 @@ export function registerServiceWorker() {
 }
 
 // Cache busting and version management
-export function clearCacheOnVersionChange() {
+export async function clearCacheOnVersionChange() {
+  APP_VERSION = await fetchAppVersion();
   const storedVersion = localStorage.getItem(VERSION_KEY);
   
   if (storedVersion !== APP_VERSION) {
@@ -151,9 +162,9 @@ export function loadNonCriticalJS() {
 }
 
 // Initialize all performance optimizations
-export function initializePerformanceOptimizations() {
+export async function initializePerformanceOptimizations() {
   // Clear cache if version changed (must be first)
-  const willReload = clearCacheOnVersionChange();
+  const willReload = await clearCacheOnVersionChange();
   
   // Only continue if we're not about to reload
   if (!willReload) {

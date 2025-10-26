@@ -1,39 +1,56 @@
-// Service Worker for caching optimization with automatic cache busting
-// Cache version is generated at build time to ensure updates are detected
-const CACHE_VERSION = Date.now(); // This will be unique for each deployment
-const CACHE_NAME = `lynk-health-v${CACHE_VERSION}`;
-const STATIC_CACHE = [
-  '/manifest.json',
-  // Critical hero images
-  '/images/AdobeStock_616281927_1751485954823.jpeg',
-  '/images/AdobeStock_419808796_1751485954770.jpeg',
-  // Frequently used images
-  '/images/elderly-patient-care.jpeg',
-  '/images/elderly-monitoring.jpeg',
-  '/images/elderly-behavioral-health.jpeg',
-  '/images/AdobeStock_133178564_1751485954798.jpeg',
-  '/images/AdobeStock_400007631_1751485954795.jpeg',
-  '/images/AdobeStock_279901729_1751485954797.jpeg',
-  '/images/AdobeStock_226055713_1751485954796.jpeg',
-  '/images/AdobeStock_429992249_1751485954795.jpeg',
-  '/images/LOGO-Lynk_Health_1749182161866.png',
-  '/images/image_1756413884888.png'
-];
+// Service Worker for caching optimization with build-time cache versioning
+// Cache version is fetched from version.json which is generated at build time
+let CACHE_VERSION = 'loading';
+let CACHE_NAME = 'lynk-health-loading';
 
-// Install event - cache static assets
+// Fetch the build version
 self.addEventListener('install', (event) => {
-  console.log('[Service Worker] Installing version:', CACHE_VERSION);
+  console.log('[Service Worker] Installing...');
   event.waitUntil(
-    caches.open(CACHE_NAME)
-      .then((cache) => {
-        return cache.addAll(STATIC_CACHE);
+    fetch('/version.json')
+      .then(response => response.json())
+      .then(data => {
+        CACHE_VERSION = data.buildTimestamp;
+        CACHE_NAME = `lynk-health-v${CACHE_VERSION}`;
+        console.log('[Service Worker] Cache version:', CACHE_VERSION);
+        
+        // Cache critical static assets
+        const STATIC_CACHE = [
+          '/manifest.json',
+          '/version.json',
+          // Critical hero images
+          '/images/AdobeStock_616281927_1751485954823.jpeg',
+          '/images/AdobeStock_419808796_1751485954770.jpeg',
+          // Frequently used images
+          '/images/elderly-patient-care.jpeg',
+          '/images/elderly-monitoring.jpeg',
+          '/images/elderly-behavioral-health.jpeg',
+          '/images/AdobeStock_133178564_1751485954798.jpeg',
+          '/images/AdobeStock_400007631_1751485954795.jpeg',
+          '/images/AdobeStock_279901729_1751485954797.jpeg',
+          '/images/AdobeStock_226055713_1751485954796.jpeg',
+          '/images/AdobeStock_429992249_1751485954795.jpeg',
+          '/images/LOGO-Lynk_Health_1749182161866.png',
+          '/images/image_1756413884888.png'
+        ];
+        
+        return caches.open(CACHE_NAME).then((cache) => {
+          return cache.addAll(STATIC_CACHE);
+        }).catch((err) => {
+          console.warn('[Service Worker] Cache failed:', err);
+        });
       })
-      .catch((err) => {
-        console.warn('[Service Worker] Cache failed:', err);
+      .catch(err => {
+        console.warn('[Service Worker] Failed to fetch version:', err);
+        // Use timestamp as fallback
+        CACHE_VERSION = Date.now();
+        CACHE_NAME = `lynk-health-v${CACHE_VERSION}`;
+      })
+      .then(() => {
+        // Force the waiting service worker to become the active service worker
+        return self.skipWaiting();
       })
   );
-  // Force the waiting service worker to become the active service worker
-  self.skipWaiting();
 });
 
 // Activate event - clean up old caches
@@ -43,16 +60,17 @@ self.addEventListener('activate', (event) => {
     caches.keys().then((cacheNames) => {
       return Promise.all(
         cacheNames.map((cacheName) => {
-          if (cacheName !== CACHE_NAME) {
+          if (cacheName !== CACHE_NAME && cacheName.startsWith('lynk-health-')) {
             console.log('[Service Worker] Deleting old cache:', cacheName);
             return caches.delete(cacheName);
           }
         })
       );
+    }).then(() => {
+      // Take control of all pages immediately
+      return self.clients.claim();
     })
   );
-  // Take control of all pages immediately
-  self.clients.claim();
 });
 
 // Fetch event - use network-first for HTML/JS/CSS, cache-first for images
@@ -68,9 +86,10 @@ self.addEventListener('fetch', (event) => {
   const isImage = /\.(jpg|jpeg|png|gif|webp|svg|ico)$/i.test(url.pathname);
   const isHTML = url.pathname === '/' || /\.html$/i.test(url.pathname);
   const isAPI = url.pathname.startsWith('/api');
+  const isVersion = url.pathname === '/version.json';
   
-  if (isAPI) {
-    // Never cache API requests
+  if (isAPI || isVersion) {
+    // Never cache API requests or version file
     event.respondWith(fetch(event.request));
     return;
   }
@@ -104,7 +123,7 @@ self.addEventListener('fetch', (event) => {
           // Clone the response as it can only be consumed once
           const responseToCache = response.clone();
           
-          // Don't cache responses with errors
+          // Don't cache HTML responses, but cache JS/CSS
           if (response && response.status === 200 && !isHTML) {
             caches.open(CACHE_NAME).then((cache) => {
               cache.put(event.request, responseToCache);
