@@ -2833,12 +2833,12 @@ export const blogPosts: Record<string, BlogPost> = {
   "2026-rpm-cpt-code-updates": {
     title: "2026 Remote Patient Monitoring CPT Code Updates: What Primary Care Practices Need to Know",
     excerpt: "CMS introduces new RPM codes for short-duration and episode-based monitoring in 2026. Learn how these changes expand billing flexibility beyond monthly cycles.",
-    date: "February 10, 2026",
+    date: "November 6, 2025",
     readTime: "12 min read",
     category: "Billing & Compliance",
     tags: ["RPM", "CPT Codes", "Medicare", "2026 Updates", "Billing"],
-    author: "Dr. Michael Stevens, MD",
-    authorBio: "Family medicine physician and Medicare billing specialist with 15+ years of experience in care coordination and remote monitoring programs.",
+    author: "Will Moon",
+    authorBio: "Healthcare care coordination specialist with extensive experience in Medicare billing, remote patient monitoring programs, and practice revenue optimization.",
     slug: "2026-rpm-cpt-code-updates",
     content: `
       <div class="prose prose-lg max-w-none">
