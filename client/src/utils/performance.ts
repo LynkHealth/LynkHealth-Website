@@ -163,21 +163,21 @@ export function loadNonCriticalJS() {
 
 // Initialize all performance optimizations
 export async function initializePerformanceOptimizations() {
-  // TEMPORARILY DISABLED cache clearing to prevent reload loops in development
-  // Will re-enable for production only
-  // const willReload = await clearCacheOnVersionChange();
+  // Clear cache if version changed (must be first)
+  const willReload = await clearCacheOnVersionChange();
   
-  // Only register service worker in production
-  if (import.meta.env.PROD) {
+  // Only continue if we're not about to reload
+  if (!willReload) {
+    // Register service worker for caching
     registerServiceWorker();
+    
+    preloadCriticalResources();
+    addResourceHints();
+    loadNonCriticalJS();
+    
+    // Add font optimization in a non-blocking way
+    setTimeout(() => {
+      optimizeFonts();
+    }, 0);
   }
-  
-  preloadCriticalResources();
-  addResourceHints();
-  loadNonCriticalJS();
-  
-  // Add font optimization in a non-blocking way
-  setTimeout(() => {
-    optimizeFonts();
-  }, 0);
 }
