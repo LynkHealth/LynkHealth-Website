@@ -2830,6 +2830,296 @@ export const blogPosts: Record<string, BlogPost> = {
     `
   },
 
+  "2026-rpm-cpt-code-updates": {
+    title: "2026 Remote Patient Monitoring CPT Code Updates: What Primary Care Practices Need to Know",
+    excerpt: "CMS introduces new RPM codes for short-duration and episode-based monitoring in 2026. Learn how these changes expand billing flexibility beyond monthly cycles.",
+    date: "February 10, 2026",
+    readTime: "12 min read",
+    category: "Billing & Compliance",
+    tags: ["RPM", "CPT Codes", "Medicare", "2026 Updates", "Billing"],
+    author: "Dr. Michael Stevens, MD",
+    authorBio: "Family medicine physician and Medicare billing specialist with 15+ years of experience in care coordination and remote monitoring programs.",
+    slug: "2026-rpm-cpt-code-updates",
+    content: `
+      <div class="prose prose-lg max-w-none">
+        <p class="lead">Remote Patient Monitoring (RPM) has steadily grown over the past several years as practices look for ways to support patients between visits, reduce avoidable hospitalizations, and create more predictable recurring revenue. In the 2026 Medicare Physician Fee Schedule, CMS introduced notable changes to the RPM code set—not a complete overhaul, but meaningful additions that expand how practices can structure and bill for monitoring.</p>
+
+        <p>If your clinic currently offers RPM, or is evaluating whether to add it, these changes matter. They offer more flexibility in when and how monitoring can occur—especially for patients who need shorter-term support during medication adjustments, post-discharge recovery, or exacerbations of chronic conditions.</p>
+
+        <p>Below is a clear breakdown of what's changing and what it means for primary care organizations.</p>
+
+        <h2>The Core RPM Codes Aren't Going Anywhere</h2>
+        <p>The foundational RPM codes remain the same:</p>
+
+        <div class="overflow-x-auto my-6">
+          <table class="min-w-full border-collapse border border-slate-300">
+            <thead class="bg-slate-100">
+              <tr>
+                <th class="border border-slate-300 px-4 py-2 text-left font-semibold">CPT Code</th>
+                <th class="border border-slate-300 px-4 py-2 text-left font-semibold">Description</th>
+                <th class="border border-slate-300 px-4 py-2 text-left font-semibold">Key Notes</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td class="border border-slate-300 px-4 py-2"><strong>99453</strong></td>
+                <td class="border border-slate-300 px-4 py-2">Initial setup + patient education</td>
+                <td class="border border-slate-300 px-4 py-2">One-time per episode of care</td>
+              </tr>
+              <tr>
+                <td class="border border-slate-300 px-4 py-2"><strong>99454</strong></td>
+                <td class="border border-slate-300 px-4 py-2">Device supply + monitoring data transmission (every 30 days)</td>
+                <td class="border border-slate-300 px-4 py-2">Device must be automatically transmitted, not manually reported</td>
+              </tr>
+              <tr>
+                <td class="border border-slate-300 px-4 py-2"><strong>99457</strong></td>
+                <td class="border border-slate-300 px-4 py-2">First 20 minutes of clinical management / patient interaction per month</td>
+                <td class="border border-slate-300 px-4 py-2">Must include live, synchronous communication</td>
+              </tr>
+              <tr>
+                <td class="border border-slate-300 px-4 py-2"><strong>99458</strong></td>
+                <td class="border border-slate-300 px-4 py-2">Each additional 20 minutes</td>
+                <td class="border border-slate-300 px-4 py-2">Can be billed in addition to 99457 in the same month</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <p>If your clinic is running an RPM program today, these are the codes you're already billing. The 2026 updates do not replace these — they layer onto them.</p>
+
+        <h2>The 2026 Changes Introduce More Flexibility</h2>
+        <p>Two new CPT codes are being introduced to support shorter-duration, targeted monitoring without requiring a full 30-day monitoring cycle:</p>
+
+        <div class="overflow-x-auto my-6">
+          <table class="min-w-full border-collapse border border-slate-300">
+            <thead class="bg-slate-100">
+              <tr>
+                <th class="border border-slate-300 px-4 py-2 text-left font-semibold">New CPT Code</th>
+                <th class="border border-slate-300 px-4 py-2 text-left font-semibold">What It's For</th>
+                <th class="border border-slate-300 px-4 py-2 text-left font-semibold">Why It Matters</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td class="border border-slate-300 px-4 py-2"><strong>99445</strong></td>
+                <td class="border border-slate-300 px-4 py-2">Short-burst monitoring, typically under 16 days</td>
+                <td class="border border-slate-300 px-4 py-2">Useful for med titration, post-discharge recovery, or acute episodes</td>
+              </tr>
+              <tr>
+                <td class="border border-slate-300 px-4 py-2"><strong>99470</strong></td>
+                <td class="border border-slate-300 px-4 py-2">Episode-based monitoring connected to a clearly defined clinical goal</td>
+                <td class="border border-slate-300 px-4 py-2">Supports monitoring around a specific change or risk period</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="bg-accent/10 border-l-4 border-accent p-6 my-6">
+          <p class="font-semibold mb-2">This is the key takeaway:</p>
+          <p class="mb-0">RPM is no longer only a "long-term chronic care" tool. CMS is acknowledging real-world use cases where monitoring is needed for days or weeks, not months.</p>
+        </div>
+
+        <h3>Examples of When These Codes Apply:</h3>
+        <ul>
+          <li>Adjusting hypertension medication and monitoring blood pressure response</li>
+          <li>Monitoring COPD worsening after a winter respiratory infection</li>
+          <li>Post-discharge follow-up after CHF or pneumonia</li>
+          <li>Temporary monitoring for patients with fall risk after a hip injection or steroid taper</li>
+        </ul>
+
+        <p>For many practices, these new codes turn RPM into a more flexible care tool, not just a monthly service tied to a device rental.</p>
+
+        <h2>What This Means Financially for Clinics</h2>
+        <p>The revenue model for RPM traditionally assumes 30-day billing cycles. With the new codes, clinics will be able to capture reimbursement more accurately aligned to the duration of real-world care.</p>
+
+        <div class="grid md:grid-cols-2 gap-6 my-6">
+          <div class="bg-slate-50 p-6 rounded-lg">
+            <h4 class="font-semibold mb-3">Old RPM Model:</h4>
+            <p class="mb-0">You either enrolled a patient for a full month… or you didn't enroll them at all.</p>
+          </div>
+          <div class="bg-primary/5 p-6 rounded-lg">
+            <h4 class="font-semibold mb-3">New RPM Model:</h4>
+            <p class="mb-2">You can now support patients through:</p>
+            <ul class="mb-0 space-y-1">
+              <li>Short, clearly-defined episodes</li>
+              <li>Situational monitoring</li>
+              <li>Transitional care periods</li>
+              <li>Medication adjustment cycles</li>
+            </ul>
+          </div>
+        </div>
+
+        <p>Instead of under-billing or skipping enrollment, practices can bill appropriately for the care they were already delivering.</p>
+
+        <h2>Who Benefits the Most</h2>
+        <p>The updates particularly benefit clinics with high volumes of:</p>
+
+        <ul>
+          <li><strong>Hypertension & heart failure patients</strong> requiring frequent medication adjustments</li>
+          <li><strong>COPD & asthma patients</strong> experiencing seasonal exacerbations</li>
+          <li><strong>Patients after SNF or hospital discharge</strong> needing transitional care support</li>
+          <li><strong>Patients undergoing med changes</strong> requiring close observation</li>
+          <li><strong>Older adults at risk</strong> of falls or worsening chronic disease</li>
+        </ul>
+
+        <p>If you are already providing supportive check-ins during these times, RPM now helps you document, standardize, and reimburse that work.</p>
+
+        <h2>What Practices Should Do Next</h2>
+        <p>There are three clear steps to prepare for 2026:</p>
+
+        <h3>1. Review Existing RPM Workflows</h3>
+        <p>Look at:</p>
+        <ul>
+          <li>Who enrolls patients?</li>
+          <li>How minutes are tracked?</li>
+          <li>How follow-up is documented?</li>
+        </ul>
+
+        <h3>2. Expand Enrollment Criteria</h3>
+        <p>Many patients who were previously considered "borderline" RPM candidates now qualify due to short-term clinical need.</p>
+
+        <div class="bg-slate-50 p-6 rounded-lg my-6">
+          <h4 class="font-semibold mb-3">Previously Excluded Patients Who Now Qualify:</h4>
+          <ul class="space-y-2">
+            <li><strong>Post-acute care patients:</strong> 2-week monitoring after hospital discharge</li>
+            <li><strong>Medication titration patients:</strong> 7-10 day monitoring during dose adjustments</li>
+            <li><strong>Seasonal condition patients:</strong> Short-term monitoring during COPD or asthma flares</li>
+            <li><strong>Pre-surgical patients:</strong> Blood pressure optimization before elective procedures</li>
+          </ul>
+        </div>
+
+        <h3>3. Train Staff on When to Use Short-Duration vs. Monthly Codes</h3>
+        <p>This is the most important operational change. Billing RPM well is about clear decision rules, not guesswork.</p>
+
+        <div class="overflow-x-auto my-6">
+          <table class="min-w-full border-collapse border border-slate-300">
+            <thead class="bg-slate-100">
+              <tr>
+                <th class="border border-slate-300 px-4 py-2 text-left font-semibold">Clinical Scenario</th>
+                <th class="border border-slate-300 px-4 py-2 text-left font-semibold">Recommended Code</th>
+                <th class="border border-slate-300 px-4 py-2 text-left font-semibold">Duration</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td class="border border-slate-300 px-4 py-2">Chronic HTN baseline monitoring</td>
+                <td class="border border-slate-300 px-4 py-2">Traditional monthly codes (99453-99458)</td>
+                <td class="border border-slate-300 px-4 py-2">Ongoing</td>
+              </tr>
+              <tr>
+                <td class="border border-slate-300 px-4 py-2">HTN medication adjustment</td>
+                <td class="border border-slate-300 px-4 py-2">New code 99445</td>
+                <td class="border border-slate-300 px-4 py-2">7-14 days</td>
+              </tr>
+              <tr>
+                <td class="border border-slate-300 px-4 py-2">Post-discharge CHF monitoring</td>
+                <td class="border border-slate-300 px-4 py-2">New code 99470</td>
+                <td class="border border-slate-300 px-4 py-2">14-21 days</td>
+              </tr>
+              <tr>
+                <td class="border border-slate-300 px-4 py-2">COPD exacerbation watch</td>
+                <td class="border border-slate-300 px-4 py-2">New code 99445</td>
+                <td class="border border-slate-300 px-4 py-2">10-16 days</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <h2>How Lynk Health Can Support Your Clinic</h2>
+        <p>Our team works directly with clinics to:</p>
+
+        <ul>
+          <li><strong>Identify eligible patients</strong> using EHR data & nurse-led outreach</li>
+          <li><strong>Handle patient enrollment</strong> and device logistics</li>
+          <li><strong>Provide monthly or episode-based monitoring</strong> tailored to each patient's needs</li>
+          <li><strong>Track billing minutes</strong> and code documentation</li>
+          <li><strong>Ensure compliance</strong> and reimbursement success</li>
+        </ul>
+
+        <p>We act as your care coordination and monitoring team—fully white-labeled to your practice, so it feels local, personal, and aligned with your providers.</p>
+
+        <h2>Implementation Considerations</h2>
+
+        <h3>Documentation Requirements</h3>
+        <p>The new codes require the same rigorous documentation standards as traditional RPM:</p>
+
+        <ul>
+          <li><strong>Clear clinical indication:</strong> Document why short-term monitoring is medically necessary</li>
+          <li><strong>Defined monitoring period:</strong> Specify start and expected end dates</li>
+          <li><strong>Daily data review:</strong> Track and respond to transmitted readings</li>
+          <li><strong>Patient communication:</strong> Document all interactions and clinical decisions</li>
+          <li><strong>Outcome documentation:</strong> Record whether monitoring goals were achieved</li>
+        </ul>
+
+        <h3>Technology Platform Capabilities</h3>
+        <p>Ensure your RPM platform can support:</p>
+
+        <ul>
+          <li>Variable monitoring durations (not just 30-day cycles)</li>
+          <li>Episode-based billing triggers</li>
+          <li>Automated alerts for short-duration monitoring completion</li>
+          <li>Flexible reporting for both traditional and new CPT codes</li>
+        </ul>
+
+        <h2>Financial Impact Analysis</h2>
+
+        <h3>Revenue Opportunity Example</h3>
+        <p>Consider a primary care practice with 500 active patients with chronic conditions:</p>
+
+        <div class="bg-primary/5 p-6 rounded-lg my-6">
+          <h4 class="font-semibold mb-4">Before 2026 Updates:</h4>
+          <ul class="space-y-2">
+            <li><strong>Long-term RPM patients:</strong> 100 patients × $119/month = $11,900/month</li>
+            <li><strong>Short-term monitoring:</strong> Missed revenue (couldn't bill for <30 days)</li>
+            <li><strong>Monthly Total:</strong> $11,900</li>
+          </ul>
+
+          <h4 class="font-semibold mb-4 mt-6">After 2026 Updates:</h4>
+          <ul class="space-y-2">
+            <li><strong>Long-term RPM patients:</strong> 100 patients × $119/month = $11,900/month</li>
+            <li><strong>Short-duration monitoring:</strong> 25 patients × $65/episode = $1,625/month</li>
+            <li><strong>Episode-based monitoring:</strong> 15 patients × $75/episode = $1,125/month</li>
+            <li><strong>Monthly Total:</strong> $14,650</li>
+            <li><strong>Annual Increase:</strong> $33,000</li>
+          </ul>
+        </div>
+
+        <h2>Common Questions About 2026 RPM Updates</h2>
+
+        <h3>Can I use both old and new codes for the same patient?</h3>
+        <p>Not simultaneously for the same monitoring period. However, a patient might use traditional RPM codes for chronic baseline monitoring, then transition to short-duration codes during an acute episode or medication adjustment.</p>
+
+        <h3>Do the new codes require different devices?</h3>
+        <p>No. The same FDA-cleared, cellular-connected devices used for traditional RPM work for short-duration and episode-based monitoring.</p>
+
+        <h3>What about patient consent?</h3>
+        <p>Standard RPM consent processes apply. Clearly explain the monitoring duration and clinical goals to patients at enrollment.</p>
+
+        <h3>How does this affect Medicare Advantage plans?</h3>
+        <p>While Medicare sets the precedent, individual MA plans may have varying policies. Verify coverage with specific payers before implementation.</p>
+
+        <h2>Looking Ahead</h2>
+        <p>The 2026 RPM updates represent CMS's recognition that clinical monitoring needs don't always fit into 30-day boxes. By introducing flexibility for short-duration and episode-based monitoring, these changes align billing with real-world care delivery.</p>
+
+        <p>Practices that adapt quickly will capture revenue they previously missed while providing more responsive, patient-centered care during critical periods like medication adjustments and post-discharge transitions.</p>
+
+        <div class="bg-primary/5 p-6 rounded-lg mt-8">
+          <h3 class="font-semibold mb-2">If You'd Like Help Preparing for 2026</h3>
+          <p class="mb-4">We're offering a free RPM program review to show:</p>
+          <ul class="mb-4">
+            <li>Which of your patients are immediately eligible</li>
+            <li>Expected reimbursement impact</li>
+            <li>How to roll in the new short-duration codes with minimal workflow change</li>
+          </ul>
+          <div class="flex gap-4">
+            <a href="/contact" class="inline-block bg-primary text-primary-foreground px-6 py-2 rounded-lg font-semibold hover:bg-primary/90 transition-colors">Schedule a Review</a>
+            <a href="/monitoring" class="inline-block border border-primary text-primary px-6 py-2 rounded-lg font-semibold hover:bg-primary hover:text-primary-foreground transition-colors">Learn About RPM</a>
+          </div>
+        </div>
+      </div>
+    `
+  },
+
   // Add more blog posts here as needed - each with comprehensive, relevant content
   // Template for new posts:
   /*

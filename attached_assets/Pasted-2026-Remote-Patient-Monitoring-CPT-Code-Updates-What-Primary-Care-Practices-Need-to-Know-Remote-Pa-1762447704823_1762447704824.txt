@@ -1,0 +1,135 @@
+2026 Remote Patient Monitoring CPT Code Updates: What Primary Care Practices Need to Know
+
+Remote Patient Monitoring (RPM) has steadily grown over the past several years as practices look for ways to support patients between visits, reduce avoidable hospitalizations, and create more predictable recurring revenue. In the 2026 Medicare Physician Fee Schedule, CMS introduced notable changes to the RPM code set—not a complete overhaul, but meaningful additions that expand how practices can structure and bill for monitoring.
+
+If your clinic currently offers RPM, or is evaluating whether to add it, these changes matter. They offer more flexibility in when and how monitoring can occur—especially for patients who need shorter-term support during medication adjustments, post-discharge recovery, or exacerbations of chronic conditions.
+
+Below is a clear breakdown of what’s changing and what it means for primary care organizations.
+
+The Core RPM Codes Aren’t Going Anywhere
+
+The foundational RPM codes remain the same:
+
+CPT Code	Description	Key Notes
+99453	Initial setup + patient education	One-time per episode of care
+99454	Device supply + monitoring data transmission (every 30 days)	Device must be automatically transmitted, not manually reported
+99457	First 20 minutes of clinical management / patient interaction per month	Must include live, synchronous communication
+99458	Each additional 20 minutes	Can be billed in addition to 99457 in the same month
+
+If your clinic is running an RPM program today, these are the codes you’re already billing. The 2026 updates do not replace these — they layer onto them.
+
+The 2026 Changes Introduce More Flexibility
+
+Two new CPT codes are being introduced to support shorter-duration, targeted monitoring without requiring a full 30-day monitoring cycle:
+
+New CPT Code	What It’s For	Why It Matters
+99445	Short-burst monitoring, typically under 16 days	Useful for med titration, post-discharge recovery, or acute episodes
+99470	Episode-based monitoring connected to a clearly defined clinical goal	Supports monitoring around a specific change or risk period
+
+This is the key takeaway:
+RPM is no longer only a "long-term chronic care" tool.
+CMS is acknowledging real-world use cases where monitoring is needed for days or weeks, not months.
+
+Examples of When These Codes Apply:
+
+Adjusting hypertension medication and monitoring blood pressure response
+
+Monitoring COPD worsening after a winter respiratory infection
+
+Post-discharge follow-up after CHF or pneumonia
+
+Temporary monitoring for patients with fall risk after a hip injection or steroid taper
+
+For many practices, these new codes turn RPM into a more flexible care tool, not just a monthly service tied to a device rental.
+
+What This Means Financially for Clinics
+
+The revenue model for RPM traditionally assumes 30-day billing cycles.
+With the new codes, clinics will be able to capture reimbursement more accurately aligned to the duration of real-world care.
+
+Old RPM Model:
+
+You either enrolled a patient for a full month… or you didn’t enroll them at all.
+
+New RPM Model:
+
+You can now support patients through:
+
+Short, clearly-defined episodes
+
+Situational monitoring
+
+Transitional care periods
+
+Medication adjustment cycles
+
+Instead of under-billing or skipping enrollment, practices can bill appropriately for the care they were already delivering.
+
+Who Benefits the Most
+
+The updates particularly benefit clinics with high volumes of:
+
+Hypertension & heart failure patients
+
+COPD & asthma patients
+
+Patients after SNF or hospital discharge
+
+Patients undergoing med changes requiring close observation
+
+Older adults at risk of falls or worsening chronic disease
+
+If you are already providing supportive check-ins during these times, RPM now helps you document, standardize, and reimburse that work.
+
+What Practices Should Do Next
+
+There are three clear steps to prepare for 2026:
+
+1. Review Existing RPM Workflows
+
+Look at:
+
+Who enrolls patients?
+
+How minutes are tracked?
+
+How follow-up is documented?
+
+2. Expand Enrollment Criteria
+
+Many patients who were previously considered “borderline” RPM candidates now qualify due to short-term clinical need.
+
+3. Train Staff on When to Use Short-Duration vs. Monthly Codes
+
+This is the most important operational change.
+
+Billing RPM well is about clear decision rules, not guesswork.
+
+How Lynk Health Can Support Your Clinic
+
+Our team works directly with clinics to:
+
+Identify eligible patients (using EHR data & nurse-led outreach)
+
+Handle patient enrollment and device logistics
+
+Provide monthly or episode-based monitoring
+
+Track billing minutes and code documentation
+
+Ensure compliance and reimbursement success
+
+We act as your care coordination and monitoring team—fully white-labeled to your practice, so it feels local, personal, and aligned with your providers.
+
+If You’d Like Help Preparing for 2026
+
+We’re offering a free RPM program review to show:
+
+Which of your patients are immediately eligible
+
+Expected reimbursement impact
+
+How to roll in the new short-duration codes with minimal workflow change
+
+You can schedule a short call here: [INSERT SCHEDULING LINK]
+Or simply reply to this email and I’ll send a few available times.
