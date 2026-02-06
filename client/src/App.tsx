@@ -1,4 +1,4 @@
-import { Switch, Route } from "wouter";
+import { Switch, Route, useLocation } from "wouter";
 import { queryClient } from "./lib/queryClient";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
@@ -7,7 +7,6 @@ import { useScrollToTop } from "@/hooks/use-scroll-to-top";
 import Header from "@/components/layout/header";
 import Footer from "@/components/layout/footer";
 
-// Import pages directly instead of lazy loading to avoid issues
 import Home from "@/pages/home";
 import About from "@/pages/about";
 import CCM from "@/pages/ccm";
@@ -24,17 +23,29 @@ import Calculator from "@/pages/calculator";
 import BlogPost from "@/pages/blog-post";
 import Contact from "@/pages/contact";
 import NotFound from "@/pages/not-found";
-// Who We Work With pages
 import PrimaryCarePage from "@/pages/who-we-work-with/primary-care";
 import SpecialtyPracticesPage from "@/pages/who-we-work-with/specialty-practices";
 import HospitalsPage from "@/pages/who-we-work-with/hospitals";
 import FQHCsPage from "@/pages/who-we-work-with/fqhcs";
 import SNFPage from "@/pages/who-we-work-with/snf";
 import HomeHealthPage from "@/pages/who-we-work-with/home-health";
+import AdminLogin from "@/pages/admin/login";
+import AdminDashboard from "@/pages/admin/dashboard";
 
 function Router() {
-  // Scroll to top when navigating between pages
   useScrollToTop();
+  const [location] = useLocation();
+  const isAdmin = location.startsWith("/admin");
+
+  if (isAdmin) {
+    return (
+      <Switch>
+        <Route path="/admin/login" component={AdminLogin} />
+        <Route path="/admin" component={AdminDashboard} />
+        <Route path="/admin/:rest*" component={AdminDashboard} />
+      </Switch>
+    );
+  }
   
   return (
     <div className="min-h-screen flex flex-col">
@@ -56,7 +67,6 @@ function Router() {
           <Route path="/calculator" component={Calculator} />
           <Route path="/blog/:slug" component={BlogPost} />
           <Route path="/contact" component={Contact} />
-          {/* Who We Work With routes */}
           <Route path="/primary-care" component={PrimaryCarePage} />
           <Route path="/specialty-practices" component={SpecialtyPracticesPage} />
           <Route path="/hospitals" component={HospitalsPage} />
