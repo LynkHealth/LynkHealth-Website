@@ -202,10 +202,25 @@ async function syncEnrollments(patientOrgMap: Map<string, number>): Promise<Enro
 
   const byOrg = new Map<number, Map<string, ProgramStats>>();
 
+  // Diagnostic: track all status values and program codes
+  const statusCounts = new Map<string, number>();
+  const programCodeCounts = new Map<string, number>();
+  const statusByProgram = new Map<string, Map<string, number>>();
+
   for (const enrollment of enrollments) {
     const patientRef = enrollment.patient?.reference;
     const programCode = enrollment.type?.coding?.[0]?.code;
     const status = enrollment.status;
+
+    // Diagnostic logging
+    const statusKey = status || "undefined";
+    statusCounts.set(statusKey, (statusCounts.get(statusKey) || 0) + 1);
+    if (programCode) {
+      programCodeCounts.set(programCode, (programCodeCounts.get(programCode) || 0) + 1);
+      if (!statusByProgram.has(programCode)) statusByProgram.set(programCode, new Map());
+      const progStatuses = statusByProgram.get(programCode)!;
+      progStatuses.set(statusKey, (progStatuses.get(statusKey) || 0) + 1);
+    }
 
     if (!programCode || !patientRef) continue;
 
@@ -230,6 +245,34 @@ async function syncEnrollments(patientOrgMap: Map<string, number>): Promise<Enro
     } else {
       stats.inactive++;
     }
+  }
+
+  // Log diagnostic info
+  console.log("[TC Diag] Status values:", JSON.stringify(Object.fromEntries(statusCounts)));
+  console.log("[TC Diag] Program codes:", JSON.stringify(Object.fromEntries(programCodeCounts)));
+  statusByProgram.forEach((statuses, program) => {
+    console.log(`[TC Diag] ${program} statuses:`, JSON.stringify(Object.fromEntries(statuses)));
+  });
+
+  // Log per-org breakdown for org 1707
+  const org1707 = byOrg.get(1707);
+  if (org1707) {
+    org1707.forEach((stats, program) => {
+      console.log(`[TC Diag] org1707 ${program}: active=${stats.active}, inactive=${stats.inactive}, total=${stats.total}`);
+    });
+  }
+
+  // Log first enrollment sample
+  if (enrollments.length > 0) {
+    const sample = enrollments[0];
+    console.log("[TC Diag] Sample enrollment:", JSON.stringify({
+      id: sample.id,
+      status: sample.status,
+      type: sample.type,
+      patient: sample.patient,
+      period: sample.period,
+      managingOrganization: sample.managingOrganization,
+    }));
   }
 
   let orgSummary = "";
