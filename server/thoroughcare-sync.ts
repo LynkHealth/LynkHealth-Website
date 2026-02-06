@@ -3,6 +3,7 @@ import {
   fetchEnrollments,
   fetchTasksForPeriod,
   fetchPatientCount,
+  fetchPatientsForOrg,
   testConnection,
 } from "./thoroughcare-client";
 import { db } from "./db";
@@ -64,10 +65,13 @@ export async function runFullSync(month?: string, year?: number): Promise<SyncPr
 
   try {
     updateProgress("Organizations", 5, "Fetching practices from ThoroughCare...");
-    const orgMap = await syncOrganizations();
+    const orgData = await syncOrganizations();
 
-    updateProgress("Enrollments", 20, "Fetching enrollment data...");
-    const enrollmentData = await syncEnrollments(orgMap);
+    updateProgress("Patients", 15, "Building patient-to-practice mapping...");
+    const patientOrgMap = await buildPatientOrgMap(orgData.tcOrgIds);
+
+    updateProgress("Enrollments", 25, "Fetching enrollment data...");
+    const enrollmentData = await syncEnrollments(patientOrgMap);
 
     updateProgress("Time Logs", 50, `Fetching time logs for ${targetMonth} ${targetYear}...`);
     const timeData = await syncTimeLogs(targetMonth, targetYear);
@@ -103,15 +107,23 @@ export async function runFullSync(month?: string, year?: number): Promise<SyncPr
   }
 }
 
-async function syncOrganizations(): Promise<Map<number, number>> {
+interface OrgSyncResult {
+  tcOrgIds: number[];
+  orgToDbMap: Map<number, number>;
+}
+
+async function syncOrganizations(): Promise<OrgSyncResult> {
   const orgs = await fetchOrganizations();
   const orgToDbMap = new Map<number, number>();
+  const tcOrgIds: number[] = [];
 
   for (const org of orgs) {
     const tcId = org.id;
     const name = org.name || "Unknown";
     const alias = org.alias || null;
     const active = org.active !== false;
+
+    tcOrgIds.push(tcId);
 
     const deptNames: string[] = [];
     if (org.extension) {
@@ -144,8 +156,30 @@ async function syncOrganizations(): Promise<Map<number, number>> {
     }
   }
 
-  updateProgress("Organizations", 15, `Synced ${orgs.length} practices`);
-  return orgToDbMap;
+  updateProgress("Organizations", 12, `Synced ${orgs.length} practices`);
+  return { tcOrgIds, orgToDbMap };
+}
+
+async function buildPatientOrgMap(tcOrgIds: number[]): Promise<Map<string, number>> {
+  const patientOrgMap = new Map<string, number>();
+
+  for (let i = 0; i < tcOrgIds.length; i++) {
+    const orgId = tcOrgIds[i];
+    updateProgress("Patients", 15 + Math.round((i / tcOrgIds.length) * 8), `Fetching patients for org ${i + 1}/${tcOrgIds.length}...`);
+
+    try {
+      const patients = await fetchPatientsForOrg(orgId);
+      for (const patient of patients) {
+        const patientId = String(patient.id);
+        patientOrgMap.set(patientId, orgId);
+      }
+    } catch (err) {
+      console.error(`[TC Sync] Error fetching patients for org ${orgId}:`, err);
+    }
+  }
+
+  updateProgress("Patients", 23, `Mapped ${patientOrgMap.size} patients to ${tcOrgIds.length} organizations`);
+  return patientOrgMap;
 }
 
 interface ProgramStats {
@@ -158,39 +192,26 @@ interface ProgramStats {
 interface EnrollmentData {
   totalEnrollments: number;
   byOrg: Map<number, Map<string, ProgramStats>>;
-  patientOrgMap: Map<string, number>;
 }
 
-async function syncEnrollments(orgToDbMap: Map<number, number>): Promise<EnrollmentData> {
+async function syncEnrollments(patientOrgMap: Map<string, number>): Promise<EnrollmentData> {
   const enrollments = await fetchEnrollments((page, total) => {
-    const pct = Math.min(20 + Math.round((page / total) * 25), 45);
+    const pct = Math.min(25 + Math.round((page / total) * 20), 45);
     updateProgress("Enrollments", pct, `Fetching enrollments page ${page}/${total}...`);
   });
 
-  const patientOrgMap = new Map<string, number>();
   const byOrg = new Map<number, Map<string, ProgramStats>>();
 
   for (const enrollment of enrollments) {
     const patientRef = enrollment.patient?.reference;
     const programCode = enrollment.type?.coding?.[0]?.code;
-    const status = enrollment.status?.toLowerCase();
+    const status = enrollment.status;
 
     if (!programCode || !patientRef) continue;
 
     const patientId = patientRef.replace("Patient/", "");
 
-    let tcOrgId = 0;
-    const managingOrgRef = enrollment.managingOrganization?.reference;
-    if (managingOrgRef) {
-      const orgMatch = managingOrgRef.match(/Organization\/(\d+)/);
-      if (orgMatch) {
-        tcOrgId = parseInt(orgMatch[1]);
-      }
-    }
-
-    if (tcOrgId > 0) {
-      patientOrgMap.set(patientId, tcOrgId);
-    }
+    const tcOrgId = patientOrgMap.get(patientId) || 0;
 
     if (!byOrg.has(tcOrgId)) {
       byOrg.set(tcOrgId, new Map());
@@ -201,7 +222,9 @@ async function syncEnrollments(orgToDbMap: Map<number, number>): Promise<Enrollm
     }
     const stats = programs.get(programCode)!;
     stats.total++;
-    if (status === "active") {
+
+    const isActive = status?.toLowerCase() === "active";
+    if (isActive) {
       stats.active++;
       stats.activePatientIds.add(patientId);
     } else {
@@ -209,8 +232,15 @@ async function syncEnrollments(orgToDbMap: Map<number, number>): Promise<Enrollm
     }
   }
 
-  updateProgress("Enrollments", 45, `Processed ${enrollments.length} enrollments across ${byOrg.size} organizations`);
-  return { totalEnrollments: enrollments.length, byOrg, patientOrgMap };
+  let orgSummary = "";
+  byOrg.forEach((programs, orgId) => {
+    let total = 0;
+    programs.forEach((stats) => { total += stats.active; });
+    if (total > 0) orgSummary += `org${orgId}:${total} `;
+  });
+
+  updateProgress("Enrollments", 45, `Processed ${enrollments.length} enrollments (${orgSummary.trim()})`);
+  return { totalEnrollments: enrollments.length, byOrg };
 }
 
 interface TimeData {
@@ -285,7 +315,7 @@ async function buildSnapshots(
   await db.delete(programSnapshots)
     .where(and(eq(programSnapshots.month, month), eq(programSnapshots.year, year)));
 
-  const programTypes = ["CCM", "PCM", "AWV", "BHI", "RPM", "RTM"];
+  const programTypes = ["CCM", "PCM", "AWV", "BHI", "RPM", "RTM", "CCO"];
 
   const orgEntries = Array.from(enrollmentData.byOrg.entries());
   for (let oi = 0; oi < orgEntries.length; oi++) {
@@ -306,7 +336,7 @@ async function buildSnapshots(
 
       const patientsEnrolled = enrollment.active;
       const inactive = enrollment.inactive;
-      const notEnrolled = enrollment.total - enrollment.active - enrollment.inactive;
+      const notEnrolled = 0;
 
       const patientMinutesList: number[] = [];
       let patientsWithTime = 0;
@@ -321,7 +351,6 @@ async function buildSnapshots(
       }
 
       const timeBuckets = categorizeMinutes(programType, patientMinutesList);
-
       timeBuckets.mins0 = Math.max(0, patientsEnrolled - patientsWithTime);
 
       await db.insert(programSnapshots).values({
@@ -330,7 +359,7 @@ async function buildSnapshots(
         month,
         year,
         patientsEnrolled,
-        notEnrolled: notEnrolled > 0 ? notEnrolled : 0,
+        notEnrolled,
         inactive,
         source: "thoroughcare",
         syncedAt: new Date(),

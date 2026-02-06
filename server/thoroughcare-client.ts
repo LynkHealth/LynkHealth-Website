@@ -158,7 +158,7 @@ export async function fetchPatientCount(): Promise<number> {
 }
 
 export async function fetchPatientsForOrg(orgId: number): Promise<any[]> {
-  return fetchAllPages("/v1/Patient", { organization: String(orgId) });
+  return fetchAllPages("/v1/Patient", { managingOrganization: `Organization/${orgId}` });
 }
 
 export async function testConnection(): Promise<{ success: boolean; message: string }> {
