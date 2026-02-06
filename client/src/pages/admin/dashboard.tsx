@@ -202,6 +202,7 @@ export default function AdminDashboard() {
     progress: number;
     details: string;
   } | null>(null);
+  const [selectedPracticeId, setSelectedPracticeId] = useState<number | "all">("all");
   const [currentMonth, setCurrentMonth] = useState(() => {
     const now = new Date();
     return MONTHS[now.getMonth()];
@@ -369,7 +370,7 @@ export default function AdminDashboard() {
             </h1>
           </div>
           {activeTab === "dashboard" && (
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 flex-wrap">
               <Button
                 variant="outline"
                 size="sm"
@@ -384,6 +385,17 @@ export default function AdminDashboard() {
                 )}
                 {syncing ? "Syncing..." : "Sync ThoroughCare"}
               </Button>
+              <div className="w-px h-5 bg-slate-200 mx-1" />
+              <select
+                value={selectedPracticeId === "all" ? "all" : String(selectedPracticeId)}
+                onChange={(e) => setSelectedPracticeId(e.target.value === "all" ? "all" : Number(e.target.value))}
+                className="text-xs border border-slate-200 rounded-md px-2 py-1.5 bg-white text-slate-700"
+              >
+                <option value="all">All Practices</option>
+                {practices.map((p) => (
+                  <option key={p.id} value={p.id}>{p.name}</option>
+                ))}
+              </select>
               <div className="w-px h-5 bg-slate-200 mx-1" />
               <Button variant="ghost" size="sm" onClick={() => navigateMonth(-1)}>
                 <ChevronLeft className="w-4 h-4" />
@@ -442,42 +454,56 @@ export default function AdminDashboard() {
                       </CardContent>
                     </Card>
                   )}
-                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-                    <Card>
-                      <CardContent className="p-4 text-center">
-                        <p className="text-2xl font-bold text-blue-600">{practices.length}</p>
-                        <p className="text-xs text-slate-500 mt-1">Partner Practices</p>
-                      </CardContent>
-                    </Card>
-                    <Card>
-                      <CardContent className="p-4 text-center">
-                        <p className="text-2xl font-bold text-green-600">
-                          {snapshots.filter((s) => s.programType === "CCM").reduce((sum, s) => sum + (s.patientsEnrolled || 0), 0)}
-                        </p>
-                        <p className="text-xs text-slate-500 mt-1">CCM Enrolled</p>
-                      </CardContent>
-                    </Card>
-                    <Card>
-                      <CardContent className="p-4 text-center">
-                        <p className="text-2xl font-bold text-purple-600">
-                          {snapshots.filter((s) => s.programType === "RPM").reduce((sum, s) => sum + (s.patientsEnrolled || 0), 0)}
-                        </p>
-                        <p className="text-xs text-slate-500 mt-1">RPM Enrolled</p>
-                      </CardContent>
-                    </Card>
-                    <Card>
-                      <CardContent className="p-4 text-center">
-                        <p className="text-2xl font-bold text-amber-600">{totalInquiries}</p>
-                        <p className="text-xs text-slate-500 mt-1">Total Inquiries</p>
-                      </CardContent>
-                    </Card>
-                  </div>
+                  {(() => {
+                    const filtered = selectedPracticeId === "all"
+                      ? snapshots
+                      : snapshots.filter((s) => s.practiceId === selectedPracticeId);
+                    const selectedName = selectedPracticeId === "all"
+                      ? "All Practices"
+                      : practices.find((p) => p.id === selectedPracticeId)?.name || "";
+                    return (
+                      <>
+                        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+                          <Card>
+                            <CardContent className="p-4 text-center">
+                              <p className="text-2xl font-bold text-blue-600">
+                                {selectedPracticeId === "all" ? practices.length : 1}
+                              </p>
+                              <p className="text-xs text-slate-500 mt-1">Partner Practices</p>
+                            </CardContent>
+                          </Card>
+                          <Card>
+                            <CardContent className="p-4 text-center">
+                              <p className="text-2xl font-bold text-green-600">
+                                {filtered.filter((s) => s.programType === "CCM").reduce((sum, s) => sum + (s.patientsEnrolled || 0), 0)}
+                              </p>
+                              <p className="text-xs text-slate-500 mt-1">CCM Enrolled</p>
+                            </CardContent>
+                          </Card>
+                          <Card>
+                            <CardContent className="p-4 text-center">
+                              <p className="text-2xl font-bold text-purple-600">
+                                {filtered.filter((s) => s.programType === "RPM").reduce((sum, s) => sum + (s.patientsEnrolled || 0), 0)}
+                              </p>
+                              <p className="text-xs text-slate-500 mt-1">RPM Enrolled</p>
+                            </CardContent>
+                          </Card>
+                          <Card>
+                            <CardContent className="p-4 text-center">
+                              <p className="text-2xl font-bold text-amber-600">{totalInquiries}</p>
+                              <p className="text-xs text-slate-500 mt-1">Total Inquiries</p>
+                            </CardContent>
+                          </Card>
+                        </div>
 
-                  <ProgramCard title="Chronic Care Management" icon={Heart} programType="CCM" snapshots={snapshots} color="text-red-500" />
-                  <ProgramCard title="Principal Care Management" icon={ClipboardCheck} programType="PCM" snapshots={snapshots} color="text-blue-500" />
-                  <ProgramCard title="Annual Wellness Visit" icon={FileText} programType="AWV" snapshots={snapshots} color="text-green-500" />
-                  <ProgramCard title="Behavioral Health Integration" icon={Brain} programType="BHI" snapshots={snapshots} color="text-purple-500" />
-                  <ProgramCard title="Remote Patient Monitoring" icon={Monitor} programType="RPM" snapshots={snapshots} color="text-teal-500" />
+                        <ProgramCard title="Chronic Care Management" icon={Heart} programType="CCM" snapshots={filtered} color="text-red-500" />
+                        <ProgramCard title="Principal Care Management" icon={ClipboardCheck} programType="PCM" snapshots={filtered} color="text-blue-500" />
+                        <ProgramCard title="Annual Wellness Visit" icon={FileText} programType="AWV" snapshots={filtered} color="text-green-500" />
+                        <ProgramCard title="Behavioral Health Integration" icon={Brain} programType="BHI" snapshots={filtered} color="text-purple-500" />
+                        <ProgramCard title="Remote Patient Monitoring" icon={Monitor} programType="RPM" snapshots={filtered} color="text-teal-500" />
+                      </>
+                    );
+                  })()}
                 </div>
               )}
 

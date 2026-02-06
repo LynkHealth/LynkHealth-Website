@@ -180,6 +180,7 @@ export async function registerAdminRoutes(app: Express) {
       res.status(500).json({ success: false, message: "Connection test failed" });
     }
   });
+
 }
 
 export async function seedAdminUsers() {

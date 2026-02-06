@@ -64,10 +64,10 @@ export async function runFullSync(month?: string, year?: number): Promise<SyncPr
 
   try {
     updateProgress("Organizations", 5, "Fetching practices from ThoroughCare...");
-    await syncOrganizations();
+    const orgMap = await syncOrganizations();
 
     updateProgress("Enrollments", 20, "Fetching enrollment data...");
-    const enrollmentData = await syncEnrollments();
+    const enrollmentData = await syncEnrollments(orgMap);
 
     updateProgress("Time Logs", 50, `Fetching time logs for ${targetMonth} ${targetYear}...`);
     const timeData = await syncTimeLogs(targetMonth, targetYear);
@@ -103,8 +103,9 @@ export async function runFullSync(month?: string, year?: number): Promise<SyncPr
   }
 }
 
-async function syncOrganizations() {
+async function syncOrganizations(): Promise<Map<number, number>> {
   const orgs = await fetchOrganizations();
+  const orgToDbMap = new Map<number, number>();
 
   for (const org of orgs) {
     const tcId = org.id;
@@ -130,74 +131,86 @@ async function syncOrganizations() {
         status: active ? "active" : "inactive",
         departments: deptNames.length > 0 ? JSON.stringify(deptNames) : null,
       }).where(eq(practices.id, existing.id));
+      orgToDbMap.set(tcId, existing.id);
     } else {
-      await db.insert(practices).values({
+      const [newPractice] = await db.insert(practices).values({
         name,
         thoroughcareId: tcId,
         thoroughcareAlias: alias,
         status: active ? "active" : "inactive",
         departments: deptNames.length > 0 ? JSON.stringify(deptNames) : null,
-      });
+      }).returning();
+      orgToDbMap.set(tcId, newPractice.id);
     }
   }
 
   updateProgress("Organizations", 15, `Synced ${orgs.length} practices`);
+  return orgToDbMap;
+}
+
+interface ProgramStats {
+  active: number;
+  inactive: number;
+  total: number;
+  activePatientIds: Set<string>;
 }
 
 interface EnrollmentData {
   totalEnrollments: number;
-  byPractice: Map<number, Map<string, { active: number; inactive: number; total: number }>>;
-  patientOrgs: Map<string, number>;
+  byOrg: Map<number, Map<string, ProgramStats>>;
+  patientOrgMap: Map<string, number>;
 }
 
-async function syncEnrollments(): Promise<EnrollmentData> {
+async function syncEnrollments(orgToDbMap: Map<number, number>): Promise<EnrollmentData> {
   const enrollments = await fetchEnrollments((page, total) => {
     const pct = Math.min(20 + Math.round((page / total) * 25), 45);
     updateProgress("Enrollments", pct, `Fetching enrollments page ${page}/${total}...`);
   });
 
-  const patientOrgs = new Map<string, number>();
-  const byPractice = new Map<number, Map<string, { active: number; inactive: number; total: number }>>();
+  const patientOrgMap = new Map<string, number>();
+  const byOrg = new Map<number, Map<string, ProgramStats>>();
 
   for (const enrollment of enrollments) {
     const patientRef = enrollment.patient?.reference;
     const programCode = enrollment.type?.coding?.[0]?.code;
     const status = enrollment.status?.toLowerCase();
-    const careManagerRef = enrollment.careManager?.reference;
 
-    if (!programCode) continue;
+    if (!programCode || !patientRef) continue;
 
-    const patientId = patientRef?.replace("Patient/", "");
+    const patientId = patientRef.replace("Patient/", "");
 
-    const practitionerMatch = careManagerRef?.match(/Practitioner\/(\d+)/);
-    let orgId: number | undefined;
-
-    if (patientId && patientOrgs.has(patientId)) {
-      orgId = patientOrgs.get(patientId);
+    let tcOrgId = 0;
+    const managingOrgRef = enrollment.managingOrganization?.reference;
+    if (managingOrgRef) {
+      const orgMatch = managingOrgRef.match(/Organization\/(\d+)/);
+      if (orgMatch) {
+        tcOrgId = parseInt(orgMatch[1]);
+      }
     }
 
-    if (!orgId) {
-      orgId = 0;
+    if (tcOrgId > 0) {
+      patientOrgMap.set(patientId, tcOrgId);
     }
 
-    if (!byPractice.has(orgId)) {
-      byPractice.set(orgId, new Map());
+    if (!byOrg.has(tcOrgId)) {
+      byOrg.set(tcOrgId, new Map());
     }
-    const programs = byPractice.get(orgId)!;
+    const programs = byOrg.get(tcOrgId)!;
     if (!programs.has(programCode)) {
-      programs.set(programCode, { active: 0, inactive: 0, total: 0 });
+      programs.set(programCode, { active: 0, inactive: 0, total: 0, activePatientIds: new Set() });
     }
     const stats = programs.get(programCode)!;
     stats.total++;
     if (status === "active") {
       stats.active++;
+      stats.activePatientIds.add(patientId);
     } else {
       stats.inactive++;
     }
   }
 
-  updateProgress("Enrollments", 45, `Processed ${enrollments.length} enrollments`);
-  return { totalEnrollments: enrollments.length, byPractice, patientOrgs };
+  updateProgress("Enrollments", 45, `Processed ${enrollments.length} enrollments across ${byOrg.size} organizations`);
+  return { totalEnrollments: enrollments.length, byOrg, patientOrgMap };
 }
 
 interface TimeData {
@@ -244,11 +257,10 @@ async function syncTimeLogs(month: string, year: number): Promise<TimeData> {
       minutes = Math.round((end - start) / 60000);
     }
 
-    const key = `${patientId}`;
-    if (!patientMinutes.has(key)) {
-      patientMinutes.set(key, new Map());
+    if (!patientMinutes.has(patientId)) {
+      patientMinutes.set(patientId, new Map());
     }
-    const programMins = patientMinutes.get(key)!;
+    const programMins = patientMinutes.get(patientId)!;
     programMins.set(programCode, (programMins.get(programCode) || 0) + minutes);
   }
 
@@ -263,60 +275,62 @@ async function buildSnapshots(
   year: number
 ) {
   const allPractices = await db.select().from(practices);
-  const practiceMap = new Map(allPractices.map((p) => [p.thoroughcareId || 0, p]));
+  const tcIdToDbId = new Map<number, number>();
+  for (const p of allPractices) {
+    if (p.thoroughcareId) {
+      tcIdToDbId.set(p.thoroughcareId, p.id);
+    }
+  }
 
   await db.delete(programSnapshots)
     .where(and(eq(programSnapshots.month, month), eq(programSnapshots.year, year)));
 
   const programTypes = ["CCM", "PCM", "AWV", "BHI", "RPM", "RTM"];
 
-  const allEnrollmentsByProgram = new Map<string, { active: number; inactive: number; total: number }>();
+  const orgEntries = Array.from(enrollmentData.byOrg.entries());
+  for (let oi = 0; oi < orgEntries.length; oi++) {
+    const [tcOrgId, programs] = orgEntries[oi];
+    let dbPracticeId: number | undefined;
 
-  enrollmentData.byPractice.forEach((programs, _orgId) => {
-    programs.forEach((stats, program) => {
-      if (!allEnrollmentsByProgram.has(program)) {
-        allEnrollmentsByProgram.set(program, { active: 0, inactive: 0, total: 0 });
-      }
-      const agg = allEnrollmentsByProgram.get(program)!;
-      agg.active += stats.active;
-      agg.inactive += stats.inactive;
-      agg.total += stats.total;
-    });
-  });
+    if (tcOrgId === 0) {
+      dbPracticeId = allPractices[0]?.id;
+    } else {
+      dbPracticeId = tcIdToDbId.get(tcOrgId);
+    }
 
-  const minutesByProgram = new Map<string, number[]>();
-  timeData.patientMinutes.forEach((programs, patientId) => {
-    programs.forEach((mins, program) => {
-      if (!minutesByProgram.has(program)) {
-        minutesByProgram.set(program, []);
-      }
-      minutesByProgram.get(program)!.push(mins);
-    });
-  });
+    if (!dbPracticeId) continue;
 
-  for (const practice of allPractices) {
     for (const programType of programTypes) {
-      const enrollment = allEnrollmentsByProgram.get(programType);
-      if (!enrollment && !minutesByProgram.has(programType)) continue;
+      const enrollment = programs.get(programType);
+      if (!enrollment || (enrollment.active === 0 && enrollment.inactive === 0)) continue;
 
-      const patientMinutesList = minutesByProgram.get(programType) || [];
+      const patientsEnrolled = enrollment.active;
+      const inactive = enrollment.inactive;
+      const notEnrolled = enrollment.total - enrollment.active - enrollment.inactive;
+
+      const patientMinutesList: number[] = [];
+      let patientsWithTime = 0;
+
+      const patientIds = Array.from(enrollment.activePatientIds);
+      for (const patientId of patientIds) {
+        const patientPrograms = timeData.patientMinutes.get(patientId);
+        if (patientPrograms && patientPrograms.has(programType)) {
+          patientMinutesList.push(patientPrograms.get(programType)!);
+          patientsWithTime++;
+        }
+      }
 
       const timeBuckets = categorizeMinutes(programType, patientMinutesList);
-      const patientsEnrolled = enrollment?.active || 0;
-      const inactive = enrollment?.inactive || 0;
 
-      if (patientsEnrolled === 0 && inactive === 0 && patientMinutesList.length === 0) continue;
-
-      const isGlobalPractice = practice.id === allPractices[0]?.id;
-      if (!isGlobalPractice) continue;
+      timeBuckets.mins0 = Math.max(0, patientsEnrolled - patientsWithTime);
 
       await db.insert(programSnapshots).values({
-        practiceId: practice.id,
+        practiceId: dbPracticeId,
         programType,
         month,
         year,
         patientsEnrolled,
-        notEnrolled: 0,
+        notEnrolled: notEnrolled > 0 ? notEnrolled : 0,
         inactive,
         source: "thoroughcare",
         syncedAt: new Date(),
@@ -325,7 +339,7 @@ async function buildSnapshots(
     }
   }
 
-  updateProgress("Snapshots", 95, `Built program snapshots for ${month} ${year}`);
+  updateProgress("Snapshots", 95, `Built per-practice program snapshots for ${month} ${year}`);
 }
 
 function categorizeMinutes(programType: string, minutesList: number[]): Record<string, number> {
