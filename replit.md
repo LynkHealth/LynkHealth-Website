@@ -25,10 +25,12 @@ A hidden admin dashboard is accessible via the copyright symbol (©) in the foot
 **ThoroughCare API Integration** (`server/thoroughcare-client.ts`, `server/thoroughcare-sync.ts`):
 - OAuth2 client credentials flow with token caching (credentials in Replit Secrets)
 - Rate-limited API client (10 req/sec) with automatic pagination (1000 records/page)
-- Full sync pulls: Organizations → Enrollments → Time Logs → Program Snapshots
+- Full sync pulls: Organizations → Patients (build org map) → Enrollments → Time Logs → Program Snapshots
+- Patient API uses `managingOrganization=Organization/{id}` format to correctly map patients to practices
 - Real-time sync progress tracking via `/api/admin/tc/status` polling
 - Sync triggered via admin dashboard button or POST to `/api/admin/tc/sync`
-- Data volumes: ~7 practices, ~3,578 enrollments, ~141k time logs, ~22 second sync duration
+- Data volumes: ~7 practices, ~14,786 patients, ~3,578 enrollments, ~1,842 time logs, ~26 second sync duration
+- Per-practice filtering available in admin dashboard via dropdown selector
 
 ### System Design Choices
 The architecture emphasizes robust validation and error handling. SEO strategy focuses on national reach and service quality. A comprehensive cache management system ensures users always see the latest content after deployments while optimizing performance through aggressive caching of static assets, using a service worker and build-time timestamp injection. HTTP cache headers are carefully configured for various asset types to balance freshness and performance.
