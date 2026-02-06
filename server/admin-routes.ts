@@ -4,6 +4,8 @@ import { adminLoginSchema } from "@shared/schema";
 import bcrypt from "bcryptjs";
 import crypto from "crypto";
 import { z } from "zod";
+import { runFullSync, getSyncStatus } from "./thoroughcare-sync";
+import { testConnection } from "./thoroughcare-client";
 
 declare global {
   namespace Express {
@@ -107,7 +109,7 @@ export async function registerAdminRoutes(app: Express) {
     try {
       const practiceSchema = z.object({
         name: z.string().min(1),
-        thoroughcareId: z.string().optional(),
+        thoroughcareId: z.number().optional(),
         npi: z.string().optional(),
         location: z.string().optional(),
         status: z.string().default("active"),
@@ -146,6 +148,36 @@ export async function registerAdminRoutes(app: Express) {
       res.json({ success: true, contactInquiries, nightInquiries, woundReferrals });
     } catch (error) {
       res.status(500).json({ success: false, message: "Failed to load inquiries" });
+    }
+  });
+
+  app.get("/api/admin/tc/status", adminAuth, async (_req, res) => {
+    try {
+      const syncStatus = getSyncStatus();
+      res.json({ success: true, ...syncStatus });
+    } catch (error) {
+      res.status(500).json({ success: false, message: "Failed to get sync status" });
+    }
+  });
+
+  app.post("/api/admin/tc/sync", adminAuth, async (req, res) => {
+    try {
+      const { month, year } = req.body || {};
+      res.json({ success: true, message: "Sync started" });
+      runFullSync(month, year).catch((err) => {
+        console.error("[TC Sync] Background sync error:", err);
+      });
+    } catch (error) {
+      res.status(500).json({ success: false, message: "Failed to start sync" });
+    }
+  });
+
+  app.get("/api/admin/tc/test", adminAuth, async (_req, res) => {
+    try {
+      const result = await testConnection();
+      res.json(result);
+    } catch (error) {
+      res.status(500).json({ success: false, message: "Connection test failed" });
     }
   });
 }

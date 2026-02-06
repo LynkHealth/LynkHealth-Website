@@ -110,9 +110,13 @@ export type AdminSession = typeof adminSessions.$inferSelect;
 export const practices = pgTable("practices", {
   id: serial("id").primaryKey(),
   name: text("name").notNull(),
+  thoroughcareId: integer("thoroughcare_id"),
+  thoroughcareAlias: text("thoroughcare_alias"),
   location: text("location"),
   npi: text("npi"),
   status: text("status").notNull().default("active"),
+  totalPatients: integer("total_patients").default(0),
+  departments: text("departments"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
@@ -123,6 +127,18 @@ export const insertPracticeSchema = createInsertSchema(practices).omit({
 
 export type InsertPractice = z.infer<typeof insertPracticeSchema>;
 export type Practice = typeof practices.$inferSelect;
+
+export const tcSyncLog = pgTable("tc_sync_log", {
+  id: serial("id").primaryKey(),
+  syncType: text("sync_type").notNull(),
+  status: text("status").notNull().default("running"),
+  recordsProcessed: integer("records_processed").default(0),
+  details: text("details"),
+  startedAt: timestamp("started_at").defaultNow().notNull(),
+  completedAt: timestamp("completed_at"),
+});
+
+export type TcSyncLog = typeof tcSyncLog.$inferSelect;
 
 export const programSnapshots = pgTable("program_snapshots", {
   id: serial("id").primaryKey(),

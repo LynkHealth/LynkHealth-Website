@@ -5,9 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { adminFetch, getAdminUser, clearAdminAuth } from "@/lib/admin-auth";
 import {
   LayoutDashboard,
-  Users,
   Heart,
-  Activity,
   Brain,
   Monitor,
   ClipboardCheck,
@@ -19,6 +17,10 @@ import {
   Building2,
   Menu,
   X,
+  RefreshCw,
+  CheckCircle2,
+  AlertCircle,
+  Loader2,
 } from "lucide-react";
 import type { ProgramSnapshot, Practice, ContactInquiry } from "@shared/schema";
 
@@ -193,6 +195,13 @@ export default function AdminDashboard() {
     woundReferrals: any[];
   }>({ contactInquiries: [], nightInquiries: [], woundReferrals: [] });
   const [loading, setLoading] = useState(true);
+  const [syncing, setSyncing] = useState(false);
+  const [syncStatus, setSyncStatus] = useState<{
+    status: string;
+    step: string;
+    progress: number;
+    details: string;
+  } | null>(null);
   const [currentMonth, setCurrentMonth] = useState(() => {
     const now = new Date();
     return MONTHS[now.getMonth()];
@@ -208,6 +217,26 @@ export default function AdminDashboard() {
     }
     loadDashboard();
   }, [currentMonth, currentYear]);
+
+  useEffect(() => {
+    if (!syncing) return;
+    const interval = setInterval(async () => {
+      try {
+        const res = await adminFetch("/api/admin/tc/status");
+        const data = await res.json();
+        if (data.success) {
+          setSyncStatus(data);
+          if (data.status === "completed" || data.status === "error") {
+            setSyncing(false);
+            if (data.status === "completed") {
+              loadDashboard();
+            }
+          }
+        }
+      } catch {}
+    }, 2000);
+    return () => clearInterval(interval);
+  }, [syncing]);
 
   const loadDashboard = async () => {
     setLoading(true);
@@ -229,6 +258,21 @@ export default function AdminDashboard() {
       console.error("Dashboard load error:", err);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleSync = async () => {
+    setSyncing(true);
+    setSyncStatus({ status: "running", step: "Starting", progress: 0, details: "Initiating sync..." });
+    try {
+      await adminFetch("/api/admin/tc/sync", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ month: currentMonth, year: currentYear }),
+      });
+    } catch (err) {
+      setSyncing(false);
+      setSyncStatus({ status: "error", step: "Error", progress: 0, details: "Failed to start sync" });
     }
   };
 
@@ -326,6 +370,21 @@ export default function AdminDashboard() {
           </div>
           {activeTab === "dashboard" && (
             <div className="flex items-center gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleSync}
+                disabled={syncing}
+                className="gap-1.5 text-xs"
+              >
+                {syncing ? (
+                  <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                ) : (
+                  <RefreshCw className="w-3.5 h-3.5" />
+                )}
+                {syncing ? "Syncing..." : "Sync ThoroughCare"}
+              </Button>
+              <div className="w-px h-5 bg-slate-200 mx-1" />
               <Button variant="ghost" size="sm" onClick={() => navigateMonth(-1)}>
                 <ChevronLeft className="w-4 h-4" />
               </Button>
@@ -348,6 +407,41 @@ export default function AdminDashboard() {
             <>
               {activeTab === "dashboard" && (
                 <div className="space-y-4">
+                  {syncing && syncStatus && (
+                    <Card className="border-blue-200 bg-blue-50">
+                      <CardContent className="p-4">
+                        <div className="flex items-center gap-3 mb-2">
+                          <Loader2 className="w-4 h-4 animate-spin text-blue-600" />
+                          <span className="text-sm font-medium text-blue-800">{syncStatus.step}</span>
+                        </div>
+                        <p className="text-xs text-blue-600 mb-2">{syncStatus.details}</p>
+                        <div className="w-full bg-blue-100 rounded-full h-2">
+                          <div
+                            className="bg-blue-600 h-2 rounded-full transition-all duration-500"
+                            style={{ width: `${syncStatus.progress}%` }}
+                          />
+                        </div>
+                      </CardContent>
+                    </Card>
+                  )}
+                  {!syncing && syncStatus?.status === "completed" && (
+                    <Card className="border-green-200 bg-green-50">
+                      <CardContent className="p-3 flex items-center gap-2">
+                        <CheckCircle2 className="w-4 h-4 text-green-600" />
+                        <span className="text-sm text-green-800">{syncStatus.details}</span>
+                        <Button variant="ghost" size="sm" className="ml-auto text-xs" onClick={() => setSyncStatus(null)}>Dismiss</Button>
+                      </CardContent>
+                    </Card>
+                  )}
+                  {!syncing && syncStatus?.status === "error" && (
+                    <Card className="border-red-200 bg-red-50">
+                      <CardContent className="p-3 flex items-center gap-2">
+                        <AlertCircle className="w-4 h-4 text-red-600" />
+                        <span className="text-sm text-red-800">{syncStatus.details}</span>
+                        <Button variant="ghost" size="sm" className="ml-auto text-xs" onClick={() => setSyncStatus(null)}>Dismiss</Button>
+                      </CardContent>
+                    </Card>
+                  )}
                   <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
                     <Card>
                       <CardContent className="p-4 text-center">
@@ -512,31 +606,44 @@ export default function AdminDashboard() {
                   </CardHeader>
                   <CardContent>
                     {practices.length === 0 ? (
-                      <p className="text-sm text-slate-500">No practices added yet. Practices will be synced from ThoroughCare once API credentials are configured.</p>
+                      <p className="text-sm text-slate-500">No practices synced yet. Click "Sync ThoroughCare" on the Dashboard tab to pull practice data.</p>
                     ) : (
                       <div className="overflow-x-auto">
                         <table className="w-full text-sm">
                           <thead>
                             <tr className="border-b">
                               <th className="text-left py-2 px-3 font-medium">Practice Name</th>
-                              <th className="text-left py-2 px-3 font-medium">Location</th>
-                              <th className="text-left py-2 px-3 font-medium">NPI</th>
+                              <th className="text-left py-2 px-3 font-medium">Alias</th>
+                              <th className="text-left py-2 px-3 font-medium">Departments</th>
                               <th className="text-left py-2 px-3 font-medium">Status</th>
                             </tr>
                           </thead>
                           <tbody>
-                            {practices.map((p) => (
-                              <tr key={p.id} className="border-b hover:bg-slate-50">
-                                <td className="py-2 px-3 font-medium">{p.name}</td>
-                                <td className="py-2 px-3">{p.location || "—"}</td>
-                                <td className="py-2 px-3">{p.npi || "—"}</td>
-                                <td className="py-2 px-3">
-                                  <span className={`px-2 py-0.5 rounded text-xs font-medium ${
-                                    p.status === "active" ? "bg-green-100 text-green-700" : "bg-slate-100 text-slate-600"
-                                  }`}>{p.status}</span>
-                                </td>
-                              </tr>
-                            ))}
+                            {practices.map((p: any) => {
+                              let depts: string[] = [];
+                              try { depts = p.departments ? JSON.parse(p.departments) : []; } catch {}
+                              return (
+                                <tr key={p.id} className="border-b hover:bg-slate-50">
+                                  <td className="py-2 px-3 font-medium">{p.name}</td>
+                                  <td className="py-2 px-3 text-slate-500">{p.thoroughcareAlias || "—"}</td>
+                                  <td className="py-2 px-3">
+                                    {depts.length > 0 ? (
+                                      <div className="flex flex-wrap gap-1">
+                                        {depts.slice(0, 5).map((d: string, i: number) => (
+                                          <span key={i} className="bg-slate-100 text-slate-600 px-1.5 py-0.5 rounded text-xs">{d.replace(/\s*\[\d+\]\s*$/, '')}</span>
+                                        ))}
+                                        {depts.length > 5 && <span className="text-xs text-slate-400">+{depts.length - 5} more</span>}
+                                      </div>
+                                    ) : "—"}
+                                  </td>
+                                  <td className="py-2 px-3">
+                                    <span className={`px-2 py-0.5 rounded text-xs font-medium ${
+                                      p.status === "active" ? "bg-green-100 text-green-700" : "bg-slate-100 text-slate-600"
+                                    }`}>{p.status}</span>
+                                  </td>
+                                </tr>
+                              );
+                            })}
                           </tbody>
                         </table>
                       </div>
