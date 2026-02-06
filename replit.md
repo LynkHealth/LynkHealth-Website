@@ -16,6 +16,20 @@ The frontend is built with React 18 and TypeScript, using Wouter for routing, Ta
 ### Feature Specifications
 Key features include a consolidated contact form, a blog post management system, integration of authentic industry statistics and Medicare billing codes, and a leadership team section. Testimonials are replaced with compliance-friendly marketing focusing on aggregate results. The platform also includes a new "Who We Work With" section targeting various healthcare specialties and an "Overnight On-Call Coverage" service with dedicated pages and forms.
 
+### Admin Dashboard & ThoroughCare Integration
+A hidden admin dashboard is accessible via the copyright symbol (©) in the footer, leading to `/admin/login`. Admin credentials are stored in the database (`admin_users` table). The dashboard aggregates data from ThoroughCare API and displays:
+- **Practice data**: Organizations with departments and aliases synced from ThoroughCare
+- **Program snapshots**: CCM, PCM, BHI, RPM, RTM enrollment counts with time bucket breakdowns
+- **Inquiry management**: Contact form submissions, night coverage inquiries, wound care referrals
+
+**ThoroughCare API Integration** (`server/thoroughcare-client.ts`, `server/thoroughcare-sync.ts`):
+- OAuth2 client credentials flow with token caching (credentials in Replit Secrets)
+- Rate-limited API client (10 req/sec) with automatic pagination (1000 records/page)
+- Full sync pulls: Organizations → Enrollments → Time Logs → Program Snapshots
+- Real-time sync progress tracking via `/api/admin/tc/status` polling
+- Sync triggered via admin dashboard button or POST to `/api/admin/tc/sync`
+- Data volumes: ~7 practices, ~3,578 enrollments, ~141k time logs, ~22 second sync duration
+
 ### System Design Choices
 The architecture emphasizes robust validation and error handling. SEO strategy focuses on national reach and service quality. A comprehensive cache management system ensures users always see the latest content after deployments while optimizing performance through aggressive caching of static assets, using a service worker and build-time timestamp injection. HTTP cache headers are carefully configured for various asset types to balance freshness and performance.
 
