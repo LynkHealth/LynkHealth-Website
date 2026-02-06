@@ -22,8 +22,10 @@ export async function adminAuth(req: Request, res: Response, next: NextFunction)
   if (!session) {
     return res.status(401).json({ success: false, message: "Session expired" });
   }
-  const user = await storage.getAdminUserByEmail("");
-  const allUsers = await storage.getPractices();
+  if (session.expiresAt && new Date(session.expiresAt) < new Date()) {
+    await storage.deleteAdminSession(token);
+    return res.status(401).json({ success: false, message: "Session expired" });
+  }
   const { db } = await import("./db");
   const { adminUsers } = await import("@shared/schema");
   const { eq } = await import("drizzle-orm");
@@ -103,9 +105,20 @@ export async function registerAdminRoutes(app: Express) {
 
   app.post("/api/admin/practices", adminAuth, async (req, res) => {
     try {
-      const practice = await storage.createPractice(req.body);
+      const practiceSchema = z.object({
+        name: z.string().min(1),
+        thoroughcareId: z.string().optional(),
+        npi: z.string().optional(),
+        location: z.string().optional(),
+        status: z.string().default("active"),
+      });
+      const validated = practiceSchema.parse(req.body);
+      const practice = await storage.createPractice(validated);
       res.json({ success: true, practice });
     } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ success: false, message: "Invalid practice data", errors: error.errors });
+      }
       res.status(500).json({ success: false, message: "Failed to create practice" });
     }
   });
