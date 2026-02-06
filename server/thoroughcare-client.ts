@@ -13,7 +13,8 @@ async function getAccessToken(): Promise<string> {
   const clientSecret = process.env.THOROUGHCARE_CLIENT_SECRET;
 
   if (!clientId || !clientSecret) {
-    throw new Error("ThoroughCare API credentials not configured");
+    const envKeys = Object.keys(process.env).filter(k => k.includes("THOROUGH") || k.includes("thorough")).join(", ");
+    throw new Error(`ThoroughCare API credentials not configured. ID=${!!clientId}, Secret=${!!clientSecret}. Related env keys: [${envKeys}]`);
   }
 
   const res = await fetch(`${TC_BASE}/oauth/token`, {
