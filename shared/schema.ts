@@ -143,6 +143,7 @@ export type TcSyncLog = typeof tcSyncLog.$inferSelect;
 export const programSnapshots = pgTable("program_snapshots", {
   id: serial("id").primaryKey(),
   practiceId: integer("practice_id").notNull(),
+  department: text("department"),
   programType: text("program_type").notNull(),
   month: text("month").notNull(),
   year: integer("year").notNull(),

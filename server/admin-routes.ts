@@ -87,9 +87,25 @@ export async function registerAdminRoutes(app: Express) {
       const month = req.query.month as string || monthNames[now.getMonth()];
       const year = parseInt(req.query.year as string) || now.getFullYear();
       const snapshots = await storage.getAggregatedSnapshots(month, year);
-      const practices = await storage.getPractices();
+      const practicesList = await storage.getPractices();
       const inquiries = await storage.getContactInquiries();
-      res.json({ success: true, snapshots, practices, inquiries, month, year });
+
+      const departmentsByPractice: Record<number, string[]> = {};
+      for (const s of snapshots) {
+        if (s.department) {
+          if (!departmentsByPractice[s.practiceId]) {
+            departmentsByPractice[s.practiceId] = [];
+          }
+          if (!departmentsByPractice[s.practiceId].includes(s.department)) {
+            departmentsByPractice[s.practiceId].push(s.department);
+          }
+        }
+      }
+      for (const key of Object.keys(departmentsByPractice)) {
+        departmentsByPractice[Number(key)].sort();
+      }
+
+      res.json({ success: true, snapshots, practices: practicesList, departmentsByPractice, inquiries, month, year });
     } catch (error) {
       console.error("Dashboard error:", error);
       res.status(500).json({ success: false, message: "Failed to load dashboard" });
