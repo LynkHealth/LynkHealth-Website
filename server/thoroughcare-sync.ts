@@ -2,9 +2,7 @@ import {
   fetchOrganizations,
   fetchEnrollments,
   fetchTasksForPeriod,
-  fetchPatientCount,
   fetchPatientsForOrg,
-  testConnection,
 } from "./thoroughcare-client";
 import { db } from "./db";
 import { practices, programSnapshots, tcSyncLog } from "@shared/schema";
@@ -68,10 +66,10 @@ export async function runFullSync(month?: string, year?: number): Promise<SyncPr
     const orgData = await syncOrganizations();
 
     updateProgress("Patients", 15, "Building patient-to-practice mapping...");
-    const patientOrgMap = await buildPatientOrgMap(orgData.tcOrgIds);
+    const patientData = await buildPatientOrgMap(orgData.tcOrgIds);
 
     updateProgress("Enrollments", 25, "Fetching enrollment data...");
-    const enrollmentData = await syncEnrollments(patientOrgMap);
+    const enrollmentData = await syncEnrollments(patientData);
 
     updateProgress("Time Logs", 50, `Fetching time logs for ${targetMonth} ${targetYear}...`);
     const timeData = await syncTimeLogs(targetMonth, targetYear);
@@ -160,8 +158,14 @@ async function syncOrganizations(): Promise<OrgSyncResult> {
   return { tcOrgIds, orgToDbMap };
 }
 
-async function buildPatientOrgMap(tcOrgIds: number[]): Promise<Map<string, number>> {
-  const patientOrgMap = new Map<string, number>();
+interface PatientData {
+  orgMap: Map<string, number>;
+  inactivePatients: Set<string>;
+}
+
+async function buildPatientOrgMap(tcOrgIds: number[]): Promise<PatientData> {
+  const orgMap = new Map<string, number>();
+  const inactivePatients = new Set<string>();
 
   for (let i = 0; i < tcOrgIds.length; i++) {
     const orgId = tcOrgIds[i];
@@ -171,15 +175,19 @@ async function buildPatientOrgMap(tcOrgIds: number[]): Promise<Map<string, numbe
       const patients = await fetchPatientsForOrg(orgId);
       for (const patient of patients) {
         const patientId = String(patient.id);
-        patientOrgMap.set(patientId, orgId);
+        orgMap.set(patientId, orgId);
+        const flags = patient.extension?.find((e: any) => e.url === "flags")?.value || [];
+        if (flags.includes("INACTIVE")) {
+          inactivePatients.add(patientId);
+        }
       }
     } catch (err) {
       console.error(`[TC Sync] Error fetching patients for org ${orgId}:`, err);
     }
   }
 
-  updateProgress("Patients", 23, `Mapped ${patientOrgMap.size} patients to ${tcOrgIds.length} organizations`);
-  return patientOrgMap;
+  updateProgress("Patients", 23, `Mapped ${orgMap.size} patients to ${tcOrgIds.length} organizations (${inactivePatients.size} inactive)`);
+  return { orgMap, inactivePatients };
 }
 
 interface ProgramStats {
@@ -194,7 +202,9 @@ interface EnrollmentData {
   byOrg: Map<number, Map<string, ProgramStats>>;
 }
 
-async function syncEnrollments(patientOrgMap: Map<string, number>): Promise<EnrollmentData> {
+async function syncEnrollments(patientData: PatientData): Promise<EnrollmentData> {
+  const { orgMap, inactivePatients } = patientData;
+
   const enrollments = await fetchEnrollments((page, total) => {
     const pct = Math.min(25 + Math.round((page / total) * 20), 45);
     updateProgress("Enrollments", pct, `Fetching enrollments page ${page}/${total}...`);
@@ -202,31 +212,14 @@ async function syncEnrollments(patientOrgMap: Map<string, number>): Promise<Enro
 
   const byOrg = new Map<number, Map<string, ProgramStats>>();
 
-  // Diagnostic: track all status values and program codes
-  const statusCounts = new Map<string, number>();
-  const programCodeCounts = new Map<string, number>();
-  const statusByProgram = new Map<string, Map<string, number>>();
-
   for (const enrollment of enrollments) {
     const patientRef = enrollment.patient?.reference;
     const programCode = enrollment.type?.coding?.[0]?.code;
-    const status = enrollment.status;
-
-    // Diagnostic logging
-    const statusKey = status || "undefined";
-    statusCounts.set(statusKey, (statusCounts.get(statusKey) || 0) + 1);
-    if (programCode) {
-      programCodeCounts.set(programCode, (programCodeCounts.get(programCode) || 0) + 1);
-      if (!statusByProgram.has(programCode)) statusByProgram.set(programCode, new Map());
-      const progStatuses = statusByProgram.get(programCode)!;
-      progStatuses.set(statusKey, (progStatuses.get(statusKey) || 0) + 1);
-    }
 
     if (!programCode || !patientRef) continue;
 
     const patientId = patientRef.replace("Patient/", "");
-
-    const tcOrgId = patientOrgMap.get(patientId) || 0;
+    const tcOrgId = orgMap.get(patientId) || 0;
 
     if (!byOrg.has(tcOrgId)) {
       byOrg.set(tcOrgId, new Map());
@@ -238,8 +231,10 @@ async function syncEnrollments(patientOrgMap: Map<string, number>): Promise<Enro
     const stats = programs.get(programCode)!;
     stats.total++;
 
-    const isActive = status?.toLowerCase() === "active";
-    if (isActive) {
+    const isActive = enrollment.status?.toLowerCase() === "active";
+    const isPatientInactive = inactivePatients.has(patientId);
+
+    if (isActive && !isPatientInactive) {
       stats.active++;
       stats.activePatientIds.add(patientId);
     } else {
@@ -247,38 +242,10 @@ async function syncEnrollments(patientOrgMap: Map<string, number>): Promise<Enro
     }
   }
 
-  // Log diagnostic info
-  console.log("[TC Diag] Status values:", JSON.stringify(Object.fromEntries(statusCounts)));
-  console.log("[TC Diag] Program codes:", JSON.stringify(Object.fromEntries(programCodeCounts)));
-  statusByProgram.forEach((statuses, program) => {
-    console.log(`[TC Diag] ${program} statuses:`, JSON.stringify(Object.fromEntries(statuses)));
-  });
-
-  // Log per-org breakdown for org 1707
-  const org1707 = byOrg.get(1707);
-  if (org1707) {
-    org1707.forEach((stats, program) => {
-      console.log(`[TC Diag] org1707 ${program}: active=${stats.active}, inactive=${stats.inactive}, total=${stats.total}`);
-    });
-  }
-
-  // Log first enrollment sample
-  if (enrollments.length > 0) {
-    const sample = enrollments[0];
-    console.log("[TC Diag] Sample enrollment:", JSON.stringify({
-      id: sample.id,
-      status: sample.status,
-      type: sample.type,
-      patient: sample.patient,
-      period: sample.period,
-      managingOrganization: sample.managingOrganization,
-    }));
-  }
-
   let orgSummary = "";
   byOrg.forEach((programs, orgId) => {
     let total = 0;
-    programs.forEach((stats) => { total += stats.active; });
+    programs.forEach((stats) => { total += stats.activePatientIds.size; });
     if (total > 0) orgSummary += `org${orgId}:${total} `;
   });
 
@@ -358,7 +325,7 @@ async function buildSnapshots(
   await db.delete(programSnapshots)
     .where(and(eq(programSnapshots.month, month), eq(programSnapshots.year, year)));
 
-  const programTypes = ["CCM", "PCM", "AWV", "BHI", "RPM", "RTM", "CCO"];
+  const programTypes = ["CCM", "PCM", "AWV", "BHI", "RPM", "RTM", "CCO", "APCM"];
 
   const orgEntries = Array.from(enrollmentData.byOrg.entries());
   for (let oi = 0; oi < orgEntries.length; oi++) {
@@ -375,9 +342,9 @@ async function buildSnapshots(
 
     for (const programType of programTypes) {
       const enrollment = programs.get(programType);
-      if (!enrollment || (enrollment.active === 0 && enrollment.inactive === 0)) continue;
+      if (!enrollment || (enrollment.activePatientIds.size === 0 && enrollment.inactive === 0)) continue;
 
-      const patientsEnrolled = enrollment.active;
+      const patientsEnrolled = enrollment.activePatientIds.size;
       const inactive = enrollment.inactive;
       const notEnrolled = 0;
 
@@ -387,9 +354,15 @@ async function buildSnapshots(
       const patientIds = Array.from(enrollment.activePatientIds);
       for (const patientId of patientIds) {
         const patientPrograms = timeData.patientMinutes.get(patientId);
-        if (patientPrograms && patientPrograms.has(programType)) {
-          patientMinutesList.push(patientPrograms.get(programType)!);
-          patientsWithTime++;
+        if (patientPrograms) {
+          const programMinutes = patientPrograms.get(programType);
+          if (programMinutes !== undefined) {
+            patientMinutesList.push(programMinutes);
+            patientsWithTime++;
+          } else if (programType === "PCM" && patientPrograms.has("CCM")) {
+            patientMinutesList.push(patientPrograms.get("CCM")!);
+            patientsWithTime++;
+          }
         }
       }
 
@@ -454,10 +427,3 @@ function categorizeMinutes(programType: string, minutesList: number[]): Record<s
 
   return buckets;
 }
-
-export async function getLastSync(): Promise<TcSyncLog | null> {
-  const [last] = await db.select().from(tcSyncLog).orderBy(tcSyncLog.id).limit(1);
-  return last || null;
-}
-
-type TcSyncLog = typeof tcSyncLog.$inferSelect;

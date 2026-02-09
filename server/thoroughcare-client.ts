@@ -115,9 +115,17 @@ export async function fetchOrganizations(): Promise<any[]> {
 }
 
 export async function fetchEnrollments(
+  onProgress?: (page: number, total: number) => void,
+  params?: Record<string, string>
+): Promise<any[]> {
+  return fetchAllPages("/v1/EpisodeOfCare", params, onProgress);
+}
+
+export async function fetchEnrollmentsForOrg(
+  orgId: number,
   onProgress?: (page: number, total: number) => void
 ): Promise<any[]> {
-  return fetchAllPages("/v1/EpisodeOfCare", undefined, onProgress);
+  return fetchAllPages("/v1/EpisodeOfCare", { organization: String(orgId) }, onProgress);
 }
 
 export async function fetchTasksForPeriod(
