@@ -21,6 +21,10 @@ import {
   CheckCircle2,
   AlertCircle,
   Loader2,
+  Activity,
+  Stethoscope,
+  Shield,
+  Zap,
 } from "lucide-react";
 import type { ProgramSnapshot, Practice, ContactInquiry } from "@shared/schema";
 
@@ -139,12 +143,64 @@ function ProgramCard({ title, icon: Icon, programType, snapshots, color }: {
           { label: "Inactive", value: totals.inactive },
           { label: "Not Enrolled", value: totals.notEnrolled },
         ];
+      case "RTM":
+        return [
+          { label: "Patients Enrolled", value: totals.patientsEnrolled, highlight: true },
+          { label: "40+ Mins", value: totals.mins40Plus, color: "text-green-600" },
+          { label: "20-39 Mins", value: totals.mins20to39, color: "text-yellow-600" },
+          { label: "10-19 Mins", value: totals.mins10to19, color: "text-orange-500" },
+          { label: "1-9 Mins", value: totals.mins1to9, color: "text-red-500" },
+          { label: "0 Mins", value: totals.mins0, color: "text-red-600" },
+          { label: "Inactive", value: totals.inactive },
+        ];
+      case "APCM":
+        return [
+          { label: "Patients Enrolled", value: totals.patientsEnrolled, highlight: true },
+          { label: "60+ Mins", value: totals.mins60Plus, color: "text-green-600" },
+          { label: "40-59 Mins", value: totals.mins40to59, color: "text-green-600" },
+          { label: "20-39 Mins", value: totals.mins20to39, color: "text-yellow-600" },
+          { label: "10-19 Mins", value: totals.mins10to19, color: "text-orange-500" },
+          { label: "1-9 Mins", value: totals.mins1to9, color: "text-red-500" },
+          { label: "0 Mins", value: totals.mins0, color: "text-red-600" },
+          { label: "Inactive", value: totals.inactive },
+        ];
+      case "CCCM":
+        return [
+          { label: "Patients Enrolled", value: totals.patientsEnrolled, highlight: true },
+          { label: "60+ Mins", value: totals.mins60Plus, color: "text-green-600" },
+          { label: "40-59 Mins", value: totals.mins40to59, color: "text-green-600" },
+          { label: "20-39 Mins", value: totals.mins20to39, color: "text-yellow-600" },
+          { label: "10-19 Mins", value: totals.mins10to19, color: "text-orange-500" },
+          { label: "1-9 Mins", value: totals.mins1to9, color: "text-red-500" },
+          { label: "0 Mins", value: totals.mins0, color: "text-red-600" },
+          { label: "Inactive", value: totals.inactive },
+        ];
+      case "CCO":
+        return [
+          { label: "Patients Enrolled", value: totals.patientsEnrolled, highlight: true },
+          { label: "60+ Mins", value: totals.mins60Plus, color: "text-green-600" },
+          { label: "40-59 Mins", value: totals.mins40to59, color: "text-green-600" },
+          { label: "20-39 Mins", value: totals.mins20to39, color: "text-yellow-600" },
+          { label: "1-9 Mins", value: totals.mins1to9, color: "text-red-500" },
+          { label: "0 Mins", value: totals.mins0, color: "text-red-600" },
+          { label: "Inactive", value: totals.inactive },
+        ];
       default:
-        return [];
+        return [
+          { label: "Patients Enrolled", value: totals.patientsEnrolled, highlight: true },
+          { label: "Inactive", value: totals.inactive },
+        ];
     }
   };
 
   const columns = getColumns();
+
+  const hasAnyData = data.length > 0 && (
+    totals.patientsEnrolled > 0 || totals.inactive > 0 || totals.notEnrolled > 0 || totals.dueForVisit > 0
+  );
+  if (!hasAnyData) {
+    return null;
+  }
 
   return (
     <Card className="mb-4">
@@ -483,24 +539,30 @@ export default function AdminDashboard() {
                           <Card>
                             <CardContent className="p-4 text-center">
                               <p className="text-2xl font-bold text-purple-600">
-                                {filtered.filter((s) => s.programType === "RPM").reduce((sum, s) => sum + (s.patientsEnrolled || 0), 0)}
+                                {filtered.filter((s) => s.programType === "BHI").reduce((sum, s) => sum + (s.patientsEnrolled || 0), 0)}
                               </p>
-                              <p className="text-xs text-slate-500 mt-1">RPM Enrolled</p>
+                              <p className="text-xs text-slate-500 mt-1">BHI Enrolled</p>
                             </CardContent>
                           </Card>
                           <Card>
                             <CardContent className="p-4 text-center">
-                              <p className="text-2xl font-bold text-amber-600">{totalInquiries}</p>
-                              <p className="text-xs text-slate-500 mt-1">Total Inquiries</p>
+                              <p className="text-2xl font-bold text-teal-600">
+                                {filtered.filter((s) => s.programType === "RPM").reduce((sum, s) => sum + (s.patientsEnrolled || 0), 0)}
+                              </p>
+                              <p className="text-xs text-slate-500 mt-1">RPM Enrolled</p>
                             </CardContent>
                           </Card>
                         </div>
 
                         <ProgramCard title="Chronic Care Management" icon={Heart} programType="CCM" snapshots={filtered} color="text-red-500" />
                         <ProgramCard title="Principal Care Management" icon={ClipboardCheck} programType="PCM" snapshots={filtered} color="text-blue-500" />
-                        <ProgramCard title="Annual Wellness Visit" icon={FileText} programType="AWV" snapshots={filtered} color="text-green-500" />
                         <ProgramCard title="Behavioral Health Integration" icon={Brain} programType="BHI" snapshots={filtered} color="text-purple-500" />
                         <ProgramCard title="Remote Patient Monitoring" icon={Monitor} programType="RPM" snapshots={filtered} color="text-teal-500" />
+                        <ProgramCard title="Remote Therapeutic Monitoring" icon={Activity} programType="RTM" snapshots={filtered} color="text-orange-500" />
+                        <ProgramCard title="Advanced Primary Care Mgmt" icon={Shield} programType="APCM" snapshots={filtered} color="text-indigo-500" />
+                        <ProgramCard title="Complex Chronic Care Mgmt" icon={Stethoscope} programType="CCCM" snapshots={filtered} color="text-rose-500" />
+                        <ProgramCard title="Chronic Care Optimization" icon={Zap} programType="CCO" snapshots={filtered} color="text-amber-500" />
+                        <ProgramCard title="Annual Wellness Visit" icon={FileText} programType="AWV" snapshots={filtered} color="text-green-500" />
                       </>
                     );
                   })()}

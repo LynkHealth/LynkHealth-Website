@@ -3,12 +3,25 @@ import {
   fetchEnrollments,
   fetchTasksForPeriod,
   fetchPatientsForOrg,
+  fetchCarePlansForPatientsBatch,
 } from "./thoroughcare-client";
 import { db } from "./db";
 import { practices, programSnapshots, tcSyncLog } from "@shared/schema";
 import { eq, and } from "drizzle-orm";
 
 const MONTHS = ["JAN", "FEB", "MAR", "APR", "MAY", "JUN", "JUL", "AUG", "SEP", "OCT", "NOV", "DEC"];
+
+const ALL_PROGRAM_TYPES = [
+  "CCM",   // Chronic Care Management
+  "PCM",   // Principal Care Management
+  "BHI",   // Behavioral Health Integration
+  "RPM",   // Remote Patient Monitoring
+  "RTM",   // Remote Therapeutic Monitoring
+  "APCM",  // Advanced Primary Care Management
+  "CCCM",  // Complex Chronic Care Management
+  "CCO",   // Chronic Care Optimization
+  "AWV",   // Annual Wellness Visit
+];
 
 interface SyncProgress {
   status: "idle" | "running" | "completed" | "error";
@@ -65,13 +78,16 @@ export async function runFullSync(month?: string, year?: number): Promise<SyncPr
     updateProgress("Organizations", 5, "Fetching practices from ThoroughCare...");
     const orgData = await syncOrganizations();
 
-    updateProgress("Patients", 15, "Building patient-to-practice mapping...");
+    updateProgress("Patients", 10, "Building patient-to-practice mapping...");
     const patientData = await buildPatientOrgMap(orgData.tcOrgIds);
 
-    updateProgress("Enrollments", 25, "Fetching enrollment data...");
+    updateProgress("Enrollments", 20, "Fetching enrollment data...");
     const enrollmentData = await syncEnrollments(patientData);
 
-    updateProgress("Time Logs", 50, `Fetching time logs for ${targetMonth} ${targetYear}...`);
+    updateProgress("CarePlans", 40, "Resolving program assignments for dual-enrolled patients...");
+    await resolveOverlapWithCarePlans(enrollmentData);
+
+    updateProgress("Time Logs", 55, `Fetching time logs for ${targetMonth} ${targetYear}...`);
     const timeData = await syncTimeLogs(targetMonth, targetYear);
 
     updateProgress("Snapshots", 80, "Building program snapshots...");
@@ -154,7 +170,7 @@ async function syncOrganizations(): Promise<OrgSyncResult> {
     }
   }
 
-  updateProgress("Organizations", 12, `Synced ${orgs.length} practices`);
+  updateProgress("Organizations", 8, `Synced ${orgs.length} practices`);
   return { tcOrgIds, orgToDbMap };
 }
 
@@ -169,7 +185,7 @@ async function buildPatientOrgMap(tcOrgIds: number[]): Promise<PatientData> {
 
   for (let i = 0; i < tcOrgIds.length; i++) {
     const orgId = tcOrgIds[i];
-    updateProgress("Patients", 15 + Math.round((i / tcOrgIds.length) * 8), `Fetching patients for org ${i + 1}/${tcOrgIds.length}...`);
+    updateProgress("Patients", 10 + Math.round((i / tcOrgIds.length) * 8), `Fetching patients for org ${i + 1}/${tcOrgIds.length}...`);
 
     try {
       const patients = await fetchPatientsForOrg(orgId);
@@ -186,7 +202,7 @@ async function buildPatientOrgMap(tcOrgIds: number[]): Promise<PatientData> {
     }
   }
 
-  updateProgress("Patients", 23, `Mapped ${orgMap.size} patients to ${tcOrgIds.length} organizations (${inactivePatients.size} inactive)`);
+  updateProgress("Patients", 18, `Mapped ${orgMap.size} patients to ${tcOrgIds.length} organizations (${inactivePatients.size} inactive)`);
   return { orgMap, inactivePatients };
 }
 
@@ -206,7 +222,7 @@ async function syncEnrollments(patientData: PatientData): Promise<EnrollmentData
   const { orgMap, inactivePatients } = patientData;
 
   const enrollments = await fetchEnrollments((page, total) => {
-    const pct = Math.min(25 + Math.round((page / total) * 20), 45);
+    const pct = Math.min(20 + Math.round((page / total) * 18), 38);
     updateProgress("Enrollments", pct, `Fetching enrollments page ${page}/${total}...`);
   });
 
@@ -214,9 +230,11 @@ async function syncEnrollments(patientData: PatientData): Promise<EnrollmentData
 
   for (const enrollment of enrollments) {
     const patientRef = enrollment.patient?.reference;
-    const programCode = enrollment.type?.coding?.[0]?.code;
+    let programCode = enrollment.type?.coding?.[0]?.code;
 
     if (!programCode || !patientRef) continue;
+
+    programCode = programCode.toUpperCase();
 
     const patientId = patientRef.replace("Patient/", "");
     const tcOrgId = orgMap.get(patientId) || 0;
@@ -249,8 +267,127 @@ async function syncEnrollments(patientData: PatientData): Promise<EnrollmentData
     if (total > 0) orgSummary += `org${orgId}:${total} `;
   });
 
-  updateProgress("Enrollments", 45, `Processed ${enrollments.length} enrollments (${orgSummary.trim()})`);
+  updateProgress("Enrollments", 38, `Processed ${enrollments.length} enrollments (${orgSummary.trim()})`);
   return { totalEnrollments: enrollments.length, byOrg };
+}
+
+async function resolveOverlapWithCarePlans(enrollmentData: EnrollmentData): Promise<void> {
+  const CONFLICTING_PROGRAMS = ["CCM", "PCM", "CCCM", "APCM"];
+
+  let totalOverlap = 0;
+  const overlapByOrg = new Map<number, string[]>();
+
+  const orgEntries = Array.from(enrollmentData.byOrg.entries());
+  for (const [orgId, programs] of orgEntries) {
+    const programSets = new Map<string, Set<string>>();
+    for (const prog of CONFLICTING_PROGRAMS) {
+      const stats = programs.get(prog);
+      if (stats && stats.activePatientIds.size > 0) {
+        programSets.set(prog, stats.activePatientIds);
+      }
+    }
+
+    if (programSets.size < 2) continue;
+
+    const overlapPatients = new Set<string>();
+    const allPatientSets = Array.from(programSets.values());
+    for (let i = 0; i < allPatientSets.length; i++) {
+      for (let j = i + 1; j < allPatientSets.length; j++) {
+        const setI = Array.from(allPatientSets[i]);
+        for (const pid of setI) {
+          if (allPatientSets[j].has(pid)) {
+            overlapPatients.add(pid);
+          }
+        }
+      }
+    }
+
+    if (overlapPatients.size === 0) continue;
+
+    totalOverlap += overlapPatients.size;
+    overlapByOrg.set(orgId, Array.from(overlapPatients));
+  }
+
+  if (totalOverlap === 0) {
+    updateProgress("CarePlans", 50, "No dual-enrolled patients found, skipping CarePlan resolution");
+    return;
+  }
+
+  updateProgress("CarePlans", 42, `Found ${totalOverlap} dual-enrolled patients across ${overlapByOrg.size} orgs. Fetching CarePlans...`);
+
+  let resolved = 0;
+  let totalProcessed = 0;
+
+  const overlapEntries = Array.from(overlapByOrg.entries());
+  for (const [orgId, patientIds] of overlapEntries) {
+    const programs = enrollmentData.byOrg.get(orgId)!;
+
+    const carePlans = await fetchCarePlansForPatientsBatch(patientIds, (completed, total) => {
+      const pct = 42 + Math.round(((totalProcessed + completed) / totalOverlap) * 10);
+      updateProgress("CarePlans", Math.min(pct, 52), `Fetching CarePlans: ${totalProcessed + completed}/${totalOverlap}...`);
+    });
+
+    const carePlanEntries = Array.from(carePlans.entries());
+    for (const [patientId, activeCarePlans] of carePlanEntries) {
+      const enrolledIn: string[] = [];
+      for (const prog of CONFLICTING_PROGRAMS) {
+        if (programs.get(prog)?.activePatientIds.has(patientId)) {
+          enrolledIn.push(prog);
+        }
+      }
+
+      if (enrolledIn.length < 2) continue;
+
+      const carePlanPrograms = new Set(activeCarePlans);
+
+      const PROGRAM_PRIORITY = ["PCM", "APCM", "CCCM", "CCM"];
+      let primaryProgram: string | null = null;
+      for (const prog of PROGRAM_PRIORITY) {
+        if (enrolledIn.includes(prog) && carePlanPrograms.has(prog)) {
+          primaryProgram = prog;
+          break;
+        }
+      }
+      if (!primaryProgram) {
+        for (const prog of PROGRAM_PRIORITY) {
+          if (enrolledIn.includes(prog)) {
+            primaryProgram = prog;
+            break;
+          }
+        }
+      }
+      if (!primaryProgram) {
+        primaryProgram = enrolledIn[0];
+      }
+
+      for (const prog of enrolledIn) {
+        if (prog !== primaryProgram) {
+          const stats = programs.get(prog)!;
+          if (stats.activePatientIds.has(patientId)) {
+            stats.activePatientIds.delete(patientId);
+            stats.active--;
+            stats.inactive++;
+            resolved++;
+          }
+        }
+      }
+    }
+
+    totalProcessed += patientIds.length;
+  }
+
+  const postSummary: string[] = [];
+  const postOrgEntries = Array.from(enrollmentData.byOrg.entries());
+  for (const [orgId, programs] of postOrgEntries) {
+    for (const prog of CONFLICTING_PROGRAMS) {
+      const stats = programs.get(prog);
+      if (stats && stats.activePatientIds.size > 0) {
+        postSummary.push(`org${orgId} ${prog}:${stats.activePatientIds.size}`);
+      }
+    }
+  }
+
+  updateProgress("CarePlans", 53, `Resolved ${resolved} dual-enrollments. Post-dedup: ${postSummary.join(", ")}`);
 }
 
 interface TimeData {
@@ -268,7 +405,7 @@ async function syncTimeLogs(month: string, year: number): Promise<TimeData> {
   let tasks: any[];
   try {
     tasks = await fetchTasksForPeriod(startStr, endStr, (page, total) => {
-      const pct = Math.min(50 + Math.round((page / total) * 25), 75);
+      const pct = Math.min(55 + Math.round((page / total) * 20), 75);
       updateProgress("Time Logs", pct, `Fetching time logs page ${page}/${total}...`);
     });
   } catch (error) {
@@ -280,11 +417,12 @@ async function syncTimeLogs(month: string, year: number): Promise<TimeData> {
 
   for (const task of tasks) {
     const patientRef = task.for?.reference;
-    const programCode = task.code?.coding?.[0]?.code;
+    let programCode = task.code?.coding?.[0]?.code;
     const description = task.description || "";
 
     if (!patientRef || !programCode) continue;
 
+    programCode = programCode.toUpperCase();
     const patientId = patientRef.replace("Patient/", "");
     const secondsMatch = description.match(/(\d+)\s*seconds/);
     let minutes = 0;
@@ -325,8 +463,6 @@ async function buildSnapshots(
   await db.delete(programSnapshots)
     .where(and(eq(programSnapshots.month, month), eq(programSnapshots.year, year)));
 
-  const programTypes = ["CCM", "PCM", "AWV", "BHI", "RPM", "RTM", "CCO", "APCM"];
-
   const orgEntries = Array.from(enrollmentData.byOrg.entries());
   for (let oi = 0; oi < orgEntries.length; oi++) {
     const [tcOrgId, programs] = orgEntries[oi];
@@ -340,7 +476,7 @@ async function buildSnapshots(
 
     if (!dbPracticeId) continue;
 
-    for (const programType of programTypes) {
+    for (const programType of ALL_PROGRAM_TYPES) {
       const enrollment = programs.get(programType);
       if (!enrollment || (enrollment.activePatientIds.size === 0 && enrollment.inactive === 0)) continue;
 
@@ -359,7 +495,7 @@ async function buildSnapshots(
           if (programMinutes !== undefined) {
             patientMinutesList.push(programMinutes);
             patientsWithTime++;
-          } else if (programType === "PCM" && patientPrograms.has("CCM")) {
+          } else if ((programType === "PCM" || programType === "CCCM" || programType === "APCM") && patientPrograms.has("CCM")) {
             patientMinutesList.push(patientPrograms.get("CCM")!);
             patientsWithTime++;
           }

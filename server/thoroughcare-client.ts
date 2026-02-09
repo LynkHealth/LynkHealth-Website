@@ -170,6 +170,49 @@ export async function fetchPatientsForOrg(orgId: number): Promise<any[]> {
   return fetchAllPages("/v1/Patient", { managingOrganization: `Organization/${orgId}` });
 }
 
+export async function fetchCarePlansForPatient(patientId: string): Promise<string[]> {
+  try {
+    const data = await tcFetch("/v1/CarePlan", { patient_id: patientId });
+    const programs: string[] = [];
+    if (data.entry) {
+      for (const entry of data.entry) {
+        const code = entry.resource?.category?.[0]?.coding?.[0]?.code;
+        if (code) programs.push(code.toUpperCase());
+      }
+    }
+    if (programs.length === 0 && data.entry?.length > 0) {
+      console.log(`[TC CarePlan] Patient ${patientId}: ${data.entry.length} CarePlan entries but no program codes extracted`);
+    }
+    return programs;
+  } catch (err: any) {
+    console.log(`[TC CarePlan] Error fetching CarePlans for patient ${patientId}: ${err.message}`);
+    return [];
+  }
+}
+
+export async function fetchCarePlansForPatientsBatch(
+  patientIds: string[],
+  onProgress?: (completed: number, total: number) => void
+): Promise<Map<string, string[]>> {
+  const results = new Map<string, string[]>();
+  const BATCH_SIZE = 8;
+
+  for (let i = 0; i < patientIds.length; i += BATCH_SIZE) {
+    const batch = patientIds.slice(i, i + BATCH_SIZE);
+    const promises = batch.map(async (pid) => {
+      const programs = await fetchCarePlansForPatient(pid);
+      results.set(pid, programs);
+    });
+    await Promise.all(promises);
+    onProgress?.(Math.min(i + BATCH_SIZE, patientIds.length), patientIds.length);
+    if (i + BATCH_SIZE < patientIds.length) {
+      await sleep(RATE_LIMIT_DELAY * 2);
+    }
+  }
+
+  return results;
+}
+
 export async function testConnection(): Promise<{ success: boolean; message: string }> {
   try {
     await getAccessToken();
