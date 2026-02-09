@@ -121,6 +121,95 @@ export async function runFullSync(month?: string, year?: number): Promise<SyncPr
   }
 }
 
+function generateMonthRange(totalMonths: number): Array<{ month: string; year: number }> {
+  const now = new Date();
+  const months: Array<{ month: string; year: number }> = [];
+  for (let i = 0; i < totalMonths; i++) {
+    const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+    months.push({ month: MONTHS[d.getMonth()], year: d.getFullYear() });
+  }
+  return months;
+}
+
+export async function runHistoricalSync(totalMonths: number = 24): Promise<SyncProgress> {
+  if (currentSync.status === "running") {
+    return currentSync;
+  }
+
+  const now = new Date();
+  const monthRange = generateMonthRange(totalMonths);
+
+  currentSync = {
+    status: "running",
+    step: "Starting",
+    progress: 0,
+    details: `Initializing historical sync (${totalMonths} months)...`,
+    startedAt: now,
+  };
+
+  const [logEntry] = await db.insert(tcSyncLog).values({
+    syncType: "historical",
+    status: "running",
+    details: `Historical sync: ${totalMonths} months`,
+  }).returning();
+
+  try {
+    updateProgress("Organizations", 2, "Fetching practices from ThoroughCare...");
+    const orgData = await syncOrganizations();
+
+    updateProgress("Patients", 5, "Building patient-to-practice mapping...");
+    const patientData = await buildPatientOrgMap(orgData.tcOrgIds);
+
+    updateProgress("Enrollments", 10, "Fetching enrollment data...");
+    const enrollmentData = await syncEnrollments(patientData);
+
+    updateProgress("CarePlans", 18, "Resolving program assignments for dual-enrolled patients...");
+    await resolveOverlapWithCarePlans(enrollmentData);
+
+    let totalTimeLogs = 0;
+    const monthProgressBase = 25;
+    const monthProgressRange = 70;
+
+    for (let i = 0; i < monthRange.length; i++) {
+      const { month, year } = monthRange[i];
+      const monthLabel = `${month} ${year}`;
+      const monthPct = monthProgressBase + Math.round((i / monthRange.length) * monthProgressRange);
+
+      updateProgress("Historical Sync", monthPct, `Month ${i + 1}/${monthRange.length}: Fetching time logs for ${monthLabel}...`);
+      const timeData = await syncTimeLogs(month, year);
+      totalTimeLogs += timeData.totalLogs;
+
+      updateProgress("Historical Sync", monthPct + Math.round(monthProgressRange / monthRange.length / 2), `Month ${i + 1}/${monthRange.length}: Building snapshots for ${monthLabel}...`);
+      await buildSnapshots(enrollmentData, timeData, month, year);
+    }
+
+    updateProgress("Complete", 100, `Historical sync completed: ${totalMonths} months, ${totalTimeLogs} total time logs`);
+    currentSync.status = "completed";
+    currentSync.completedAt = new Date();
+
+    await db.update(tcSyncLog).set({
+      status: "completed",
+      recordsProcessed: enrollmentData.totalEnrollments + totalTimeLogs,
+      details: `Historical sync: ${totalMonths} months, ${enrollmentData.totalEnrollments} enrollments, ${totalTimeLogs} time logs`,
+      completedAt: new Date(),
+    }).where(eq(tcSyncLog.id, logEntry.id));
+
+    return currentSync;
+  } catch (error: any) {
+    currentSync.status = "error";
+    currentSync.error = error.message;
+    console.error("[TC Historical Sync] Error:", error);
+
+    await db.update(tcSyncLog).set({
+      status: "error",
+      details: error.message,
+      completedAt: new Date(),
+    }).where(eq(tcSyncLog.id, logEntry.id));
+
+    return currentSync;
+  }
+}
+
 interface OrgSyncResult {
   tcOrgIds: number[];
   orgToDbMap: Map<number, number>;

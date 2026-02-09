@@ -336,6 +336,21 @@ export default function AdminDashboard() {
     }
   };
 
+  const handleHistoricalSync = async () => {
+    setSyncing(true);
+    setSyncStatus({ status: "running", step: "Starting", progress: 0, details: "Initiating 24-month historical sync..." });
+    try {
+      await adminFetch("/api/admin/tc/sync-historical", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ months: 24 }),
+      });
+    } catch (err) {
+      setSyncing(false);
+      setSyncStatus({ status: "error", step: "Error", progress: 0, details: "Failed to start historical sync" });
+    }
+  };
+
   const handleLogout = async () => {
     try {
       await adminFetch("/api/admin/logout", { method: "POST" });
@@ -442,7 +457,21 @@ export default function AdminDashboard() {
                 ) : (
                   <RefreshCw className="w-3.5 h-3.5" />
                 )}
-                {syncing ? "Syncing..." : "Sync ThoroughCare"}
+                {syncing ? "Syncing..." : "Sync Month"}
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleHistoricalSync}
+                disabled={syncing}
+                className="gap-1.5 text-xs"
+              >
+                {syncing ? (
+                  <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                ) : (
+                  <Activity className="w-3.5 h-3.5" />
+                )}
+                Sync 24 Months
               </Button>
               <div className="w-px h-5 bg-slate-200 mx-1" />
               <select

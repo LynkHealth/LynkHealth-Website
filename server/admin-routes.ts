@@ -4,7 +4,7 @@ import { adminLoginSchema } from "@shared/schema";
 import bcrypt from "bcryptjs";
 import crypto from "crypto";
 import { z } from "zod";
-import { runFullSync, getSyncStatus } from "./thoroughcare-sync";
+import { runFullSync, runHistoricalSync, getSyncStatus } from "./thoroughcare-sync";
 import { testConnection } from "./thoroughcare-client";
 
 declare global {
@@ -185,6 +185,19 @@ export async function registerAdminRoutes(app: Express) {
       });
     } catch (error) {
       res.status(500).json({ success: false, message: "Failed to start sync" });
+    }
+  });
+
+  app.post("/api/admin/tc/sync-historical", adminAuth, async (req, res) => {
+    try {
+      const { months } = req.body || {};
+      const totalMonths = Math.min(Math.max(months || 24, 1), 36);
+      res.json({ success: true, message: `Historical sync started (${totalMonths} months)` });
+      runHistoricalSync(totalMonths).catch((err) => {
+        console.error("[TC Historical Sync] Background sync error:", err);
+      });
+    } catch (error) {
+      res.status(500).json({ success: false, message: "Failed to start historical sync" });
     }
   });
 
