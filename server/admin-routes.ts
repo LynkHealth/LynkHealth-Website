@@ -181,6 +181,25 @@ export async function registerAdminRoutes(app: Express) {
     }
   });
 
+  app.get("/api/admin/tc/sample-enrollments", adminAuth, async (_req, res) => {
+    try {
+      const { fetchEnrollments } = await import("./thoroughcare-client");
+      const enrollments = await fetchEnrollments(undefined, { _count: "10" });
+      const samples = enrollments.slice(0, 10).map((e: any) => ({
+        id: e.id,
+        status: e.status,
+        type: e.type,
+        patient: e.patient,
+        period: e.period,
+        managingOrganization: e.managingOrganization,
+        allKeys: Object.keys(e),
+      }));
+      res.json({ success: true, samples });
+    } catch (error: any) {
+      res.status(500).json({ success: false, message: error.message });
+    }
+  });
+
 }
 
 export async function seedAdminUsers() {
