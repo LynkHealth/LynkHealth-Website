@@ -1,4 +1,4 @@
-import { users, contactInquiries, nightCoverageInquiries, woundCareReferrals, adminUsers, adminSessions, practices, programSnapshots, revenueSnapshots, type User, type InsertUser, type ContactInquiry, type InsertContactInquiry, type NightCoverageInquiry, type InsertNightCoverageInquiry, type WoundCareReferral, type InsertWoundCareReferral, type AdminUser, type InsertAdminUser, type AdminSession, type Practice, type InsertPractice, type ProgramSnapshot, type InsertProgramSnapshot, type RevenueSnapshot, type InsertRevenueSnapshot } from "@shared/schema";
+import { users, contactInquiries, nightCoverageInquiries, woundCareReferrals, adminUsers, adminSessions, practices, programSnapshots, revenueSnapshots, cptBillingCodes, type User, type InsertUser, type ContactInquiry, type InsertContactInquiry, type NightCoverageInquiry, type InsertNightCoverageInquiry, type WoundCareReferral, type InsertWoundCareReferral, type AdminUser, type InsertAdminUser, type AdminSession, type Practice, type InsertPractice, type ProgramSnapshot, type InsertProgramSnapshot, type RevenueSnapshot, type InsertRevenueSnapshot, type CptBillingCode, type InsertCptBillingCode } from "@shared/schema";
 import { db } from "./db";
 import { eq, and, desc } from "drizzle-orm";
 
@@ -23,6 +23,11 @@ export interface IStorage {
   createProgramSnapshot(snapshot: InsertProgramSnapshot): Promise<ProgramSnapshot>;
   getAggregatedSnapshots(month: string, year: number): Promise<ProgramSnapshot[]>;
   getRevenueSnapshots(month: string, year: number): Promise<RevenueSnapshot[]>;
+  getCptBillingCodes(effectiveYear?: number): Promise<CptBillingCode[]>;
+  getCptBillingCode(id: number): Promise<CptBillingCode | undefined>;
+  createCptBillingCode(code: InsertCptBillingCode): Promise<CptBillingCode>;
+  updateCptBillingCode(id: number, updates: Partial<InsertCptBillingCode>): Promise<CptBillingCode | undefined>;
+  deleteCptBillingCode(id: number): Promise<void>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -134,6 +139,36 @@ export class DatabaseStorage implements IStorage {
     return await db.select().from(revenueSnapshots)
       .where(and(eq(revenueSnapshots.month, month), eq(revenueSnapshots.year, year)))
       .orderBy(revenueSnapshots.programType);
+  }
+  async getCptBillingCodes(effectiveYear?: number): Promise<CptBillingCode[]> {
+    if (effectiveYear) {
+      return await db.select().from(cptBillingCodes)
+        .where(eq(cptBillingCodes.effectiveYear, effectiveYear))
+        .orderBy(cptBillingCodes.program, cptBillingCodes.code);
+    }
+    return await db.select().from(cptBillingCodes).orderBy(cptBillingCodes.program, cptBillingCodes.code);
+  }
+
+  async getCptBillingCode(id: number): Promise<CptBillingCode | undefined> {
+    const [code] = await db.select().from(cptBillingCodes).where(eq(cptBillingCodes.id, id));
+    return code || undefined;
+  }
+
+  async createCptBillingCode(insertCode: InsertCptBillingCode): Promise<CptBillingCode> {
+    const [code] = await db.insert(cptBillingCodes).values(insertCode).returning();
+    return code;
+  }
+
+  async updateCptBillingCode(id: number, updates: Partial<InsertCptBillingCode>): Promise<CptBillingCode | undefined> {
+    const [updated] = await db.update(cptBillingCodes)
+      .set({ ...updates, updatedAt: new Date() })
+      .where(eq(cptBillingCodes.id, id))
+      .returning();
+    return updated || undefined;
+  }
+
+  async deleteCptBillingCode(id: number): Promise<void> {
+    await db.delete(cptBillingCodes).where(eq(cptBillingCodes.id, id));
   }
 }
 

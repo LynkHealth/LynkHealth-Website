@@ -208,6 +208,28 @@ export const insertRevenueSnapshotSchema = createInsertSchema(revenueSnapshots).
 export type InsertRevenueSnapshot = z.infer<typeof insertRevenueSnapshotSchema>;
 export type RevenueSnapshot = typeof revenueSnapshots.$inferSelect;
 
+export const cptBillingCodes = pgTable("cpt_billing_codes", {
+  id: serial("id").primaryKey(),
+  code: text("code").notNull(),
+  description: text("description").notNull(),
+  program: text("program").notNull(),
+  rateCents: integer("rate_cents").notNull(),
+  effectiveYear: integer("effective_year").notNull(),
+  state: text("state").notNull().default("MS"),
+  isActive: integer("is_active").notNull().default(1),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+export const insertCptBillingCodeSchema = createInsertSchema(cptBillingCodes).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export type InsertCptBillingCode = z.infer<typeof insertCptBillingCodeSchema>;
+export type CptBillingCode = typeof cptBillingCodes.$inferSelect;
+
 export const adminLoginSchema = z.object({
   email: z.string().email(),
   password: z.string().min(6),

@@ -1,11 +1,13 @@
 import type { Express, Request, Response, NextFunction } from "express";
 import { storage } from "./storage";
-import { adminLoginSchema } from "@shared/schema";
+import { adminLoginSchema, cptBillingCodes } from "@shared/schema";
 import bcrypt from "bcryptjs";
 import crypto from "crypto";
 import { z } from "zod";
 import { runFullSync, runHistoricalSync, runRevenueSync, runHistoricalRevenueSync, getSyncStatus } from "./thoroughcare-sync";
 import { testConnection } from "./thoroughcare-client";
+import { db } from "./db";
+import { eq } from "drizzle-orm";
 
 declare global {
   namespace Express {
@@ -255,6 +257,124 @@ export async function registerAdminRoutes(app: Express) {
     }
   });
 
+  app.get("/api/admin/billing-codes", adminAuth, async (req, res) => {
+    try {
+      const year = req.query.year ? parseInt(req.query.year as string) : undefined;
+      const codes = await storage.getCptBillingCodes(year);
+      res.json({ success: true, codes });
+    } catch (error) {
+      res.status(500).json({ success: false, message: "Failed to load billing codes" });
+    }
+  });
+
+  app.post("/api/admin/billing-codes", adminAuth, async (req, res) => {
+    try {
+      const schema = z.object({
+        code: z.string().min(1),
+        description: z.string().min(1),
+        program: z.string().min(1),
+        rateCents: z.number().int().min(0),
+        effectiveYear: z.number().int().min(2020).max(2050),
+        state: z.string().default("MS"),
+        isActive: z.number().default(1),
+      });
+      const validated = schema.parse(req.body);
+      const billingCode = await storage.createCptBillingCode(validated);
+      res.json({ success: true, code: billingCode });
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ success: false, message: "Invalid billing code data", errors: error.errors });
+      }
+      res.status(500).json({ success: false, message: "Failed to create billing code" });
+    }
+  });
+
+  app.put("/api/admin/billing-codes/:id", adminAuth, async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const schema = z.object({
+        code: z.string().min(1).optional(),
+        description: z.string().min(1).optional(),
+        program: z.string().min(1).optional(),
+        rateCents: z.number().int().min(0).optional(),
+        effectiveYear: z.number().int().min(2020).max(2050).optional(),
+        state: z.string().optional(),
+        isActive: z.number().optional(),
+      });
+      const validated = schema.parse(req.body);
+      const updated = await storage.updateCptBillingCode(id, validated);
+      if (!updated) {
+        return res.status(404).json({ success: false, message: "Billing code not found" });
+      }
+      res.json({ success: true, code: updated });
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ success: false, message: "Invalid data", errors: error.errors });
+      }
+      res.status(500).json({ success: false, message: "Failed to update billing code" });
+    }
+  });
+
+  app.delete("/api/admin/billing-codes/:id", adminAuth, async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      await storage.deleteCptBillingCode(id);
+      res.json({ success: true });
+    } catch (error) {
+      res.status(500).json({ success: false, message: "Failed to delete billing code" });
+    }
+  });
+
+}
+
+export async function seedBillingCodes() {
+  const existing = await storage.getCptBillingCodes(2026);
+  if (existing.length > 0) {
+    console.log(`[Billing] 2026 billing codes already seeded (${existing.length} codes)`);
+    return;
+  }
+
+  const codes2026 = [
+    { code: "99490", description: "CCM - Initial 20 min clinical staff", program: "CCM", rateCents: 5824 },
+    { code: "99439", description: "CCM - Each additional 20 min clinical staff", program: "CCM", rateCents: 4415 },
+    { code: "99487", description: "CCM - Complex, initial 60 min clinical staff", program: "CCM", rateCents: 12550 },
+    { code: "99489", description: "CCM - Complex, each additional 30 min", program: "CCM", rateCents: 6807 },
+    { code: "99453", description: "RPM - Initial setup & patient education", program: "RPM", rateCents: 1768 },
+    { code: "99445", description: "RPM - Remote monitoring, initial 20 min", program: "RPM", rateCents: 4258 },
+    { code: "99454", description: "RPM - Device supply with daily recordings", program: "RPM", rateCents: 4258 },
+    { code: "99470", description: "RPM - Self-measured BP monitoring setup", program: "RPM", rateCents: 2260 },
+    { code: "99457", description: "RPM - Remote physiologic monitoring treatment, initial 20 min", program: "RPM", rateCents: 4488 },
+    { code: "99458", description: "RPM - Remote physiologic monitoring treatment, additional 20 min", program: "RPM", rateCents: 3641 },
+    { code: "99473", description: "RPM - Self-measured BP patient education/training", program: "RPM", rateCents: 1253 },
+    { code: "99474", description: "RPM - Separate self-measurement BP readings", program: "RPM", rateCents: 1578 },
+    { code: "99484", description: "BHI - Care management services, initial 20 min", program: "BHI", rateCents: 5086 },
+    { code: "99424", description: "PCM - Initial 30 min clinical staff", program: "PCM", rateCents: 7755 },
+    { code: "99425", description: "PCM - Each additional 30 min clinical staff", program: "PCM", rateCents: 5441 },
+    { code: "99426", description: "PCM - Initial 30 min physician/QHP", program: "PCM", rateCents: 5960 },
+    { code: "99427", description: "PCM - Each additional 30 min physician/QHP", program: "PCM", rateCents: 4720 },
+    { code: "98975", description: "RTM - Initial setup & patient education", program: "RTM", rateCents: 1768 },
+    { code: "98976", description: "RTM - Device supply with daily recordings (respiratory)", program: "RTM", rateCents: 4258 },
+    { code: "98977", description: "RTM - Device supply with daily recordings (musculoskeletal)", program: "RTM", rateCents: 4204 },
+    { code: "98980", description: "RTM - Treatment management, initial 20 min", program: "RTM", rateCents: 4687 },
+    { code: "98981", description: "RTM - Treatment management, additional 20 min", program: "RTM", rateCents: 3645 },
+    { code: "G0556", description: "APCM - Monthly care management, low complexity", program: "APCM", rateCents: 1441 },
+    { code: "G0557", description: "APCM - Monthly care management, moderate complexity", program: "APCM", rateCents: 4719 },
+    { code: "G0558", description: "APCM - Monthly care management, high complexity", program: "APCM", rateCents: 10280 },
+    { code: "G0438", description: "AWV - Initial annual wellness visit", program: "AWV", rateCents: 15343 },
+    { code: "G0439", description: "AWV - Subsequent annual wellness visit", program: "AWV", rateCents: 12080 },
+    { code: "99495", description: "TCM - Transitional care, moderate complexity (face-to-face within 14 days)", program: "TCM", rateCents: 19157 },
+    { code: "99496", description: "TCM - Transitional care, high complexity (face-to-face within 7 days)", program: "TCM", rateCents: 26003 },
+  ];
+
+  for (const c of codes2026) {
+    await storage.createCptBillingCode({
+      ...c,
+      effectiveYear: 2026,
+      state: "MS",
+      isActive: 1,
+    });
+  }
+  console.log(`[Billing] Seeded ${codes2026.length} billing codes for 2026`);
 }
 
 export async function seedAdminUsers() {

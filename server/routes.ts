@@ -5,7 +5,7 @@ import { insertContactInquirySchema, insertNightCoverageInquirySchema, insertWou
 import { z } from "zod";
 // @ts-ignore - No type definitions available for this package
 import mailchimp from "@mailchimp/mailchimp_marketing";
-import { registerAdminRoutes, seedAdminUsers } from "./admin-routes";
+import { registerAdminRoutes, seedAdminUsers, seedBillingCodes } from "./admin-routes";
 
 // Initialize Mailchimp
 mailchimp.setConfig({
@@ -174,6 +174,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   await registerAdminRoutes(app);
   await seedAdminUsers();
+  await seedBillingCodes();
 
   const httpServer = createServer(app);
   return httpServer;
