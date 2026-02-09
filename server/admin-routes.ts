@@ -4,7 +4,7 @@ import { adminLoginSchema } from "@shared/schema";
 import bcrypt from "bcryptjs";
 import crypto from "crypto";
 import { z } from "zod";
-import { runFullSync, runHistoricalSync, getSyncStatus } from "./thoroughcare-sync";
+import { runFullSync, runHistoricalSync, runRevenueSync, runHistoricalRevenueSync, getSyncStatus } from "./thoroughcare-sync";
 import { testConnection } from "./thoroughcare-client";
 
 declare global {
@@ -105,7 +105,8 @@ export async function registerAdminRoutes(app: Express) {
         departmentsByPractice[Number(key)].sort();
       }
 
-      res.json({ success: true, snapshots, practices: practicesList, departmentsByPractice, inquiries, month, year });
+      const revenueData = await storage.getRevenueSnapshots(month, year);
+      res.json({ success: true, snapshots, practices: practicesList, departmentsByPractice, inquiries, month, year, revenue: revenueData });
     } catch (error) {
       console.error("Dashboard error:", error);
       res.status(500).json({ success: false, message: "Failed to load dashboard" });
@@ -198,6 +199,31 @@ export async function registerAdminRoutes(app: Express) {
       });
     } catch (error) {
       res.status(500).json({ success: false, message: "Failed to start historical sync" });
+    }
+  });
+
+  app.post("/api/admin/tc/sync-revenue", adminAuth, async (req, res) => {
+    try {
+      const { month, year } = req.body || {};
+      res.json({ success: true, message: "Revenue sync started" });
+      runRevenueSync(month, year).catch((err) => {
+        console.error("[TC Revenue Sync] Background error:", err);
+      });
+    } catch (error) {
+      res.status(500).json({ success: false, message: "Failed to start revenue sync" });
+    }
+  });
+
+  app.post("/api/admin/tc/sync-revenue-historical", adminAuth, async (req, res) => {
+    try {
+      const { months } = req.body || {};
+      const totalMonths = Math.min(Math.max(months || 24, 1), 36);
+      res.json({ success: true, message: `Historical revenue sync started (${totalMonths} months)` });
+      runHistoricalRevenueSync(totalMonths).catch((err) => {
+        console.error("[TC Historical Revenue Sync] Background error:", err);
+      });
+    } catch (error) {
+      res.status(500).json({ success: false, message: "Failed to start historical revenue sync" });
     }
   });
 

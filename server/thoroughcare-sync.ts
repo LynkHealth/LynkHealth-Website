@@ -4,9 +4,10 @@ import {
   fetchTasksForPeriod,
   fetchPatientsForOrg,
   fetchCarePlansForPatientsBatch,
+  fetchClaimsForPeriod,
 } from "./thoroughcare-client";
 import { db } from "./db";
-import { practices, programSnapshots, tcSyncLog } from "@shared/schema";
+import { practices, programSnapshots, revenueSnapshots, tcSyncLog } from "@shared/schema";
 import { eq, and } from "drizzle-orm";
 
 const MONTHS = ["JAN", "FEB", "MAR", "APR", "MAY", "JUN", "JUL", "AUG", "SEP", "OCT", "NOV", "DEC"];
@@ -676,6 +677,287 @@ async function buildSnapshots(
   }
 
   updateProgress("Snapshots", 95, `Built per-practice and per-department program snapshots for ${month} ${year}`);
+}
+
+const CPT_RATES: Record<string, number> = {
+  "99490": 6200, "99439": 4700, "99491": 8300, "99487": 9300, "99489": 7500,
+  "99457": 5000, "99458": 4200, "99473": 1100, "99474": 6300,
+  "99453": 1900, "99454": 6400, "99091": 5600,
+  "99426": 7100, "99427": 5300,
+  "99484": 5100,
+  "99424": 8300, "99425": 7100,
+  "G0506": 7400, "G2064": 7100, "G2065": 5300,
+  "99497": 8600, "99498": 7500,
+  "G0438": 17200, "G0439": 11800,
+  "99483": 28200,
+};
+
+function programFromClaimCode(code: string): string | null {
+  const map: Record<string, string> = {
+    "CCM": "CCM", "Chronic Care Management": "CCM",
+    "PCM": "PCM", "Principal Care Management": "PCM",
+    "BHI": "BHI", "Behavioral Health Integration": "BHI",
+    "RPM": "RPM", "Remote Patient Monitoring": "RPM",
+    "RTM": "RTM", "Remote Therapeutic Monitoring": "RTM",
+    "APCM": "APCM", "Advanced Primary Care Management": "APCM",
+    "CCCM": "CCCM", "Complex Chronic Care Management": "CCCM",
+    "CCO": "CCO", "Chronic Care Optimization": "CCO",
+    "AWV": "AWV", "Annual Wellness Visit": "AWV",
+  };
+  return map[code] || null;
+}
+
+async function syncClaimsForMonth(
+  month: string,
+  year: number,
+  patientData: PatientData
+): Promise<{ totalClaims: number; totalRevenueCents: number }> {
+  const monthIdx = MONTHS.indexOf(month);
+  const startDate = new Date(year, monthIdx, 1);
+  const endDate = new Date(year, monthIdx + 1, 1);
+  const startStr = startDate.toISOString().split("T")[0];
+  const endStr = endDate.toISOString().split("T")[0];
+
+  let claims: any[];
+  try {
+    claims = await fetchClaimsForPeriod(startStr, endStr, (page, total) => {
+      updateProgress("Claims", 0, `Fetching claims page ${page}/${total} for ${month} ${year}...`);
+    });
+  } catch (error) {
+    console.error(`[TC Sync] Error fetching claims for ${month} ${year}:`, error);
+    claims = [];
+  }
+
+  if (claims.length === 0) {
+    await db.delete(revenueSnapshots)
+      .where(and(eq(revenueSnapshots.month, month), eq(revenueSnapshots.year, year)));
+    return { totalClaims: 0, totalRevenueCents: 0 };
+  }
+
+  const { orgMap, deptMap } = patientData;
+
+  const allPractices = await db.select().from(practices);
+  const tcIdToDbId = new Map<number, number>();
+  for (const p of allPractices) {
+    if (p.thoroughcareId) tcIdToDbId.set(p.thoroughcareId, p.id);
+  }
+
+  const revenueByKey = new Map<string, { practiceId: number; department: string | null; programType: string; revenue: number; count: number }>();
+
+  let totalRevenueCents = 0;
+
+  for (const claim of claims) {
+    const patientRef = claim.patient?.reference;
+    if (!patientRef) continue;
+
+    const patientId = patientRef.replace("Patient/", "");
+    const tcOrgId = orgMap.get(patientId) || 0;
+    const dept = deptMap.get(patientId) || null;
+
+    let dbPracticeId: number | undefined;
+    if (tcOrgId === 0) {
+      dbPracticeId = allPractices[0]?.id;
+    } else {
+      dbPracticeId = tcIdToDbId.get(tcOrgId);
+    }
+    if (!dbPracticeId) continue;
+
+    let programType: string | null = null;
+    if (claim.item?.[0]?.productOrService?.coding?.[0]?.code) {
+      programType = programFromClaimCode(claim.item[0].productOrService.coding[0].code);
+    }
+    if (!programType && claim.supportingInfo?.[0]?.valueString) {
+      const info = claim.supportingInfo[0].valueString;
+      for (const prog of ALL_PROGRAM_TYPES) {
+        if (info.toUpperCase().includes(prog)) {
+          programType = prog;
+          break;
+        }
+      }
+    }
+    if (!programType) programType = "OTHER";
+
+    let claimRevenue = 0;
+    if (claim.procedure) {
+      for (const proc of claim.procedure) {
+        const cptCode = proc.concept?.coding?.[0]?.code;
+        const multiplier = proc.concept?.coding?.[0]?.multiplier || 1;
+        if (cptCode && CPT_RATES[cptCode]) {
+          claimRevenue += CPT_RATES[cptCode] * multiplier;
+        }
+      }
+    }
+
+    totalRevenueCents += claimRevenue;
+
+    const orgKey = `${dbPracticeId}|null|${programType}`;
+    if (!revenueByKey.has(orgKey)) {
+      revenueByKey.set(orgKey, { practiceId: dbPracticeId, department: null, programType, revenue: 0, count: 0 });
+    }
+    const orgEntry = revenueByKey.get(orgKey)!;
+    orgEntry.revenue += claimRevenue;
+    orgEntry.count++;
+
+    if (dept) {
+      const deptKey = `${dbPracticeId}|${dept}|${programType}`;
+      if (!revenueByKey.has(deptKey)) {
+        revenueByKey.set(deptKey, { practiceId: dbPracticeId, department: dept, programType, revenue: 0, count: 0 });
+      }
+      const deptEntry = revenueByKey.get(deptKey)!;
+      deptEntry.revenue += claimRevenue;
+      deptEntry.count++;
+    }
+  }
+
+  await db.delete(revenueSnapshots)
+    .where(and(eq(revenueSnapshots.month, month), eq(revenueSnapshots.year, year)));
+
+  for (const entry of Array.from(revenueByKey.values())) {
+    await db.insert(revenueSnapshots).values({
+      practiceId: entry.practiceId,
+      department: entry.department,
+      programType: entry.programType,
+      month,
+      year,
+      claimCount: entry.count,
+      totalRevenue: entry.revenue,
+      source: "thoroughcare",
+      syncedAt: new Date(),
+    });
+  }
+
+  return { totalClaims: claims.length, totalRevenueCents };
+}
+
+export async function runRevenueSync(month?: string, year?: number): Promise<SyncProgress> {
+  if (currentSync.status === "running") {
+    return currentSync;
+  }
+
+  const now = new Date();
+  const targetMonth = month || MONTHS[now.getMonth()];
+  const targetYear = year || now.getFullYear();
+
+  currentSync = {
+    status: "running",
+    step: "Starting",
+    progress: 0,
+    details: "Initializing revenue sync...",
+    startedAt: now,
+  };
+
+  const [logEntry] = await db.insert(tcSyncLog).values({
+    syncType: "revenue",
+    status: "running",
+    details: `Revenue sync for ${targetMonth} ${targetYear}`,
+  }).returning();
+
+  try {
+    updateProgress("Organizations", 5, "Fetching practices...");
+    const orgData = await syncOrganizations();
+
+    updateProgress("Patients", 15, "Building patient-to-practice mapping...");
+    const patientData = await buildPatientOrgMap(orgData.tcOrgIds);
+
+    updateProgress("Claims", 30, `Fetching claims for ${targetMonth} ${targetYear}...`);
+    const result = await syncClaimsForMonth(targetMonth, targetYear, patientData);
+
+    const revDollars = (result.totalRevenueCents / 100).toLocaleString("en-US", { style: "currency", currency: "USD" });
+    updateProgress("Complete", 100, `Revenue sync completed: ${result.totalClaims} claims, ${revDollars} total`);
+    currentSync.status = "completed";
+    currentSync.completedAt = new Date();
+
+    await db.update(tcSyncLog).set({
+      status: "completed",
+      recordsProcessed: result.totalClaims,
+      details: `Revenue sync: ${result.totalClaims} claims, ${revDollars} for ${targetMonth} ${targetYear}`,
+      completedAt: new Date(),
+    }).where(eq(tcSyncLog.id, logEntry.id));
+
+    return currentSync;
+  } catch (error: any) {
+    currentSync.status = "error";
+    currentSync.error = error.message;
+    console.error("[TC Revenue Sync] Error:", error);
+
+    await db.update(tcSyncLog).set({
+      status: "error",
+      details: error.message,
+      completedAt: new Date(),
+    }).where(eq(tcSyncLog.id, logEntry.id));
+
+    return currentSync;
+  }
+}
+
+export async function runHistoricalRevenueSync(totalMonths: number = 24): Promise<SyncProgress> {
+  if (currentSync.status === "running") {
+    return currentSync;
+  }
+
+  const now = new Date();
+  const monthRange = generateMonthRange(totalMonths);
+
+  currentSync = {
+    status: "running",
+    step: "Starting",
+    progress: 0,
+    details: `Initializing historical revenue sync (${totalMonths} months)...`,
+    startedAt: now,
+  };
+
+  const [logEntry] = await db.insert(tcSyncLog).values({
+    syncType: "historical_revenue",
+    status: "running",
+    details: `Historical revenue sync: ${totalMonths} months`,
+  }).returning();
+
+  try {
+    updateProgress("Organizations", 3, "Fetching practices...");
+    const orgData = await syncOrganizations();
+
+    updateProgress("Patients", 8, "Building patient-to-practice mapping...");
+    const patientData = await buildPatientOrgMap(orgData.tcOrgIds);
+
+    let totalClaims = 0;
+    let totalRevenueCents = 0;
+
+    for (let i = 0; i < monthRange.length; i++) {
+      const { month, year } = monthRange[i];
+      const pct = 15 + Math.round((i / monthRange.length) * 80);
+      updateProgress("Historical Revenue", pct, `Month ${i + 1}/${monthRange.length}: Fetching claims for ${month} ${year}...`);
+
+      const result = await syncClaimsForMonth(month, year, patientData);
+      totalClaims += result.totalClaims;
+      totalRevenueCents += result.totalRevenueCents;
+    }
+
+    const revDollars = (totalRevenueCents / 100).toLocaleString("en-US", { style: "currency", currency: "USD" });
+    updateProgress("Complete", 100, `Historical revenue sync: ${totalMonths} months, ${totalClaims} claims, ${revDollars}`);
+    currentSync.status = "completed";
+    currentSync.completedAt = new Date();
+
+    await db.update(tcSyncLog).set({
+      status: "completed",
+      recordsProcessed: totalClaims,
+      details: `Historical revenue: ${totalMonths} months, ${totalClaims} claims, ${revDollars}`,
+      completedAt: new Date(),
+    }).where(eq(tcSyncLog.id, logEntry.id));
+
+    return currentSync;
+  } catch (error: any) {
+    currentSync.status = "error";
+    currentSync.error = error.message;
+    console.error("[TC Historical Revenue Sync] Error:", error);
+
+    await db.update(tcSyncLog).set({
+      status: "error",
+      details: error.message,
+      completedAt: new Date(),
+    }).where(eq(tcSyncLog.id, logEntry.id));
+
+    return currentSync;
+  }
 }
 
 function categorizeMinutes(programType: string, minutesList: number[]): Record<string, number> {

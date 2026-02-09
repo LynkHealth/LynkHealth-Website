@@ -26,7 +26,8 @@ import {
   Shield,
   Zap,
 } from "lucide-react";
-import type { ProgramSnapshot, Practice, ContactInquiry } from "@shared/schema";
+import type { ProgramSnapshot, Practice, ContactInquiry, RevenueSnapshot } from "@shared/schema";
+import { DollarSign, TrendingUp } from "lucide-react";
 
 const MONTHS = ["JAN", "FEB", "MAR", "APR", "MAY", "JUN", "JUL", "AUG", "SEP", "OCT", "NOV", "DEC"];
 const MONTH_NAMES: Record<string, string> = {
@@ -244,6 +245,7 @@ export default function AdminDashboard() {
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
   const [activeTab, setActiveTab] = useState("dashboard");
   const [snapshots, setSnapshots] = useState<ProgramSnapshot[]>([]);
+  const [revenue, setRevenue] = useState<RevenueSnapshot[]>([]);
   const [practices, setPractices] = useState<Practice[]>([]);
   const [inquiries, setInquiries] = useState<{
     contactInquiries: ContactInquiry[];
@@ -310,6 +312,7 @@ export default function AdminDashboard() {
         setSnapshots(dashData.snapshots);
         setPractices(dashData.practices);
         setDepartmentsByPractice(dashData.departmentsByPractice || {});
+        setRevenue(dashData.revenue || []);
       }
       if (inquiryData.success) {
         setInquiries(inquiryData);
@@ -348,6 +351,36 @@ export default function AdminDashboard() {
     } catch (err) {
       setSyncing(false);
       setSyncStatus({ status: "error", step: "Error", progress: 0, details: "Failed to start historical sync" });
+    }
+  };
+
+  const handleRevenueSync = async () => {
+    setSyncing(true);
+    setSyncStatus({ status: "running", step: "Starting", progress: 0, details: "Initiating revenue sync..." });
+    try {
+      await adminFetch("/api/admin/tc/sync-revenue", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ month: currentMonth, year: currentYear }),
+      });
+    } catch (err) {
+      setSyncing(false);
+      setSyncStatus({ status: "error", step: "Error", progress: 0, details: "Failed to start revenue sync" });
+    }
+  };
+
+  const handleHistoricalRevenueSync = async () => {
+    setSyncing(true);
+    setSyncStatus({ status: "running", step: "Starting", progress: 0, details: "Initiating 24-month revenue sync..." });
+    try {
+      await adminFetch("/api/admin/tc/sync-revenue-historical", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ months: 24 }),
+      });
+    } catch (err) {
+      setSyncing(false);
+      setSyncStatus({ status: "error", step: "Error", progress: 0, details: "Failed to start historical revenue sync" });
     }
   };
 
@@ -472,6 +505,35 @@ export default function AdminDashboard() {
                   <Activity className="w-3.5 h-3.5" />
                 )}
                 Sync 24 Months
+              </Button>
+              <div className="w-px h-5 bg-slate-200 mx-1" />
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleRevenueSync}
+                disabled={syncing}
+                className="gap-1.5 text-xs text-green-700 border-green-200 hover:bg-green-50"
+              >
+                {syncing ? (
+                  <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                ) : (
+                  <DollarSign className="w-3.5 h-3.5" />
+                )}
+                Sync Revenue
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleHistoricalRevenueSync}
+                disabled={syncing}
+                className="gap-1.5 text-xs text-green-700 border-green-200 hover:bg-green-50"
+              >
+                {syncing ? (
+                  <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                ) : (
+                  <TrendingUp className="w-3.5 h-3.5" />
+                )}
+                Revenue 24 Mo
               </Button>
               <div className="w-px h-5 bg-slate-200 mx-1" />
               <select
@@ -608,6 +670,73 @@ export default function AdminDashboard() {
                             </CardContent>
                           </Card>
                         </div>
+
+                        {(() => {
+                          let filteredRevenue: RevenueSnapshot[];
+                          if (selectedPracticeId === "all") {
+                            filteredRevenue = revenue.filter((r) => !r.department);
+                          } else if (selectedDepartment === "all") {
+                            filteredRevenue = revenue.filter((r) => r.practiceId === selectedPracticeId && !r.department);
+                          } else {
+                            filteredRevenue = revenue.filter((r) => r.practiceId === selectedPracticeId && r.department === selectedDepartment);
+                          }
+                          const totalRev = filteredRevenue.reduce((sum, r) => sum + (r.totalRevenue || 0), 0);
+                          const totalClaims = filteredRevenue.reduce((sum, r) => sum + (r.claimCount || 0), 0);
+
+                          if (totalRev > 0 || totalClaims > 0) {
+                            const programRevenue = filteredRevenue
+                              .filter(r => (r.totalRevenue || 0) > 0)
+                              .sort((a, b) => (b.totalRevenue || 0) - (a.totalRevenue || 0));
+
+                            return (
+                              <Card className="mb-4 border-green-200">
+                                <CardHeader className="py-3 px-4 bg-green-50 rounded-t-lg">
+                                  <div className="flex items-center justify-between">
+                                    <div className="flex items-center gap-2">
+                                      <DollarSign className="w-5 h-5 text-green-600" />
+                                      <CardTitle className="text-base font-semibold text-green-800">Monthly Revenue</CardTitle>
+                                    </div>
+                                    <div className="text-right">
+                                      <p className="text-2xl font-bold text-green-700">
+                                        ${(totalRev / 100).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                                      </p>
+                                      <p className="text-xs text-green-600">{totalClaims.toLocaleString()} claims submitted</p>
+                                    </div>
+                                  </div>
+                                </CardHeader>
+                                <CardContent className="px-4 pb-4">
+                                  <div className="overflow-x-auto">
+                                    <table className="w-full">
+                                      <thead>
+                                        <tr className="border-b border-slate-200">
+                                          <th className="px-3 py-2 text-xs font-medium text-slate-500 text-left">Program</th>
+                                          <th className="px-3 py-2 text-xs font-medium text-slate-500 text-right">Claims</th>
+                                          <th className="px-3 py-2 text-xs font-medium text-slate-500 text-right">Revenue</th>
+                                          <th className="px-3 py-2 text-xs font-medium text-slate-500 text-right">Avg/Claim</th>
+                                        </tr>
+                                      </thead>
+                                      <tbody>
+                                        {programRevenue.map((r) => (
+                                          <tr key={`${r.practiceId}-${r.department}-${r.programType}`} className="border-b border-slate-100">
+                                            <td className="px-3 py-2 text-sm font-medium text-slate-700">{r.programType}</td>
+                                            <td className="px-3 py-2 text-sm text-right text-slate-600">{(r.claimCount || 0).toLocaleString()}</td>
+                                            <td className="px-3 py-2 text-sm text-right font-semibold text-green-700">
+                                              ${((r.totalRevenue || 0) / 100).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                                            </td>
+                                            <td className="px-3 py-2 text-sm text-right text-slate-500">
+                                              ${(r.claimCount ? ((r.totalRevenue || 0) / r.claimCount / 100) : 0).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                                            </td>
+                                          </tr>
+                                        ))}
+                                      </tbody>
+                                    </table>
+                                  </div>
+                                </CardContent>
+                              </Card>
+                            );
+                          }
+                          return null;
+                        })()}
 
                         <ProgramCard title="Chronic Care Management" icon={Heart} programType="CCM" snapshots={filtered} color="text-red-500" />
                         <ProgramCard title="Principal Care Management" icon={ClipboardCheck} programType="PCM" snapshots={filtered} color="text-blue-500" />

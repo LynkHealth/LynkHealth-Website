@@ -186,6 +186,28 @@ export const insertProgramSnapshotSchema = createInsertSchema(programSnapshots).
 export type InsertProgramSnapshot = z.infer<typeof insertProgramSnapshotSchema>;
 export type ProgramSnapshot = typeof programSnapshots.$inferSelect;
 
+export const revenueSnapshots = pgTable("revenue_snapshots", {
+  id: serial("id").primaryKey(),
+  practiceId: integer("practice_id").notNull(),
+  department: text("department"),
+  programType: text("program_type").notNull(),
+  month: text("month").notNull(),
+  year: integer("year").notNull(),
+  claimCount: integer("claim_count").default(0),
+  totalRevenue: integer("total_revenue").default(0),
+  source: text("source").default("thoroughcare"),
+  syncedAt: timestamp("synced_at"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+export const insertRevenueSnapshotSchema = createInsertSchema(revenueSnapshots).omit({
+  id: true,
+  createdAt: true,
+});
+
+export type InsertRevenueSnapshot = z.infer<typeof insertRevenueSnapshotSchema>;
+export type RevenueSnapshot = typeof revenueSnapshots.$inferSelect;
+
 export const adminLoginSchema = z.object({
   email: z.string().email(),
   password: z.string().min(6),

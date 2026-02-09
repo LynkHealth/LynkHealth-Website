@@ -1,4 +1,4 @@
-import { users, contactInquiries, nightCoverageInquiries, woundCareReferrals, adminUsers, adminSessions, practices, programSnapshots, type User, type InsertUser, type ContactInquiry, type InsertContactInquiry, type NightCoverageInquiry, type InsertNightCoverageInquiry, type WoundCareReferral, type InsertWoundCareReferral, type AdminUser, type InsertAdminUser, type AdminSession, type Practice, type InsertPractice, type ProgramSnapshot, type InsertProgramSnapshot } from "@shared/schema";
+import { users, contactInquiries, nightCoverageInquiries, woundCareReferrals, adminUsers, adminSessions, practices, programSnapshots, revenueSnapshots, type User, type InsertUser, type ContactInquiry, type InsertContactInquiry, type NightCoverageInquiry, type InsertNightCoverageInquiry, type WoundCareReferral, type InsertWoundCareReferral, type AdminUser, type InsertAdminUser, type AdminSession, type Practice, type InsertPractice, type ProgramSnapshot, type InsertProgramSnapshot, type RevenueSnapshot, type InsertRevenueSnapshot } from "@shared/schema";
 import { db } from "./db";
 import { eq, and, desc } from "drizzle-orm";
 
@@ -22,6 +22,7 @@ export interface IStorage {
   getProgramSnapshots(practiceId?: number, programType?: string, month?: string, year?: number): Promise<ProgramSnapshot[]>;
   createProgramSnapshot(snapshot: InsertProgramSnapshot): Promise<ProgramSnapshot>;
   getAggregatedSnapshots(month: string, year: number): Promise<ProgramSnapshot[]>;
+  getRevenueSnapshots(month: string, year: number): Promise<RevenueSnapshot[]>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -127,6 +128,12 @@ export class DatabaseStorage implements IStorage {
     return await db.select().from(programSnapshots)
       .where(and(eq(programSnapshots.month, month), eq(programSnapshots.year, year)))
       .orderBy(programSnapshots.programType);
+  }
+
+  async getRevenueSnapshots(month: string, year: number): Promise<RevenueSnapshot[]> {
+    return await db.select().from(revenueSnapshots)
+      .where(and(eq(revenueSnapshots.month, month), eq(revenueSnapshots.year, year)))
+      .orderBy(revenueSnapshots.programType);
   }
 }
 
