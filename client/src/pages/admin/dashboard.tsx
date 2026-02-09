@@ -684,9 +684,20 @@ export default function AdminDashboard() {
                           const totalClaims = filteredRevenue.reduce((sum, r) => sum + (r.claimCount || 0), 0);
 
                           if (totalRev > 0 || totalClaims > 0) {
-                            const programRevenue = filteredRevenue
-                              .filter(r => (r.totalRevenue || 0) > 0)
-                              .sort((a, b) => (b.totalRevenue || 0) - (a.totalRevenue || 0));
+                            const aggregated = new Map<string, { programType: string; claimCount: number; totalRevenue: number }>();
+                            filteredRevenue.forEach((r) => {
+                              const key = r.programType || "Unknown";
+                              const existing = aggregated.get(key);
+                              if (existing) {
+                                existing.claimCount += r.claimCount || 0;
+                                existing.totalRevenue += r.totalRevenue || 0;
+                              } else {
+                                aggregated.set(key, { programType: key, claimCount: r.claimCount || 0, totalRevenue: r.totalRevenue || 0 });
+                              }
+                            });
+                            const programRevenue = Array.from(aggregated.values())
+                              .filter(r => r.totalRevenue > 0)
+                              .sort((a, b) => b.totalRevenue - a.totalRevenue);
 
                             return (
                               <Card className="mb-4 border-green-200">
@@ -717,14 +728,14 @@ export default function AdminDashboard() {
                                       </thead>
                                       <tbody>
                                         {programRevenue.map((r) => (
-                                          <tr key={`${r.practiceId}-${r.department}-${r.programType}`} className="border-b border-slate-100">
+                                          <tr key={r.programType} className="border-b border-slate-100">
                                             <td className="px-3 py-2 text-sm font-medium text-slate-700">{r.programType}</td>
-                                            <td className="px-3 py-2 text-sm text-right text-slate-600">{(r.claimCount || 0).toLocaleString()}</td>
+                                            <td className="px-3 py-2 text-sm text-right text-slate-600">{r.claimCount.toLocaleString()}</td>
                                             <td className="px-3 py-2 text-sm text-right font-semibold text-green-700">
-                                              ${((r.totalRevenue || 0) / 100).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                                              ${(r.totalRevenue / 100).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                                             </td>
                                             <td className="px-3 py-2 text-sm text-right text-slate-500">
-                                              ${(r.claimCount ? ((r.totalRevenue || 0) / r.claimCount / 100) : 0).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                                              ${(r.claimCount ? (r.totalRevenue / r.claimCount / 100) : 0).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                                             </td>
                                           </tr>
                                         ))}

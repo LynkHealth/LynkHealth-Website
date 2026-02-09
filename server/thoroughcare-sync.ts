@@ -5,6 +5,7 @@ import {
   fetchPatientsForOrg,
   fetchCarePlansForPatientsBatch,
   fetchClaimsForPeriod,
+  fetchAllClaims,
 } from "./thoroughcare-client";
 import { db } from "./db";
 import { practices, programSnapshots, revenueSnapshots, tcSyncLog } from "@shared/schema";
@@ -692,6 +693,14 @@ const CPT_RATES: Record<string, number> = {
   "99483": 28200,
 };
 
+function getClaimServiceMonth(claim: any): { month: string; year: number } | null {
+  const dateStr = claim.billablePeriod?.start || claim.item?.[0]?.servicedDate || claim.created;
+  if (!dateStr) return null;
+  const d = new Date(dateStr);
+  if (isNaN(d.getTime())) return null;
+  return { month: MONTHS[d.getMonth()], year: d.getFullYear() };
+}
+
 function programFromClaimCode(code: string): string | null {
   const map: Record<string, string> = {
     "CCM": "CCM", "Chronic Care Management": "CCM",
@@ -705,6 +714,80 @@ function programFromClaimCode(code: string): string | null {
     "AWV": "AWV", "Annual Wellness Visit": "AWV",
   };
   return map[code] || null;
+}
+
+function processClaimData(
+  claim: any,
+  orgMap: Map<string, number>,
+  deptMap: Map<string, string>,
+  tcIdToDbId: Map<number, number>,
+  allPractices: any[]
+): { practiceId: number; department: string | null; programType: string; revenue: number } | null {
+  const patientRef = claim.patient?.reference;
+  if (!patientRef) return null;
+
+  const patientId = patientRef.replace("Patient/", "");
+  const tcOrgId = orgMap.get(patientId) || 0;
+  const dept = deptMap.get(patientId) || null;
+
+  let dbPracticeId: number | undefined;
+  if (tcOrgId === 0) {
+    dbPracticeId = allPractices[0]?.id;
+  } else {
+    dbPracticeId = tcIdToDbId.get(tcOrgId);
+  }
+  if (!dbPracticeId) return null;
+
+  let programType: string | null = null;
+  if (claim.item?.[0]?.productOrService?.coding?.[0]?.code) {
+    programType = programFromClaimCode(claim.item[0].productOrService.coding[0].code);
+  }
+  if (!programType && claim.supportingInfo?.[0]?.valueString) {
+    const info = claim.supportingInfo[0].valueString;
+    for (const prog of ALL_PROGRAM_TYPES) {
+      if (info.toUpperCase().includes(prog)) {
+        programType = prog;
+        break;
+      }
+    }
+  }
+  if (!programType) programType = "OTHER";
+
+  let claimRevenue = 0;
+  if (claim.procedure) {
+    for (const proc of claim.procedure) {
+      const cptCode = proc.concept?.coding?.[0]?.code;
+      const multiplier = proc.concept?.coding?.[0]?.multiplier || 1;
+      if (cptCode && CPT_RATES[cptCode]) {
+        claimRevenue += CPT_RATES[cptCode] * multiplier;
+      }
+    }
+  }
+
+  return { practiceId: dbPracticeId, department: dept, programType, revenue: claimRevenue };
+}
+
+async function storeRevenueForMonth(
+  month: string,
+  year: number,
+  revenueByKey: Map<string, { practiceId: number; department: string | null; programType: string; revenue: number; count: number }>
+) {
+  await db.delete(revenueSnapshots)
+    .where(and(eq(revenueSnapshots.month, month), eq(revenueSnapshots.year, year)));
+
+  for (const entry of Array.from(revenueByKey.values())) {
+    await db.insert(revenueSnapshots).values({
+      practiceId: entry.practiceId,
+      department: entry.department,
+      programType: entry.programType,
+      month,
+      year,
+      claimCount: entry.count,
+      totalRevenue: entry.revenue,
+      source: "thoroughcare",
+      syncedAt: new Date(),
+    });
+  }
 }
 
 async function syncClaimsForMonth(
@@ -728,14 +811,20 @@ async function syncClaimsForMonth(
     claims = [];
   }
 
-  if (claims.length === 0) {
+  const filteredClaims = claims.filter((claim) => {
+    const svcMonth = getClaimServiceMonth(claim);
+    return svcMonth && svcMonth.month === month && svcMonth.year === year;
+  });
+
+  console.log(`[TC Sync] Claims fetched: ${claims.length} by _lastUpdated, ${filteredClaims.length} with service date in ${month} ${year}`);
+
+  if (filteredClaims.length === 0) {
     await db.delete(revenueSnapshots)
       .where(and(eq(revenueSnapshots.month, month), eq(revenueSnapshots.year, year)));
     return { totalClaims: 0, totalRevenueCents: 0 };
   }
 
   const { orgMap, deptMap } = patientData;
-
   const allPractices = await db.select().from(practices);
   const tcIdToDbId = new Map<number, number>();
   for (const p of allPractices) {
@@ -743,90 +832,35 @@ async function syncClaimsForMonth(
   }
 
   const revenueByKey = new Map<string, { practiceId: number; department: string | null; programType: string; revenue: number; count: number }>();
-
   let totalRevenueCents = 0;
 
-  for (const claim of claims) {
-    const patientRef = claim.patient?.reference;
-    if (!patientRef) continue;
+  for (const claim of filteredClaims) {
+    const result = processClaimData(claim, orgMap, deptMap, tcIdToDbId, allPractices);
+    if (!result) continue;
 
-    const patientId = patientRef.replace("Patient/", "");
-    const tcOrgId = orgMap.get(patientId) || 0;
-    const dept = deptMap.get(patientId) || null;
+    totalRevenueCents += result.revenue;
 
-    let dbPracticeId: number | undefined;
-    if (tcOrgId === 0) {
-      dbPracticeId = allPractices[0]?.id;
-    } else {
-      dbPracticeId = tcIdToDbId.get(tcOrgId);
-    }
-    if (!dbPracticeId) continue;
-
-    let programType: string | null = null;
-    if (claim.item?.[0]?.productOrService?.coding?.[0]?.code) {
-      programType = programFromClaimCode(claim.item[0].productOrService.coding[0].code);
-    }
-    if (!programType && claim.supportingInfo?.[0]?.valueString) {
-      const info = claim.supportingInfo[0].valueString;
-      for (const prog of ALL_PROGRAM_TYPES) {
-        if (info.toUpperCase().includes(prog)) {
-          programType = prog;
-          break;
-        }
-      }
-    }
-    if (!programType) programType = "OTHER";
-
-    let claimRevenue = 0;
-    if (claim.procedure) {
-      for (const proc of claim.procedure) {
-        const cptCode = proc.concept?.coding?.[0]?.code;
-        const multiplier = proc.concept?.coding?.[0]?.multiplier || 1;
-        if (cptCode && CPT_RATES[cptCode]) {
-          claimRevenue += CPT_RATES[cptCode] * multiplier;
-        }
-      }
-    }
-
-    totalRevenueCents += claimRevenue;
-
-    const orgKey = `${dbPracticeId}|null|${programType}`;
+    const orgKey = `${result.practiceId}|null|${result.programType}`;
     if (!revenueByKey.has(orgKey)) {
-      revenueByKey.set(orgKey, { practiceId: dbPracticeId, department: null, programType, revenue: 0, count: 0 });
+      revenueByKey.set(orgKey, { practiceId: result.practiceId, department: null, programType: result.programType, revenue: 0, count: 0 });
     }
     const orgEntry = revenueByKey.get(orgKey)!;
-    orgEntry.revenue += claimRevenue;
+    orgEntry.revenue += result.revenue;
     orgEntry.count++;
 
-    if (dept) {
-      const deptKey = `${dbPracticeId}|${dept}|${programType}`;
+    if (result.department) {
+      const deptKey = `${result.practiceId}|${result.department}|${result.programType}`;
       if (!revenueByKey.has(deptKey)) {
-        revenueByKey.set(deptKey, { practiceId: dbPracticeId, department: dept, programType, revenue: 0, count: 0 });
+        revenueByKey.set(deptKey, { practiceId: result.practiceId, department: result.department, programType: result.programType, revenue: 0, count: 0 });
       }
       const deptEntry = revenueByKey.get(deptKey)!;
-      deptEntry.revenue += claimRevenue;
+      deptEntry.revenue += result.revenue;
       deptEntry.count++;
     }
   }
 
-  await db.delete(revenueSnapshots)
-    .where(and(eq(revenueSnapshots.month, month), eq(revenueSnapshots.year, year)));
-
-  for (const entry of Array.from(revenueByKey.values())) {
-    await db.insert(revenueSnapshots).values({
-      practiceId: entry.practiceId,
-      department: entry.department,
-      programType: entry.programType,
-      month,
-      year,
-      claimCount: entry.count,
-      totalRevenue: entry.revenue,
-      source: "thoroughcare",
-      syncedAt: new Date(),
-    });
-  }
-
-  return { totalClaims: claims.length, totalRevenueCents };
+  await storeRevenueForMonth(month, year, revenueByKey);
+  return { totalClaims: filteredClaims.length, totalRevenueCents };
 }
 
 export async function runRevenueSync(month?: string, year?: number): Promise<SyncProgress> {
@@ -897,6 +931,7 @@ export async function runHistoricalRevenueSync(totalMonths: number = 24): Promis
 
   const now = new Date();
   const monthRange = generateMonthRange(totalMonths);
+  const validMonths = new Set(monthRange.map(m => `${m.month}-${m.year}`));
 
   currentSync = {
     status: "running",
@@ -918,18 +953,82 @@ export async function runHistoricalRevenueSync(totalMonths: number = 24): Promis
 
     updateProgress("Patients", 8, "Building patient-to-practice mapping...");
     const patientData = await buildPatientOrgMap(orgData.tcOrgIds);
+    const { orgMap, deptMap } = patientData;
+
+    const allPractices = await db.select().from(practices);
+    const tcIdToDbId = new Map<number, number>();
+    for (const p of allPractices) {
+      if (p.thoroughcareId) tcIdToDbId.set(p.thoroughcareId, p.id);
+    }
+
+    updateProgress("Claims", 15, "Fetching all claims from ThoroughCare...");
+    let allClaims: any[];
+    try {
+      allClaims = await fetchAllClaims((page, total) => {
+        updateProgress("Claims", 15 + Math.round((page / Math.max(total, 1)) * 30), `Fetching claims page ${page}/${total}...`);
+      });
+    } catch (error) {
+      console.error("[TC Historical Revenue Sync] Error fetching claims:", error);
+      allClaims = [];
+    }
+
+    console.log(`[TC Historical Revenue Sync] Fetched ${allClaims.length} total claims, bucketing by service date...`);
+
+    const claimsByMonth = new Map<string, any[]>();
+    let skippedNoDate = 0;
+    let skippedOutOfRange = 0;
+
+    for (const claim of allClaims) {
+      const svcMonth = getClaimServiceMonth(claim);
+      if (!svcMonth) { skippedNoDate++; continue; }
+      const key = `${svcMonth.month}-${svcMonth.year}`;
+      if (!validMonths.has(key)) { skippedOutOfRange++; continue; }
+      if (!claimsByMonth.has(key)) claimsByMonth.set(key, []);
+      claimsByMonth.get(key)!.push(claim);
+    }
+
+    console.log(`[TC Historical Revenue Sync] Bucketed into ${claimsByMonth.size} months (${skippedNoDate} no date, ${skippedOutOfRange} out of range)`);
 
     let totalClaims = 0;
     let totalRevenueCents = 0;
+    let monthIdx = 0;
 
-    for (let i = 0; i < monthRange.length; i++) {
-      const { month, year } = monthRange[i];
-      const pct = 15 + Math.round((i / monthRange.length) * 80);
-      updateProgress("Historical Revenue", pct, `Month ${i + 1}/${monthRange.length}: Fetching claims for ${month} ${year}...`);
+    for (const { month, year } of monthRange) {
+      const pct = 50 + Math.round((monthIdx / monthRange.length) * 45);
+      const key = `${month}-${year}`;
+      const monthClaims = claimsByMonth.get(key) || [];
+      updateProgress("Processing", pct, `Processing ${month} ${year}: ${monthClaims.length} claims...`);
 
-      const result = await syncClaimsForMonth(month, year, patientData);
-      totalClaims += result.totalClaims;
-      totalRevenueCents += result.totalRevenueCents;
+      const revenueByKey = new Map<string, { practiceId: number; department: string | null; programType: string; revenue: number; count: number }>();
+
+      for (const claim of monthClaims) {
+        const result = processClaimData(claim, orgMap, deptMap, tcIdToDbId, allPractices);
+        if (!result) continue;
+
+        totalRevenueCents += result.revenue;
+        totalClaims++;
+
+        const orgKey = `${result.practiceId}|null|${result.programType}`;
+        if (!revenueByKey.has(orgKey)) {
+          revenueByKey.set(orgKey, { practiceId: result.practiceId, department: null, programType: result.programType, revenue: 0, count: 0 });
+        }
+        const orgEntry = revenueByKey.get(orgKey)!;
+        orgEntry.revenue += result.revenue;
+        orgEntry.count++;
+
+        if (result.department) {
+          const deptKey = `${result.practiceId}|${result.department}|${result.programType}`;
+          if (!revenueByKey.has(deptKey)) {
+            revenueByKey.set(deptKey, { practiceId: result.practiceId, department: result.department, programType: result.programType, revenue: 0, count: 0 });
+          }
+          const deptEntry = revenueByKey.get(deptKey)!;
+          deptEntry.revenue += result.revenue;
+          deptEntry.count++;
+        }
+      }
+
+      await storeRevenueForMonth(month, year, revenueByKey);
+      monthIdx++;
     }
 
     const revDollars = (totalRevenueCents / 100).toLocaleString("en-US", { style: "currency", currency: "USD" });
