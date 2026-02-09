@@ -1,11 +1,21 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
+import rateLimit from "express-rate-limit";
 import { storage } from "./storage";
 import { insertContactInquirySchema, insertNightCoverageInquirySchema, insertWoundCareReferralSchema } from "@shared/schema";
 import { z } from "zod";
 // @ts-ignore - No type definitions available for this package
 import mailchimp from "@mailchimp/mailchimp_marketing";
-import { registerAdminRoutes, seedAdminUsers } from "./admin-routes";
+import { registerAdminRoutes, seedAdminUsers, adminAuth } from "./admin-routes";
+
+// Stricter rate limit for form submissions - 5 per 15 minutes per IP
+const formRateLimit = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 5,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { success: false, message: "Too many form submissions. Please try again later." },
+});
 
 // Initialize Mailchimp
 mailchimp.setConfig({
@@ -57,7 +67,7 @@ async function addToMailchimp(email: string, firstName: string, lastName: string
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Contact form submission endpoint
-  app.post("/api/contact", async (req, res) => {
+  app.post("/api/contact", formRateLimit, async (req, res) => {
     try {
       const validatedData = insertContactInquirySchema.parse(req.body);
       
@@ -99,7 +109,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Night coverage inquiry submission endpoint
-  app.post("/api/contact-night-coverage", async (req, res) => {
+  app.post("/api/contact-night-coverage", formRateLimit, async (req, res) => {
     try {
       const validatedData = insertNightCoverageInquirySchema.parse(req.body);
       
@@ -129,7 +139,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Wound care referral submission endpoint
-  app.post("/api/referrals/wound-care", async (req, res) => {
+  app.post("/api/referrals/wound-care", formRateLimit, async (req, res) => {
     try {
       const validatedData = insertWoundCareReferralSchema.parse(req.body);
       
@@ -158,8 +168,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Get contact inquiries (for admin purposes)
-  app.get("/api/contact-inquiries", async (req, res) => {
+  // Get contact inquiries (admin only - requires authentication)
+  app.get("/api/contact-inquiries", adminAuth, async (req, res) => {
     try {
       const inquiries = await storage.getContactInquiries();
       res.json(inquiries);

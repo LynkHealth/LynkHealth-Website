@@ -1,4 +1,5 @@
 import type { Express, Request, Response, NextFunction } from "express";
+import rateLimit from "express-rate-limit";
 import { storage } from "./storage";
 import { adminLoginSchema } from "@shared/schema";
 import bcrypt from "bcryptjs";
@@ -6,6 +7,45 @@ import crypto from "crypto";
 import { z } from "zod";
 import { runFullSync, runHistoricalSync, getSyncStatus } from "./thoroughcare-sync";
 import { testConnection } from "./thoroughcare-client";
+
+// Login rate limiter - 5 attempts per 15 minutes per IP
+const loginRateLimit = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 5,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { success: false, message: "Too many login attempts. Please try again later." },
+  keyGenerator: (req) => req.ip || req.socket.remoteAddress || "unknown",
+});
+
+// Track failed login attempts per email for account lockout
+const failedLoginAttempts = new Map<string, { count: number; lastAttempt: number }>();
+const MAX_FAILED_ATTEMPTS = 5;
+const LOCKOUT_DURATION_MS = 30 * 60 * 1000; // 30 minutes
+
+function checkAccountLockout(email: string): { locked: boolean; remainingMs: number } {
+  const record = failedLoginAttempts.get(email);
+  if (!record || record.count < MAX_FAILED_ATTEMPTS) {
+    return { locked: false, remainingMs: 0 };
+  }
+  const elapsed = Date.now() - record.lastAttempt;
+  if (elapsed > LOCKOUT_DURATION_MS) {
+    failedLoginAttempts.delete(email);
+    return { locked: false, remainingMs: 0 };
+  }
+  return { locked: true, remainingMs: LOCKOUT_DURATION_MS - elapsed };
+}
+
+function recordFailedLogin(email: string) {
+  const record = failedLoginAttempts.get(email) || { count: 0, lastAttempt: 0 };
+  record.count++;
+  record.lastAttempt = Date.now();
+  failedLoginAttempts.set(email, record);
+}
+
+function clearFailedLogins(email: string) {
+  failedLoginAttempts.delete(email);
+}
 
 declare global {
   namespace Express {
@@ -40,17 +80,34 @@ export async function adminAuth(req: Request, res: Response, next: NextFunction)
 }
 
 export async function registerAdminRoutes(app: Express) {
-  app.post("/api/admin/login", async (req, res) => {
+  app.post("/api/admin/login", loginRateLimit, async (req, res) => {
     try {
       const { email, password } = adminLoginSchema.parse(req.body);
+
+      // Check account lockout
+      const lockout = checkAccountLockout(email);
+      if (lockout.locked) {
+        const remainingMin = Math.ceil(lockout.remainingMs / 60000);
+        return res.status(429).json({
+          success: false,
+          message: `Account temporarily locked. Try again in ${remainingMin} minutes.`,
+        });
+      }
+
       const user = await storage.getAdminUserByEmail(email);
       if (!user) {
+        recordFailedLogin(email);
         return res.status(401).json({ success: false, message: "Invalid email or password" });
       }
       const valid = await bcrypt.compare(password, user.passwordHash);
       if (!valid) {
+        recordFailedLogin(email);
         return res.status(401).json({ success: false, message: "Invalid email or password" });
       }
+
+      // Successful login - clear failed attempts
+      clearFailedLogins(email);
+
       const token = crypto.randomBytes(48).toString("hex");
       const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
       await storage.createAdminSession(user.id, token, expiresAt);
@@ -61,7 +118,7 @@ export async function registerAdminRoutes(app: Express) {
       });
     } catch (error) {
       if (error instanceof z.ZodError) {
-        return res.status(400).json({ success: false, message: "Invalid login data", errors: error.errors });
+        return res.status(400).json({ success: false, message: "Invalid login data" });
       }
       console.error("Admin login error:", error);
       res.status(500).json({ success: false, message: "Login failed" });
@@ -225,13 +282,24 @@ export async function registerAdminRoutes(app: Express) {
       }));
       res.json({ success: true, samples });
     } catch (error: any) {
-      res.status(500).json({ success: false, message: error.message });
+      console.error("[Admin] Sample enrollments error:", error);
+      res.status(500).json({ success: false, message: "Failed to fetch sample enrollments" });
     }
   });
 
 }
 
 export async function seedAdminUsers() {
+  const defaultPassword = process.env.ADMIN_DEFAULT_PASSWORD;
+  if (!defaultPassword) {
+    console.log("[Admin] ADMIN_DEFAULT_PASSWORD not set - skipping admin seed. Set this env var to create initial admin accounts.");
+    return;
+  }
+
+  if (defaultPassword.length < 12) {
+    console.warn("[Admin] ADMIN_DEFAULT_PASSWORD should be at least 12 characters for security.");
+  }
+
   const admins = [
     { email: "alexander.barrett@lynkhealthcare.com", name: "Alexander Barrett" },
     { email: "will.moon@lynkhealthcare.com", name: "Will Moon" },
@@ -240,7 +308,7 @@ export async function seedAdminUsers() {
   for (const admin of admins) {
     const existing = await storage.getAdminUserByEmail(admin.email);
     if (!existing) {
-      const passwordHash = await bcrypt.hash("LynkAdmin2026!", 12);
+      const passwordHash = await bcrypt.hash(defaultPassword, 12);
       await storage.createAdminUser({
         email: admin.email,
         name: admin.name,

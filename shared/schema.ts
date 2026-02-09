@@ -188,7 +188,7 @@ export type ProgramSnapshot = typeof programSnapshots.$inferSelect;
 
 export const adminLoginSchema = z.object({
   email: z.string().email(),
-  password: z.string().min(6),
+  password: z.string().min(8, "Password must be at least 8 characters"),
 });
 
 export type AdminLoginInput = z.infer<typeof adminLoginSchema>;
