@@ -31,7 +31,8 @@ A hidden admin dashboard is accessible via the copyright symbol (©) in the foot
 - Snapshots stored at both org-level (department=null) and department-level for multi-location practices
 - Real-time sync progress tracking via `/api/admin/tc/status` polling
 - Sync triggered via admin dashboard button or POST to `/api/admin/tc/sync`
-- Data volumes: ~7 practices, ~14,786 patients, ~3,578 enrollments, ~1,842 time logs
+- **Historical sync**: `runHistoricalSync()` via POST `/api/admin/tc/sync-historical` pulls 24 months of time log data in one operation (~4 min, ~130K time logs). Reuses org/patient/enrollment/CarePlan data once, then loops months for time logs + snapshots.
+- Data volumes: ~7 practices, ~14,786 patients, ~3,578 enrollments, ~1,842 time logs/month
 - Per-practice and per-department/location filtering available in admin dashboard via dual dropdown selectors
 - Department dropdown appears only when a multi-location practice is selected (e.g., MEA with 9 locations, your clinic with 7)
 
