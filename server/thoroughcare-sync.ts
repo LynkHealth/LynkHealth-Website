@@ -742,7 +742,7 @@ function processClaimData(
   tcIdToDbId: Map<number, number>,
   allPractices: any[],
   ratesMap?: Record<string, number>
-): { practiceId: number; department: string | null; programType: string; revenue: number } | null {
+): { practiceId: number; department: string | null; programType: string; revenue: number; codeBreakdown: Array<{ cptCode: string; revenue: number }> } | null {
   const patientRef = claim.patient?.reference;
   if (!patientRef) return null;
 
@@ -776,7 +776,20 @@ function processClaimData(
   const rates = ratesMap || CPT_RATES;
   let claimRevenue = 0;
   const codeBreakdown: Array<{ cptCode: string; revenue: number }> = [];
-  if (claim.procedure) {
+
+  if (claim.item && Array.isArray(claim.item)) {
+    for (const item of claim.item) {
+      const cptCode = item.productOrService?.coding?.[0]?.code;
+      const quantity = item.quantity?.value || 1;
+      if (cptCode && rates[cptCode]) {
+        const codeRev = rates[cptCode] * quantity;
+        claimRevenue += codeRev;
+        codeBreakdown.push({ cptCode, revenue: codeRev });
+      }
+    }
+  }
+
+  if (codeBreakdown.length === 0 && claim.procedure) {
     for (const proc of claim.procedure) {
       const cptCode = proc.concept?.coding?.[0]?.code;
       const multiplier = proc.concept?.coding?.[0]?.multiplier || 1;
