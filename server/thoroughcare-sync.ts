@@ -8,7 +8,7 @@ import {
   fetchAllClaims,
 } from "./thoroughcare-client";
 import { db } from "./db";
-import { practices, programSnapshots, revenueSnapshots, tcSyncLog } from "@shared/schema";
+import { practices, programSnapshots, revenueSnapshots, revenueByCode, tcSyncLog } from "@shared/schema";
 import { eq, and } from "drizzle-orm";
 
 const MONTHS = ["JAN", "FEB", "MAR", "APR", "MAY", "JUN", "JUL", "AUG", "SEP", "OCT", "NOV", "DEC"];
@@ -775,23 +775,27 @@ function processClaimData(
 
   const rates = ratesMap || CPT_RATES;
   let claimRevenue = 0;
+  const codeBreakdown: Array<{ cptCode: string; revenue: number }> = [];
   if (claim.procedure) {
     for (const proc of claim.procedure) {
       const cptCode = proc.concept?.coding?.[0]?.code;
       const multiplier = proc.concept?.coding?.[0]?.multiplier || 1;
       if (cptCode && rates[cptCode]) {
-        claimRevenue += rates[cptCode] * multiplier;
+        const codeRev = rates[cptCode] * multiplier;
+        claimRevenue += codeRev;
+        codeBreakdown.push({ cptCode, revenue: codeRev });
       }
     }
   }
 
-  return { practiceId: dbPracticeId, department: dept, programType, revenue: claimRevenue };
+  return { practiceId: dbPracticeId, department: dept, programType, revenue: claimRevenue, codeBreakdown };
 }
 
 async function storeRevenueForMonth(
   month: string,
   year: number,
-  revenueByKey: Map<string, { practiceId: number; department: string | null; programType: string; revenue: number; count: number }>
+  revenueByKey: Map<string, { practiceId: number; department: string | null; programType: string; revenue: number; count: number }>,
+  codeRevenueByKey?: Map<string, { practiceId: number; department: string | null; programType: string; cptCode: string; revenue: number; count: number }>
 ) {
   await db.delete(revenueSnapshots)
     .where(and(eq(revenueSnapshots.month, month), eq(revenueSnapshots.year, year)));
@@ -808,6 +812,25 @@ async function storeRevenueForMonth(
       source: "thoroughcare",
       syncedAt: new Date(),
     });
+  }
+
+  if (codeRevenueByKey && codeRevenueByKey.size > 0) {
+    await db.delete(revenueByCode)
+      .where(and(eq(revenueByCode.month, month), eq(revenueByCode.year, year)));
+
+    for (const entry of Array.from(codeRevenueByKey.values())) {
+      await db.insert(revenueByCode).values({
+        practiceId: entry.practiceId,
+        department: entry.department,
+        programType: entry.programType,
+        cptCode: entry.cptCode,
+        month,
+        year,
+        claimCount: entry.count,
+        totalRevenue: entry.revenue,
+        syncedAt: new Date(),
+      });
+    }
   }
 }
 
@@ -854,6 +877,7 @@ async function syncClaimsForMonth(
 
   const dbRates = await loadCptRatesFromDb(year);
   const revenueByKey = new Map<string, { practiceId: number; department: string | null; programType: string; revenue: number; count: number }>();
+  const codeRevenueByKey = new Map<string, { practiceId: number; department: string | null; programType: string; cptCode: string; revenue: number; count: number }>();
   let totalRevenueCents = 0;
 
   for (const claim of filteredClaims) {
@@ -870,6 +894,26 @@ async function syncClaimsForMonth(
     orgEntry.revenue += result.revenue;
     orgEntry.count++;
 
+    for (const cb of result.codeBreakdown) {
+      const codeOrgKey = `${result.practiceId}|null|${result.programType}|${cb.cptCode}`;
+      if (!codeRevenueByKey.has(codeOrgKey)) {
+        codeRevenueByKey.set(codeOrgKey, { practiceId: result.practiceId, department: null, programType: result.programType, cptCode: cb.cptCode, revenue: 0, count: 0 });
+      }
+      const codeEntry = codeRevenueByKey.get(codeOrgKey)!;
+      codeEntry.revenue += cb.revenue;
+      codeEntry.count++;
+
+      if (result.department) {
+        const codeDeptKey = `${result.practiceId}|${result.department}|${result.programType}|${cb.cptCode}`;
+        if (!codeRevenueByKey.has(codeDeptKey)) {
+          codeRevenueByKey.set(codeDeptKey, { practiceId: result.practiceId, department: result.department, programType: result.programType, cptCode: cb.cptCode, revenue: 0, count: 0 });
+        }
+        const codeDeptEntry = codeRevenueByKey.get(codeDeptKey)!;
+        codeDeptEntry.revenue += cb.revenue;
+        codeDeptEntry.count++;
+      }
+    }
+
     if (result.department) {
       const deptKey = `${result.practiceId}|${result.department}|${result.programType}`;
       if (!revenueByKey.has(deptKey)) {
@@ -881,7 +925,7 @@ async function syncClaimsForMonth(
     }
   }
 
-  await storeRevenueForMonth(month, year, revenueByKey);
+  await storeRevenueForMonth(month, year, revenueByKey, codeRevenueByKey);
   return { totalClaims: filteredClaims.length, totalRevenueCents };
 }
 
@@ -1029,6 +1073,7 @@ export async function runHistoricalRevenueSync(totalMonths: number = 24): Promis
 
       const dbRates = ratesByYear.get(year) || CPT_RATES;
       const revenueByKey = new Map<string, { practiceId: number; department: string | null; programType: string; revenue: number; count: number }>();
+      const codeRevenueByKey = new Map<string, { practiceId: number; department: string | null; programType: string; cptCode: string; revenue: number; count: number }>();
 
       for (const claim of monthClaims) {
         const result = processClaimData(claim, orgMap, deptMap, tcIdToDbId, allPractices, dbRates);
@@ -1045,6 +1090,26 @@ export async function runHistoricalRevenueSync(totalMonths: number = 24): Promis
         orgEntry.revenue += result.revenue;
         orgEntry.count++;
 
+        for (const cb of result.codeBreakdown) {
+          const codeOrgKey = `${result.practiceId}|null|${result.programType}|${cb.cptCode}`;
+          if (!codeRevenueByKey.has(codeOrgKey)) {
+            codeRevenueByKey.set(codeOrgKey, { practiceId: result.practiceId, department: null, programType: result.programType, cptCode: cb.cptCode, revenue: 0, count: 0 });
+          }
+          const codeEntry = codeRevenueByKey.get(codeOrgKey)!;
+          codeEntry.revenue += cb.revenue;
+          codeEntry.count++;
+
+          if (result.department) {
+            const codeDeptKey = `${result.practiceId}|${result.department}|${result.programType}|${cb.cptCode}`;
+            if (!codeRevenueByKey.has(codeDeptKey)) {
+              codeRevenueByKey.set(codeDeptKey, { practiceId: result.practiceId, department: result.department, programType: result.programType, cptCode: cb.cptCode, revenue: 0, count: 0 });
+            }
+            const codeDeptEntry = codeRevenueByKey.get(codeDeptKey)!;
+            codeDeptEntry.revenue += cb.revenue;
+            codeDeptEntry.count++;
+          }
+        }
+
         if (result.department) {
           const deptKey = `${result.practiceId}|${result.department}|${result.programType}`;
           if (!revenueByKey.has(deptKey)) {
@@ -1056,7 +1121,7 @@ export async function runHistoricalRevenueSync(totalMonths: number = 24): Promis
         }
       }
 
-      await storeRevenueForMonth(month, year, revenueByKey);
+      await storeRevenueForMonth(month, year, revenueByKey, codeRevenueByKey);
       monthIdx++;
     }
 

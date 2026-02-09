@@ -1,4 +1,4 @@
-import { users, contactInquiries, nightCoverageInquiries, woundCareReferrals, adminUsers, adminSessions, practices, programSnapshots, revenueSnapshots, cptBillingCodes, type User, type InsertUser, type ContactInquiry, type InsertContactInquiry, type NightCoverageInquiry, type InsertNightCoverageInquiry, type WoundCareReferral, type InsertWoundCareReferral, type AdminUser, type InsertAdminUser, type AdminSession, type Practice, type InsertPractice, type ProgramSnapshot, type InsertProgramSnapshot, type RevenueSnapshot, type InsertRevenueSnapshot, type CptBillingCode, type InsertCptBillingCode } from "@shared/schema";
+import { users, contactInquiries, nightCoverageInquiries, woundCareReferrals, adminUsers, adminSessions, practices, programSnapshots, revenueSnapshots, revenueByCode, cptBillingCodes, type User, type InsertUser, type ContactInquiry, type InsertContactInquiry, type NightCoverageInquiry, type InsertNightCoverageInquiry, type WoundCareReferral, type InsertWoundCareReferral, type AdminUser, type InsertAdminUser, type AdminSession, type Practice, type InsertPractice, type ProgramSnapshot, type InsertProgramSnapshot, type RevenueSnapshot, type InsertRevenueSnapshot, type RevenueByCode, type CptBillingCode, type InsertCptBillingCode } from "@shared/schema";
 import { db } from "./db";
 import { eq, and, desc } from "drizzle-orm";
 
@@ -23,6 +23,7 @@ export interface IStorage {
   createProgramSnapshot(snapshot: InsertProgramSnapshot): Promise<ProgramSnapshot>;
   getAggregatedSnapshots(month: string, year: number): Promise<ProgramSnapshot[]>;
   getRevenueSnapshots(month: string, year: number): Promise<RevenueSnapshot[]>;
+  getRevenueByCode(month: string, year: number): Promise<RevenueByCode[]>;
   getCptBillingCodes(effectiveYear?: number): Promise<CptBillingCode[]>;
   getCptBillingCode(id: number): Promise<CptBillingCode | undefined>;
   createCptBillingCode(code: InsertCptBillingCode): Promise<CptBillingCode>;
@@ -140,6 +141,12 @@ export class DatabaseStorage implements IStorage {
       .where(and(eq(revenueSnapshots.month, month), eq(revenueSnapshots.year, year)))
       .orderBy(revenueSnapshots.programType);
   }
+  async getRevenueByCode(month: string, year: number): Promise<RevenueByCode[]> {
+    return await db.select().from(revenueByCode)
+      .where(and(eq(revenueByCode.month, month), eq(revenueByCode.year, year)))
+      .orderBy(revenueByCode.programType, revenueByCode.cptCode);
+  }
+
   async getCptBillingCodes(effectiveYear?: number): Promise<CptBillingCode[]> {
     if (effectiveYear) {
       return await db.select().from(cptBillingCodes)

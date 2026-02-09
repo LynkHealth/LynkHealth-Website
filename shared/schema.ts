@@ -208,6 +208,28 @@ export const insertRevenueSnapshotSchema = createInsertSchema(revenueSnapshots).
 export type InsertRevenueSnapshot = z.infer<typeof insertRevenueSnapshotSchema>;
 export type RevenueSnapshot = typeof revenueSnapshots.$inferSelect;
 
+export const revenueByCode = pgTable("revenue_by_code", {
+  id: serial("id").primaryKey(),
+  practiceId: integer("practice_id").notNull(),
+  department: text("department"),
+  programType: text("program_type").notNull(),
+  cptCode: text("cpt_code").notNull(),
+  month: text("month").notNull(),
+  year: integer("year").notNull(),
+  claimCount: integer("claim_count").default(0),
+  totalRevenue: integer("total_revenue").default(0),
+  syncedAt: timestamp("synced_at"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+export const insertRevenueByCodeSchema = createInsertSchema(revenueByCode).omit({
+  id: true,
+  createdAt: true,
+});
+
+export type InsertRevenueByCode = z.infer<typeof insertRevenueByCodeSchema>;
+export type RevenueByCode = typeof revenueByCode.$inferSelect;
+
 export const cptBillingCodes = pgTable("cpt_billing_codes", {
   id: serial("id").primaryKey(),
   code: text("code").notNull(),

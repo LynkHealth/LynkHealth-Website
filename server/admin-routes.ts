@@ -108,7 +108,8 @@ export async function registerAdminRoutes(app: Express) {
       }
 
       const revenueData = await storage.getRevenueSnapshots(month, year);
-      res.json({ success: true, snapshots, practices: practicesList, departmentsByPractice, inquiries, month, year, revenue: revenueData });
+      const revenueByCodeData = await storage.getRevenueByCode(month, year);
+      res.json({ success: true, snapshots, practices: practicesList, departmentsByPractice, inquiries, month, year, revenue: revenueData, revenueByCode: revenueByCodeData });
     } catch (error) {
       console.error("Dashboard error:", error);
       res.status(500).json({ success: false, message: "Failed to load dashboard" });

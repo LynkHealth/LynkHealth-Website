@@ -26,8 +26,8 @@ import {
   Shield,
   Zap,
 } from "lucide-react";
-import type { ProgramSnapshot, Practice, ContactInquiry, RevenueSnapshot, CptBillingCode } from "@shared/schema";
-import { DollarSign, TrendingUp, Receipt, Pencil, Check, Trash2, Plus } from "lucide-react";
+import type { ProgramSnapshot, Practice, ContactInquiry, RevenueSnapshot, RevenueByCode, CptBillingCode } from "@shared/schema";
+import { DollarSign, TrendingUp, Receipt, Pencil, Check, Trash2, Plus, ChevronDown, ChevronUp } from "lucide-react";
 
 const MONTHS = ["JAN", "FEB", "MAR", "APR", "MAY", "JUN", "JUL", "AUG", "SEP", "OCT", "NOV", "DEC"];
 const MONTH_NAMES: Record<string, string> = {
@@ -535,6 +535,8 @@ export default function AdminDashboard() {
   const [activeTab, setActiveTab] = useState("dashboard");
   const [snapshots, setSnapshots] = useState<ProgramSnapshot[]>([]);
   const [revenue, setRevenue] = useState<RevenueSnapshot[]>([]);
+  const [revenueByCode, setRevenueByCode] = useState<RevenueByCode[]>([]);
+  const [showCodeBreakdown, setShowCodeBreakdown] = useState(false);
   const [practices, setPractices] = useState<Practice[]>([]);
   const [inquiries, setInquiries] = useState<{
     contactInquiries: ContactInquiry[];
@@ -602,6 +604,7 @@ export default function AdminDashboard() {
         setPractices(dashData.practices);
         setDepartmentsByPractice(dashData.departmentsByPractice || {});
         setRevenue(dashData.revenue || []);
+        setRevenueByCode(dashData.revenueByCode || []);
       }
       if (inquiryData.success) {
         setInquiries(inquiryData);
@@ -1038,6 +1041,105 @@ export default function AdminDashboard() {
                             );
                           }
                           return null;
+                        })()}
+
+                        {(() => {
+                          let filteredCodeRevenue: RevenueByCode[];
+                          if (selectedPracticeId === "all") {
+                            filteredCodeRevenue = revenueByCode.filter((r) => !r.department);
+                          } else if (selectedDepartment === "all") {
+                            filteredCodeRevenue = revenueByCode.filter((r) => r.practiceId === selectedPracticeId && !r.department);
+                          } else {
+                            filteredCodeRevenue = revenueByCode.filter((r) => r.practiceId === selectedPracticeId && r.department === selectedDepartment);
+                          }
+
+                          if (filteredCodeRevenue.length === 0) return null;
+
+                          const codeAggregated = new Map<string, { cptCode: string; programType: string; claimCount: number; totalRevenue: number }>();
+                          filteredCodeRevenue.forEach((r) => {
+                            const key = `${r.cptCode}|${r.programType}`;
+                            const existing = codeAggregated.get(key);
+                            if (existing) {
+                              existing.claimCount += r.claimCount || 0;
+                              existing.totalRevenue += r.totalRevenue || 0;
+                            } else {
+                              codeAggregated.set(key, {
+                                cptCode: r.cptCode || "Unknown",
+                                programType: r.programType || "Unknown",
+                                claimCount: r.claimCount || 0,
+                                totalRevenue: r.totalRevenue || 0,
+                              });
+                            }
+                          });
+                          const codeRevenue = Array.from(codeAggregated.values())
+                            .filter(r => r.totalRevenue > 0)
+                            .sort((a, b) => b.totalRevenue - a.totalRevenue);
+
+                          if (codeRevenue.length === 0) return null;
+
+                          return (
+                            <Card className="mb-4 border-green-200">
+                              <CardHeader
+                                className="py-3 px-4 bg-green-50 rounded-t-lg cursor-pointer"
+                                onClick={() => setShowCodeBreakdown(!showCodeBreakdown)}
+                              >
+                                <div className="flex items-center justify-between">
+                                  <div className="flex items-center gap-2">
+                                    <Receipt className="w-5 h-5 text-green-600" />
+                                    <CardTitle className="text-base font-semibold text-green-800">Revenue by CPT Code</CardTitle>
+                                    <span className="text-xs text-green-600 bg-green-100 px-2 py-0.5 rounded-full">{codeRevenue.length} codes</span>
+                                  </div>
+                                  {showCodeBreakdown ? (
+                                    <ChevronUp className="w-5 h-5 text-green-600" />
+                                  ) : (
+                                    <ChevronDown className="w-5 h-5 text-green-600" />
+                                  )}
+                                </div>
+                              </CardHeader>
+                              {showCodeBreakdown && (
+                                <CardContent className="px-4 pb-4">
+                                  <div className="overflow-x-auto">
+                                    <table className="w-full">
+                                      <thead>
+                                        <tr className="border-b border-slate-200">
+                                          <th className="px-3 py-2 text-xs font-medium text-slate-500 text-left">CPT Code</th>
+                                          <th className="px-3 py-2 text-xs font-medium text-slate-500 text-left">Program</th>
+                                          <th className="px-3 py-2 text-xs font-medium text-slate-500 text-right">Claims</th>
+                                          <th className="px-3 py-2 text-xs font-medium text-slate-500 text-right">Revenue</th>
+                                          <th className="px-3 py-2 text-xs font-medium text-slate-500 text-right">Avg/Claim</th>
+                                        </tr>
+                                      </thead>
+                                      <tbody>
+                                        {codeRevenue.map((r) => (
+                                          <tr key={`${r.cptCode}-${r.programType}`} className="border-b border-slate-100">
+                                            <td className="px-3 py-2 text-sm font-mono font-medium text-slate-700">{r.cptCode}</td>
+                                            <td className="px-3 py-2 text-sm text-slate-600">{r.programType}</td>
+                                            <td className="px-3 py-2 text-sm text-right text-slate-600">{r.claimCount.toLocaleString()}</td>
+                                            <td className="px-3 py-2 text-sm text-right font-semibold text-green-700">
+                                              ${(r.totalRevenue / 100).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                                            </td>
+                                            <td className="px-3 py-2 text-sm text-right text-slate-500">
+                                              ${(r.claimCount ? (r.totalRevenue / r.claimCount / 100) : 0).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                                            </td>
+                                          </tr>
+                                        ))}
+                                        <tr className="border-t-2 border-green-300 bg-green-50">
+                                          <td className="px-3 py-2 text-sm font-semibold text-green-800" colSpan={2}>Total</td>
+                                          <td className="px-3 py-2 text-sm text-right font-semibold text-green-800">
+                                            {codeRevenue.reduce((sum, r) => sum + r.claimCount, 0).toLocaleString()}
+                                          </td>
+                                          <td className="px-3 py-2 text-sm text-right font-bold text-green-800">
+                                            ${(codeRevenue.reduce((sum, r) => sum + r.totalRevenue, 0) / 100).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                                          </td>
+                                          <td className="px-3 py-2"></td>
+                                        </tr>
+                                      </tbody>
+                                    </table>
+                                  </div>
+                                </CardContent>
+                              )}
+                            </Card>
+                          );
                         })()}
 
                         <ProgramCard title="Chronic Care Management" icon={Heart} programType="CCM" snapshots={filtered} color="text-red-500" />
