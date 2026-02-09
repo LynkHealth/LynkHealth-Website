@@ -716,12 +716,32 @@ function programFromClaimCode(code: string): string | null {
   return map[code] || null;
 }
 
+async function loadCptRatesFromDb(effectiveYear?: number): Promise<Record<string, number>> {
+  const { cptBillingCodes } = await import("@shared/schema");
+  const conditions = [eq(cptBillingCodes.isActive, 1)];
+  if (effectiveYear) {
+    conditions.push(eq(cptBillingCodes.effectiveYear, effectiveYear));
+  }
+  const codes = await db.select().from(cptBillingCodes).where(and(...conditions));
+  const rates: Record<string, number> = {};
+  for (const c of codes) {
+    rates[c.code] = c.rateCents;
+  }
+  if (Object.keys(rates).length === 0) {
+    console.log(`[Revenue] No billing codes in DB for year ${effectiveYear || 'any'}, falling back to hardcoded rates`);
+    return CPT_RATES;
+  }
+  console.log(`[Revenue] Loaded ${Object.keys(rates).length} billing code rates from database (year: ${effectiveYear || 'all'})`);
+  return rates;
+}
+
 function processClaimData(
   claim: any,
   orgMap: Map<string, number>,
   deptMap: Map<string, string>,
   tcIdToDbId: Map<number, number>,
-  allPractices: any[]
+  allPractices: any[],
+  ratesMap?: Record<string, number>
 ): { practiceId: number; department: string | null; programType: string; revenue: number } | null {
   const patientRef = claim.patient?.reference;
   if (!patientRef) return null;
@@ -753,13 +773,14 @@ function processClaimData(
   }
   if (!programType) programType = "OTHER";
 
+  const rates = ratesMap || CPT_RATES;
   let claimRevenue = 0;
   if (claim.procedure) {
     for (const proc of claim.procedure) {
       const cptCode = proc.concept?.coding?.[0]?.code;
       const multiplier = proc.concept?.coding?.[0]?.multiplier || 1;
-      if (cptCode && CPT_RATES[cptCode]) {
-        claimRevenue += CPT_RATES[cptCode] * multiplier;
+      if (cptCode && rates[cptCode]) {
+        claimRevenue += rates[cptCode] * multiplier;
       }
     }
   }
@@ -831,11 +852,12 @@ async function syncClaimsForMonth(
     if (p.thoroughcareId) tcIdToDbId.set(p.thoroughcareId, p.id);
   }
 
+  const dbRates = await loadCptRatesFromDb(year);
   const revenueByKey = new Map<string, { practiceId: number; department: string | null; programType: string; revenue: number; count: number }>();
   let totalRevenueCents = 0;
 
   for (const claim of filteredClaims) {
-    const result = processClaimData(claim, orgMap, deptMap, tcIdToDbId, allPractices);
+    const result = processClaimData(claim, orgMap, deptMap, tcIdToDbId, allPractices, dbRates);
     if (!result) continue;
 
     totalRevenueCents += result.revenue;
@@ -989,6 +1011,12 @@ export async function runHistoricalRevenueSync(totalMonths: number = 24): Promis
 
     console.log(`[TC Historical Revenue Sync] Bucketed into ${claimsByMonth.size} months (${skippedNoDate} no date, ${skippedOutOfRange} out of range)`);
 
+    const ratesByYear = new Map<number, Record<string, number>>();
+    const uniqueYears = Array.from(new Set(monthRange.map(m => m.year)));
+    for (const y of uniqueYears) {
+      ratesByYear.set(y, await loadCptRatesFromDb(y));
+    }
+
     let totalClaims = 0;
     let totalRevenueCents = 0;
     let monthIdx = 0;
@@ -999,10 +1027,11 @@ export async function runHistoricalRevenueSync(totalMonths: number = 24): Promis
       const monthClaims = claimsByMonth.get(key) || [];
       updateProgress("Processing", pct, `Processing ${month} ${year}: ${monthClaims.length} claims...`);
 
+      const dbRates = ratesByYear.get(year) || CPT_RATES;
       const revenueByKey = new Map<string, { practiceId: number; department: string | null; programType: string; revenue: number; count: number }>();
 
       for (const claim of monthClaims) {
-        const result = processClaimData(claim, orgMap, deptMap, tcIdToDbId, allPractices);
+        const result = processClaimData(claim, orgMap, deptMap, tcIdToDbId, allPractices, dbRates);
         if (!result) continue;
 
         totalRevenueCents += result.revenue;

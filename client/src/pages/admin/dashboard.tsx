@@ -26,8 +26,8 @@ import {
   Shield,
   Zap,
 } from "lucide-react";
-import type { ProgramSnapshot, Practice, ContactInquiry, RevenueSnapshot } from "@shared/schema";
-import { DollarSign, TrendingUp } from "lucide-react";
+import type { ProgramSnapshot, Practice, ContactInquiry, RevenueSnapshot, CptBillingCode } from "@shared/schema";
+import { DollarSign, TrendingUp, Receipt, Pencil, Check, Trash2, Plus } from "lucide-react";
 
 const MONTHS = ["JAN", "FEB", "MAR", "APR", "MAY", "JUN", "JUL", "AUG", "SEP", "OCT", "NOV", "DEC"];
 const MONTH_NAMES: Record<string, string> = {
@@ -239,6 +239,295 @@ function ProgramCard({ title, icon: Icon, programType, snapshots, color }: {
   );
 }
 
+const PROGRAM_ORDER = ["CCM", "RPM", "BHI", "PCM", "RTM", "APCM", "AWV", "TCM"];
+const PROGRAM_COLORS: Record<string, string> = {
+  CCM: "bg-blue-50 text-blue-700 border-blue-200",
+  RPM: "bg-emerald-50 text-emerald-700 border-emerald-200",
+  BHI: "bg-purple-50 text-purple-700 border-purple-200",
+  PCM: "bg-amber-50 text-amber-700 border-amber-200",
+  RTM: "bg-teal-50 text-teal-700 border-teal-200",
+  APCM: "bg-indigo-50 text-indigo-700 border-indigo-200",
+  AWV: "bg-rose-50 text-rose-700 border-rose-200",
+  TCM: "bg-orange-50 text-orange-700 border-orange-200",
+};
+
+function BillingCodesTab() {
+  const [codes, setCodes] = useState<CptBillingCode[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [selectedYear, setSelectedYear] = useState(2026);
+  const [editingId, setEditingId] = useState<number | null>(null);
+  const [editValues, setEditValues] = useState<{ code: string; description: string; rateCents: number; program: string }>({ code: "", description: "", rateCents: 0, program: "" });
+  const [adding, setAdding] = useState(false);
+  const [newCode, setNewCode] = useState({ code: "", description: "", program: "CCM", rateCents: 0 });
+  const [saving, setSaving] = useState(false);
+
+  const fetchCodes = async () => {
+    setLoading(true);
+    try {
+      const res = await adminFetch(`/api/admin/billing-codes?year=${selectedYear}`);
+      const data = await res.json();
+      if (data.success) setCodes(data.codes);
+    } catch (err) {
+      console.error("Failed to fetch billing codes:", err);
+    }
+    setLoading(false);
+  };
+
+  useEffect(() => { fetchCodes(); }, [selectedYear]);
+
+  const startEdit = (code: CptBillingCode) => {
+    setEditingId(code.id);
+    setEditValues({ code: code.code, description: code.description, rateCents: code.rateCents, program: code.program });
+  };
+
+  const cancelEdit = () => { setEditingId(null); };
+
+  const saveEdit = async () => {
+    if (!editingId) return;
+    setSaving(true);
+    try {
+      const res = await adminFetch(`/api/admin/billing-codes/${editingId}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(editValues),
+      });
+      const data = await res.json();
+      if (data.success) {
+        setCodes(prev => prev.map(c => c.id === editingId ? data.code : c));
+        setEditingId(null);
+      }
+    } catch (err) {
+      console.error("Failed to update billing code:", err);
+    }
+    setSaving(false);
+  };
+
+  const handleDelete = async (id: number) => {
+    if (!confirm("Are you sure you want to delete this billing code?")) return;
+    try {
+      const res = await adminFetch(`/api/admin/billing-codes/${id}`, { method: "DELETE" });
+      const data = await res.json();
+      if (data.success) setCodes(prev => prev.filter(c => c.id !== id));
+    } catch (err) {
+      console.error("Failed to delete billing code:", err);
+    }
+  };
+
+  const handleAdd = async () => {
+    if (!newCode.code || !newCode.description || newCode.rateCents <= 0) return;
+    setSaving(true);
+    try {
+      const res = await adminFetch("/api/admin/billing-codes", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ ...newCode, effectiveYear: selectedYear, state: "MS", isActive: 1 }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        setCodes(prev => [...prev, data.code]);
+        setNewCode({ code: "", description: "", program: "CCM", rateCents: 0 });
+        setAdding(false);
+      }
+    } catch (err) {
+      console.error("Failed to add billing code:", err);
+    }
+    setSaving(false);
+  };
+
+  const groupedByProgram = PROGRAM_ORDER.reduce((acc, prog) => {
+    const programCodes = codes.filter(c => c.program === prog);
+    if (programCodes.length > 0) acc[prog] = programCodes;
+    return acc;
+  }, {} as Record<string, CptBillingCode[]>);
+
+  const otherCodes = codes.filter(c => !PROGRAM_ORDER.includes(c.program));
+  if (otherCodes.length > 0) groupedByProgram["Other"] = otherCodes;
+
+  return (
+    <div className="space-y-4">
+      <Card>
+        <CardHeader className="pb-3">
+          <div className="flex items-center justify-between flex-wrap gap-3">
+            <div>
+              <CardTitle className="text-base">Medicare Fee Schedule Rates — Mississippi</CardTitle>
+              <p className="text-sm text-slate-500 mt-1">Manage CPT billing codes and reimbursement rates used for revenue calculations</p>
+            </div>
+            <div className="flex items-center gap-2">
+              <select
+                value={selectedYear}
+                onChange={(e) => setSelectedYear(parseInt(e.target.value))}
+                className="border rounded px-3 py-1.5 text-sm bg-white"
+              >
+                {[2024, 2025, 2026, 2027].map(y => (
+                  <option key={y} value={y}>{y}</option>
+                ))}
+              </select>
+              <Button size="sm" onClick={() => setAdding(true)} className="gap-1">
+                <Plus className="w-4 h-4" /> Add Code
+              </Button>
+            </div>
+          </div>
+        </CardHeader>
+        <CardContent>
+          {loading ? (
+            <div className="flex items-center justify-center py-8">
+              <Loader2 className="w-6 h-6 animate-spin text-slate-400" />
+            </div>
+          ) : codes.length === 0 ? (
+            <div className="text-center py-8 text-slate-500">
+              <Receipt className="w-10 h-10 mx-auto mb-2 text-slate-300" />
+              <p>No billing codes found for {selectedYear}</p>
+              <p className="text-xs mt-1">Add codes or switch to a different year</p>
+            </div>
+          ) : (
+            <div className="space-y-6">
+              {adding && (
+                <div className="border rounded-lg p-4 bg-blue-50 border-blue-200">
+                  <h4 className="font-medium text-sm mb-3">Add New Billing Code</h4>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3">
+                    <input
+                      placeholder="CPT Code (e.g. 99490)"
+                      value={newCode.code}
+                      onChange={(e) => setNewCode(p => ({ ...p, code: e.target.value }))}
+                      className="border rounded px-3 py-1.5 text-sm"
+                    />
+                    <input
+                      placeholder="Description"
+                      value={newCode.description}
+                      onChange={(e) => setNewCode(p => ({ ...p, description: e.target.value }))}
+                      className="border rounded px-3 py-1.5 text-sm lg:col-span-2"
+                    />
+                    <select
+                      value={newCode.program}
+                      onChange={(e) => setNewCode(p => ({ ...p, program: e.target.value }))}
+                      className="border rounded px-3 py-1.5 text-sm bg-white"
+                    >
+                      {PROGRAM_ORDER.map(p => <option key={p} value={p}>{p}</option>)}
+                    </select>
+                    <div className="flex items-center gap-1">
+                      <span className="text-sm text-slate-500">$</span>
+                      <input
+                        type="number"
+                        step="0.01"
+                        placeholder="Rate"
+                        value={newCode.rateCents ? (newCode.rateCents / 100).toFixed(2) : ""}
+                        onChange={(e) => setNewCode(p => ({ ...p, rateCents: Math.round(parseFloat(e.target.value || "0") * 100) }))}
+                        className="border rounded px-3 py-1.5 text-sm w-full"
+                      />
+                    </div>
+                  </div>
+                  <div className="flex gap-2 mt-3">
+                    <Button size="sm" onClick={handleAdd} disabled={saving}>
+                      {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : "Save"}
+                    </Button>
+                    <Button size="sm" variant="outline" onClick={() => setAdding(false)}>Cancel</Button>
+                  </div>
+                </div>
+              )}
+
+              {Object.entries(groupedByProgram).map(([program, programCodes]) => (
+                <div key={program} className="border rounded-lg overflow-hidden">
+                  <div className={`px-4 py-2.5 font-medium text-sm border-b ${PROGRAM_COLORS[program] || "bg-slate-50 text-slate-700 border-slate-200"}`}>
+                    {program === "CCM" && "CCM — Chronic Care Management"}
+                    {program === "RPM" && "RPM — Remote Patient Monitoring"}
+                    {program === "BHI" && "BHI — Behavioral Health Integration"}
+                    {program === "PCM" && "PCM — Principal Care Management"}
+                    {program === "RTM" && "RTM — Remote Therapeutic Monitoring"}
+                    {program === "APCM" && "APCM — Advanced Primary Care Management"}
+                    {program === "AWV" && "AWV — Annual Wellness Visit"}
+                    {program === "TCM" && "TCM — Transitional Care Management"}
+                    {!["CCM","RPM","BHI","PCM","RTM","APCM","AWV","TCM"].includes(program) && program}
+                  </div>
+                  <table className="w-full text-sm">
+                    <thead>
+                      <tr className="bg-slate-50 border-b">
+                        <th className="text-left py-2 px-4 font-medium w-24">CPT Code</th>
+                        <th className="text-left py-2 px-4 font-medium">Description</th>
+                        <th className="text-right py-2 px-4 font-medium w-32">{selectedYear} Rate</th>
+                        <th className="text-right py-2 px-4 font-medium w-24">Actions</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {programCodes.map((c) => (
+                        <tr key={c.id} className="border-b last:border-b-0 hover:bg-slate-50">
+                          {editingId === c.id ? (
+                            <>
+                              <td className="py-2 px-4">
+                                <input
+                                  value={editValues.code}
+                                  onChange={(e) => setEditValues(p => ({ ...p, code: e.target.value }))}
+                                  className="border rounded px-2 py-1 text-sm w-full"
+                                />
+                              </td>
+                              <td className="py-2 px-4">
+                                <input
+                                  value={editValues.description}
+                                  onChange={(e) => setEditValues(p => ({ ...p, description: e.target.value }))}
+                                  className="border rounded px-2 py-1 text-sm w-full"
+                                />
+                              </td>
+                              <td className="py-2 px-4 text-right">
+                                <div className="flex items-center justify-end gap-1">
+                                  <span className="text-slate-500">$</span>
+                                  <input
+                                    type="number"
+                                    step="0.01"
+                                    value={(editValues.rateCents / 100).toFixed(2)}
+                                    onChange={(e) => setEditValues(p => ({ ...p, rateCents: Math.round(parseFloat(e.target.value || "0") * 100) }))}
+                                    className="border rounded px-2 py-1 text-sm w-24 text-right"
+                                  />
+                                </div>
+                              </td>
+                              <td className="py-2 px-4 text-right">
+                                <div className="flex items-center justify-end gap-1">
+                                  <Button size="sm" variant="ghost" onClick={saveEdit} disabled={saving} className="h-7 w-7 p-0">
+                                    {saving ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Check className="w-3.5 h-3.5 text-green-600" />}
+                                  </Button>
+                                  <Button size="sm" variant="ghost" onClick={cancelEdit} className="h-7 w-7 p-0">
+                                    <X className="w-3.5 h-3.5 text-slate-400" />
+                                  </Button>
+                                </div>
+                              </td>
+                            </>
+                          ) : (
+                            <>
+                              <td className="py-2 px-4 font-mono font-medium text-slate-700">{c.code}</td>
+                              <td className="py-2 px-4 text-slate-600">{c.description}</td>
+                              <td className="py-2 px-4 text-right font-medium">${(c.rateCents / 100).toFixed(2)}</td>
+                              <td className="py-2 px-4 text-right">
+                                <div className="flex items-center justify-end gap-1">
+                                  <Button size="sm" variant="ghost" onClick={() => startEdit(c)} className="h-7 w-7 p-0">
+                                    <Pencil className="w-3.5 h-3.5 text-slate-400 hover:text-blue-600" />
+                                  </Button>
+                                  <Button size="sm" variant="ghost" onClick={() => handleDelete(c.id)} className="h-7 w-7 p-0">
+                                    <Trash2 className="w-3.5 h-3.5 text-slate-400 hover:text-red-600" />
+                                  </Button>
+                                </div>
+                              </td>
+                            </>
+                          )}
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              ))}
+            </div>
+          )}
+        </CardContent>
+      </Card>
+      <Card>
+        <CardContent className="py-4">
+          <p className="text-xs text-slate-400">
+            Rates shown are Mississippi Physician Fee Schedule rates. These rates are used to calculate estimated revenue from ThoroughCare claims data.
+            Update rates annually when new CMS fee schedules are released.
+          </p>
+        </CardContent>
+      </Card>
+    </div>
+  );
+}
+
 export default function AdminDashboard() {
   const [, setLocation] = useLocation();
   const [sidebarOpen, setSidebarOpen] = useState(true);
@@ -404,6 +693,7 @@ export default function AdminDashboard() {
 
   const sidebarItems = [
     { id: "dashboard", label: "Dashboard", icon: LayoutDashboard },
+    { id: "billing", label: "Billing Codes", icon: Receipt },
     { id: "inquiries", label: "Inquiries", icon: Mail },
     { id: "practices", label: "Practices", icon: Building2 },
   ];
@@ -472,6 +762,7 @@ export default function AdminDashboard() {
             </Button>
             <h1 className="text-lg font-semibold text-slate-800">
               {activeTab === "dashboard" && "Clinic Dashboard"}
+              {activeTab === "billing" && "Billing Codes & Rates"}
               {activeTab === "inquiries" && "Contact Inquiries"}
               {activeTab === "practices" && "Partner Practices"}
             </h1>
@@ -880,6 +1171,10 @@ export default function AdminDashboard() {
                     </CardContent>
                   </Card>
                 </div>
+              )}
+
+              {activeTab === "billing" && (
+                <BillingCodesTab />
               )}
 
               {activeTab === "practices" && (

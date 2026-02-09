@@ -36,6 +36,16 @@ A hidden admin dashboard is accessible via the copyright symbol (©) in the foot
 - Per-practice and per-department/location filtering available in admin dashboard via dual dropdown selectors
 - Department dropdown appears only when a multi-location practice is selected (e.g., MEA with 9 locations, your clinic with 7)
 
+### CPT Billing Codes Management
+- Admin dashboard "Billing Codes" tab for managing Medicare fee schedule rates
+- Database table `cpt_billing_codes` stores CPT codes with: code, description, program, rateCents, effectiveYear, state, isActive
+- Pre-seeded with 29 Mississippi 2026 rates across CCM, RPM, BHI, PCM, RTM, APCM, AWV, TCM programs
+- Inline editing: click pencil icon to edit rate/description, add new codes, delete codes
+- Year selector allows managing rates for different years (update annually when new CMS schedules release)
+- Revenue sync (`loadCptRatesFromDb`) loads rates from database filtered by effective year, with fallback to hardcoded rates
+- Historical revenue sync caches rates per year for multi-year spans
+- API routes: GET/POST/PUT/DELETE `/api/admin/billing-codes` (admin-auth protected)
+
 ### System Design Choices
 The architecture emphasizes robust validation and error handling. SEO strategy focuses on national reach and service quality. A comprehensive cache management system ensures users always see the latest content after deployments while optimizing performance through aggressive caching of static assets, using a service worker and build-time timestamp injection. HTTP cache headers are carefully configured for various asset types to balance freshness and performance.
 
