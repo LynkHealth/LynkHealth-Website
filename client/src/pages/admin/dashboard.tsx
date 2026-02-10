@@ -976,8 +976,20 @@ export default function AdminDashboard() {
                           } else {
                             filteredRevenue = revenue.filter((r) => r.practiceId === selectedPracticeId && r.department === selectedDepartment);
                           }
-                          const totalRev = filteredRevenue.reduce((sum, r) => sum + (r.totalRevenue || 0), 0);
-                          const totalClaims = filteredRevenue.reduce((sum, r) => sum + (r.claimCount || 0), 0);
+                          let filteredCodeRevenue: RevenueByCode[];
+                          if (selectedPracticeId === "all") {
+                            filteredCodeRevenue = revenueByCode.filter((r) => !r.department);
+                          } else if (selectedDepartment === "all") {
+                            filteredCodeRevenue = revenueByCode.filter((r) => r.practiceId === selectedPracticeId && !r.department);
+                          } else {
+                            filteredCodeRevenue = revenueByCode.filter((r) => r.practiceId === selectedPracticeId && r.department === selectedDepartment);
+                          }
+                          const totalRev = filteredCodeRevenue.length > 0
+                            ? filteredCodeRevenue.reduce((sum, r) => sum + (r.totalRevenue || 0), 0)
+                            : filteredRevenue.reduce((sum, r) => sum + (r.totalRevenue || 0), 0);
+                          const totalClaims = filteredCodeRevenue.length > 0
+                            ? filteredCodeRevenue.reduce((sum, r) => sum + (r.claimCount || 0), 0)
+                            : filteredRevenue.reduce((sum, r) => sum + (r.claimCount || 0), 0);
 
                           if (totalRev > 0 || totalClaims > 0) {
                             const aggregated = new Map<string, { programType: string; claimCount: number; totalRevenue: number }>();
@@ -995,14 +1007,6 @@ export default function AdminDashboard() {
                               .filter(r => r.totalRevenue > 0)
                               .sort((a, b) => b.totalRevenue - a.totalRevenue);
 
-                            let filteredCodeRevenue: RevenueByCode[];
-                            if (selectedPracticeId === "all") {
-                              filteredCodeRevenue = revenueByCode.filter((r) => !r.department);
-                            } else if (selectedDepartment === "all") {
-                              filteredCodeRevenue = revenueByCode.filter((r) => r.practiceId === selectedPracticeId && !r.department);
-                            } else {
-                              filteredCodeRevenue = revenueByCode.filter((r) => r.practiceId === selectedPracticeId && r.department === selectedDepartment);
-                            }
                             const codesByProgram = new Map<string, Array<{ cptCode: string; claimCount: number; totalRevenue: number }>>();
                             filteredCodeRevenue.forEach((r) => {
                               const prog = r.programType || "Unknown";
@@ -1061,6 +1065,12 @@ export default function AdminDashboard() {
                                             .filter(c => c.totalRevenue > 0)
                                             .sort((a, b) => b.totalRevenue - a.totalRevenue);
                                           const hasDetails = programCodes.length > 0;
+                                          const displayClaims = hasDetails
+                                            ? programCodes.reduce((sum, c) => sum + c.claimCount, 0)
+                                            : r.claimCount;
+                                          const displayRevenue = hasDetails
+                                            ? programCodes.reduce((sum, c) => sum + c.totalRevenue, 0)
+                                            : r.totalRevenue;
                                           return (
                                             <>
                                               <tr
@@ -1076,12 +1086,12 @@ export default function AdminDashboard() {
                                                   )}
                                                 </td>
                                                 <td className="px-3 py-2 text-sm font-medium text-slate-700">{r.programType}</td>
-                                                <td className="px-3 py-2 text-sm text-right text-slate-600">{r.claimCount.toLocaleString()}</td>
+                                                <td className="px-3 py-2 text-sm text-right text-slate-600">{displayClaims.toLocaleString()}</td>
                                                 <td className="px-3 py-2 text-sm text-right font-semibold text-green-700">
-                                                  ${(r.totalRevenue / 100).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                                                  ${(displayRevenue / 100).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                                                 </td>
                                                 <td className="px-3 py-2 text-sm text-right text-slate-500">
-                                                  ${(r.claimCount ? (r.totalRevenue / r.claimCount / 100) : 0).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                                                  ${(displayClaims ? (displayRevenue / displayClaims / 100) : 0).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                                                 </td>
                                               </tr>
                                               {isExpanded && programCodes.map((c) => (
