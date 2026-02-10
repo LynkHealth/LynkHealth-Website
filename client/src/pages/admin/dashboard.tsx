@@ -536,6 +536,7 @@ export default function AdminDashboard() {
   const [snapshots, setSnapshots] = useState<ProgramSnapshot[]>([]);
   const [revenue, setRevenue] = useState<RevenueSnapshot[]>([]);
   const [revenueByCode, setRevenueByCode] = useState<RevenueByCode[]>([]);
+  const [codeDescriptions, setCodeDescriptions] = useState<Record<string, string>>({});
   const [showCodeBreakdown, setShowCodeBreakdown] = useState(false);
   const [practices, setPractices] = useState<Practice[]>([]);
   const [inquiries, setInquiries] = useState<{
@@ -605,6 +606,7 @@ export default function AdminDashboard() {
         setDepartmentsByPractice(dashData.departmentsByPractice || {});
         setRevenue(dashData.revenue || []);
         setRevenueByCode(dashData.revenueByCode || []);
+        setCodeDescriptions(dashData.codeDescriptions || {});
       }
       if (inquiryData.success) {
         setInquiries(inquiryData);
@@ -1103,6 +1105,7 @@ export default function AdminDashboard() {
                                       <thead>
                                         <tr className="border-b border-slate-200">
                                           <th className="px-3 py-2 text-xs font-medium text-slate-500 text-left">CPT Code</th>
+                                          <th className="px-3 py-2 text-xs font-medium text-slate-500 text-left">Description</th>
                                           <th className="px-3 py-2 text-xs font-medium text-slate-500 text-left">Program</th>
                                           <th className="px-3 py-2 text-xs font-medium text-slate-500 text-right">Claims</th>
                                           <th className="px-3 py-2 text-xs font-medium text-slate-500 text-right">Revenue</th>
@@ -1113,6 +1116,7 @@ export default function AdminDashboard() {
                                         {codeRevenue.map((r) => (
                                           <tr key={`${r.cptCode}-${r.programType}`} className="border-b border-slate-100">
                                             <td className="px-3 py-2 text-sm font-mono font-medium text-slate-700">{r.cptCode}</td>
+                                            <td className="px-3 py-2 text-sm text-slate-500">{codeDescriptions[r.cptCode] || "—"}</td>
                                             <td className="px-3 py-2 text-sm text-slate-600">{r.programType}</td>
                                             <td className="px-3 py-2 text-sm text-right text-slate-600">{r.claimCount.toLocaleString()}</td>
                                             <td className="px-3 py-2 text-sm text-right font-semibold text-green-700">
@@ -1124,7 +1128,7 @@ export default function AdminDashboard() {
                                           </tr>
                                         ))}
                                         <tr className="border-t-2 border-green-300 bg-green-50">
-                                          <td className="px-3 py-2 text-sm font-semibold text-green-800" colSpan={2}>Total</td>
+                                          <td className="px-3 py-2 text-sm font-semibold text-green-800" colSpan={3}>Total</td>
                                           <td className="px-3 py-2 text-sm text-right font-semibold text-green-800">
                                             {codeRevenue.reduce((sum, r) => sum + r.claimCount, 0).toLocaleString()}
                                           </td>

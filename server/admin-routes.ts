@@ -109,7 +109,13 @@ export async function registerAdminRoutes(app: Express) {
 
       const revenueData = await storage.getRevenueSnapshots(month, year);
       const revenueByCodeData = await storage.getRevenueByCode(month, year);
-      res.json({ success: true, snapshots, practices: practicesList, departmentsByPractice, inquiries, month, year, revenue: revenueData, revenueByCode: revenueByCodeData });
+      const billingCodes = await storage.getCptBillingCodes(year);
+      const codeDescriptions: Record<string, string> = {};
+      for (const bc of billingCodes) {
+        const desc = bc.description.replace(/^[A-Z]+ - /, '');
+        codeDescriptions[bc.code] = desc;
+      }
+      res.json({ success: true, snapshots, practices: practicesList, departmentsByPractice, inquiries, month, year, revenue: revenueData, revenueByCode: revenueByCodeData, codeDescriptions });
     } catch (error) {
       console.error("Dashboard error:", error);
       res.status(500).json({ success: false, message: "Failed to load dashboard" });
