@@ -1,12 +1,25 @@
 import type { Express, Request, Response, NextFunction } from "express";
 import rateLimit from "express-rate-limit";
 import { storage } from "./storage";
-import { adminLoginSchema } from "@shared/schema";
+import { adminLoginSchema, changePasswordSchema, adminPasswordSchema } from "@shared/schema";
 import bcrypt from "bcryptjs";
 import crypto from "crypto";
 import { z } from "zod";
 import { runFullSync, runHistoricalSync, getSyncStatus } from "./thoroughcare-sync";
 import { testConnection } from "./thoroughcare-client";
+import { writeAuditLog, auditFromRequest, getAuditLogs, AuditAction, getClientIp } from "./audit";
+import { requirePermission, Permission } from "./rbac";
+
+// ================================================================
+// Constants
+// ================================================================
+
+const INACTIVITY_TIMEOUT_MS = 15 * 60 * 1000;    // 15 minutes (HIPAA auto-logoff)
+const MAX_SESSION_LIFETIME_MS = 4 * 60 * 60 * 1000; // 4 hours absolute max
+const MAX_FAILED_ATTEMPTS = 5;
+const LOCKOUT_WINDOW_MS = 30 * 60 * 1000; // 30 minutes
+const PASSWORD_HISTORY_COUNT = 5;
+const PASSWORD_MAX_AGE_MS = 90 * 24 * 60 * 60 * 1000; // 90 days
 
 // Login rate limiter - 5 attempts per 15 minutes per IP
 const loginRateLimit = rateLimit({
@@ -18,34 +31,9 @@ const loginRateLimit = rateLimit({
   keyGenerator: (req) => req.ip || req.socket.remoteAddress || "unknown",
 });
 
-// Track failed login attempts per email for account lockout
-const failedLoginAttempts = new Map<string, { count: number; lastAttempt: number }>();
-const MAX_FAILED_ATTEMPTS = 5;
-const LOCKOUT_DURATION_MS = 30 * 60 * 1000; // 30 minutes
-
-function checkAccountLockout(email: string): { locked: boolean; remainingMs: number } {
-  const record = failedLoginAttempts.get(email);
-  if (!record || record.count < MAX_FAILED_ATTEMPTS) {
-    return { locked: false, remainingMs: 0 };
-  }
-  const elapsed = Date.now() - record.lastAttempt;
-  if (elapsed > LOCKOUT_DURATION_MS) {
-    failedLoginAttempts.delete(email);
-    return { locked: false, remainingMs: 0 };
-  }
-  return { locked: true, remainingMs: LOCKOUT_DURATION_MS - elapsed };
-}
-
-function recordFailedLogin(email: string) {
-  const record = failedLoginAttempts.get(email) || { count: 0, lastAttempt: 0 };
-  record.count++;
-  record.lastAttempt = Date.now();
-  failedLoginAttempts.set(email, record);
-}
-
-function clearFailedLogins(email: string) {
-  failedLoginAttempts.delete(email);
-}
+// ================================================================
+// Type augmentation
+// ================================================================
 
 declare global {
   namespace Express {
@@ -55,66 +43,223 @@ declare global {
   }
 }
 
+// ================================================================
+// Session cookie helpers
+// ================================================================
+
+function setSessionCookie(res: Response, token: string) {
+  res.cookie("admin_session", token, {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === "production",
+    sameSite: "strict",
+    maxAge: INACTIVITY_TIMEOUT_MS,
+    path: "/",
+  });
+}
+
+function clearSessionCookie(res: Response) {
+  res.clearCookie("admin_session", {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === "production",
+    sameSite: "strict",
+    path: "/",
+  });
+}
+
+// ================================================================
+// Auth middleware (HIPAA 164.312(a)(2)(iii), 164.312(d))
+// ================================================================
+
 export async function adminAuth(req: Request, res: Response, next: NextFunction) {
-  const token = req.headers.authorization?.replace("Bearer ", "") || req.cookies?.admin_token;
+  // Support both cookie and Bearer token (for backward compatibility during migration)
+  const token = req.cookies?.admin_session || req.headers.authorization?.replace("Bearer ", "");
+
   if (!token) {
     return res.status(401).json({ success: false, message: "Unauthorized" });
   }
+
   const session = await storage.getAdminSession(token);
   if (!session) {
+    await writeAuditLog({
+      action: AuditAction.INVALID_SESSION,
+      resourceType: "session",
+      ipAddress: getClientIp(req),
+      userAgent: (req.headers["user-agent"] || "").substring(0, 500),
+      outcome: "failure",
+    });
+    clearSessionCookie(res);
     return res.status(401).json({ success: false, message: "Session expired" });
   }
-  if (session.expiresAt && new Date(session.expiresAt) < new Date()) {
+
+  const now = new Date();
+
+  // Check absolute session expiration (4 hours)
+  if (now > new Date(session.expiresAt)) {
     await storage.deleteAdminSession(token);
+    await writeAuditLog({
+      action: AuditAction.SESSION_EXPIRED,
+      resourceType: "session",
+      userId: session.userId,
+      ipAddress: getClientIp(req),
+      outcome: "failure",
+      details: { reason: "absolute_expiry" },
+    });
+    clearSessionCookie(res);
     return res.status(401).json({ success: false, message: "Session expired" });
   }
-  const { db } = await import("./db");
-  const { adminUsers } = await import("@shared/schema");
-  const { eq } = await import("drizzle-orm");
-  const [adminUser] = await db.select().from(adminUsers).where(eq(adminUsers.id, session.userId));
-  if (!adminUser) {
-    return res.status(401).json({ success: false, message: "User not found" });
+
+  // Check inactivity timeout (15 minutes -- HIPAA auto-logoff)
+  const lastActivity = new Date(session.lastActivityAt);
+  if (now.getTime() - lastActivity.getTime() > INACTIVITY_TIMEOUT_MS) {
+    await storage.deleteAdminSession(token);
+    await writeAuditLog({
+      action: AuditAction.SESSION_EXPIRED,
+      resourceType: "session",
+      userId: session.userId,
+      ipAddress: getClientIp(req),
+      outcome: "failure",
+      details: { reason: "inactivity", lastActivityAt: session.lastActivityAt },
+    });
+    clearSessionCookie(res);
+    return res.status(401).json({ success: false, message: "Session timed out due to inactivity" });
   }
+
+  // Session IP binding check
+  const currentIp = getClientIp(req);
+  if (session.ipAddress && session.ipAddress !== currentIp) {
+    await storage.deleteAdminSession(token);
+    await writeAuditLog({
+      action: AuditAction.INVALID_SESSION,
+      resourceType: "session",
+      userId: session.userId,
+      ipAddress: currentIp,
+      outcome: "failure",
+      details: { reason: "ip_mismatch", sessionIp: session.ipAddress, requestIp: currentIp },
+    });
+    clearSessionCookie(res);
+    return res.status(401).json({ success: false, message: "Session invalidated" });
+  }
+
+  // Load user and check active status
+  const adminUser = await storage.getAdminUserById(session.userId);
+  if (!adminUser || !adminUser.isActive) {
+    await storage.deleteAdminSession(token);
+    clearSessionCookie(res);
+    return res.status(401).json({ success: false, message: "Account deactivated" });
+  }
+
+  // Update last activity (sliding window)
+  await storage.updateSessionActivity(token, now);
+
+  // Refresh cookie expiration
+  setSessionCookie(res, token);
+
   req.adminUser = { id: adminUser.id, email: adminUser.email, name: adminUser.name, role: adminUser.role };
   next();
 }
 
+// ================================================================
+// Route registration
+// ================================================================
+
 export async function registerAdminRoutes(app: Express) {
+
+  // ---------------------------------------------------------------
+  // LOGIN (HIPAA 164.312(d) -- Authentication)
+  // ---------------------------------------------------------------
   app.post("/api/admin/login", loginRateLimit, async (req, res) => {
     try {
       const { email, password } = adminLoginSchema.parse(req.body);
+      const ip = getClientIp(req);
+      const ua = (req.headers["user-agent"] || "").substring(0, 500);
 
-      // Check account lockout
-      const lockout = checkAccountLockout(email);
-      if (lockout.locked) {
-        const remainingMin = Math.ceil(lockout.remainingMs / 60000);
+      // Check persistent lockout
+      const failedCount = await storage.getRecentFailedAttempts(email, LOCKOUT_WINDOW_MS);
+      if (failedCount >= MAX_FAILED_ATTEMPTS) {
+        await writeAuditLog({
+          action: AuditAction.ACCOUNT_LOCKED,
+          resourceType: "admin_user",
+          userEmail: email,
+          ipAddress: ip,
+          userAgent: ua,
+          outcome: "failure",
+          details: { failedAttempts: failedCount },
+        });
         return res.status(429).json({
           success: false,
-          message: `Account temporarily locked. Try again in ${remainingMin} minutes.`,
+          message: "Account temporarily locked due to too many failed attempts. Try again later.",
         });
       }
 
       const user = await storage.getAdminUserByEmail(email);
-      if (!user) {
-        recordFailedLogin(email);
+      if (!user || !user.isActive) {
+        await storage.recordLoginAttempt(email, ip, false);
+        await writeAuditLog({
+          action: AuditAction.LOGIN_FAILURE,
+          resourceType: "admin_user",
+          userEmail: email,
+          ipAddress: ip,
+          userAgent: ua,
+          outcome: "failure",
+          details: { reason: !user ? "user_not_found" : "account_inactive" },
+        });
         return res.status(401).json({ success: false, message: "Invalid email or password" });
       }
+
       const valid = await bcrypt.compare(password, user.passwordHash);
       if (!valid) {
-        recordFailedLogin(email);
+        await storage.recordLoginAttempt(email, ip, false);
+        await writeAuditLog({
+          action: AuditAction.LOGIN_FAILURE,
+          resourceType: "admin_user",
+          resourceId: String(user.id),
+          userId: user.id,
+          userEmail: email,
+          ipAddress: ip,
+          userAgent: ua,
+          outcome: "failure",
+          details: { reason: "invalid_password" },
+        });
         return res.status(401).json({ success: false, message: "Invalid email or password" });
       }
 
-      // Successful login - clear failed attempts
-      clearFailedLogins(email);
+      // Successful login
+      await storage.recordLoginAttempt(email, ip, true);
+
+      // Invalidate any existing sessions for this user (single session enforcement)
+      await storage.deleteUserSessions(user.id);
 
       const token = crypto.randomBytes(48).toString("hex");
-      const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
-      await storage.createAdminSession(user.id, token, expiresAt);
+      const expiresAt = new Date(Date.now() + MAX_SESSION_LIFETIME_MS);
+      await storage.createAdminSession(user.id, token, expiresAt, ip, ua);
+
+      // Update last login timestamp
+      await storage.updateAdminUser(user.id, { lastLoginAt: new Date() });
+
+      // Set httpOnly cookie
+      setSessionCookie(res, token);
+
+      await writeAuditLog({
+        action: AuditAction.LOGIN_SUCCESS,
+        resourceType: "admin_user",
+        resourceId: String(user.id),
+        userId: user.id,
+        userEmail: email,
+        userRole: user.role,
+        ipAddress: ip,
+        userAgent: ua,
+        outcome: "success",
+      });
+
+      // Check if password change is required
+      const passwordExpired = !user.passwordChangedAt ||
+        (Date.now() - new Date(user.passwordChangedAt).getTime() > PASSWORD_MAX_AGE_MS);
+
       res.json({
         success: true,
-        token,
+        token, // Still send token for backward compat during migration
         user: { id: user.id, email: user.email, name: user.name, role: user.role },
+        passwordChangeRequired: passwordExpired,
       });
     } catch (error) {
       if (error instanceof z.ZodError) {
@@ -125,19 +270,112 @@ export async function registerAdminRoutes(app: Express) {
     }
   });
 
+  // ---------------------------------------------------------------
+  // LOGOUT
+  // ---------------------------------------------------------------
   app.post("/api/admin/logout", adminAuth, async (req, res) => {
-    const token = req.headers.authorization?.replace("Bearer ", "");
+    const token = req.cookies?.admin_session || req.headers.authorization?.replace("Bearer ", "");
     if (token) {
       await storage.deleteAdminSession(token);
     }
+    clearSessionCookie(res);
+    await writeAuditLog(auditFromRequest(req, {
+      action: AuditAction.LOGOUT,
+      resourceType: "session",
+      outcome: "success",
+    }));
     res.json({ success: true });
   });
 
+  // ---------------------------------------------------------------
+  // CURRENT USER
+  // ---------------------------------------------------------------
   app.get("/api/admin/me", adminAuth, async (req, res) => {
-    res.json({ success: true, user: req.adminUser });
+    const user = await storage.getAdminUserById(req.adminUser!.id);
+    const passwordExpired = !user?.passwordChangedAt ||
+      (Date.now() - new Date(user.passwordChangedAt).getTime() > PASSWORD_MAX_AGE_MS);
+    res.json({
+      success: true,
+      user: req.adminUser,
+      passwordChangeRequired: passwordExpired,
+    });
   });
 
-  app.get("/api/admin/dashboard", adminAuth, async (req, res) => {
+  // ---------------------------------------------------------------
+  // CHANGE PASSWORD (HIPAA 164.312(d))
+  // ---------------------------------------------------------------
+  app.put("/api/admin/change-password", adminAuth, async (req, res) => {
+    try {
+      const { currentPassword, newPassword } = changePasswordSchema.parse(req.body);
+      const user = await storage.getAdminUserById(req.adminUser!.id);
+      if (!user) {
+        return res.status(404).json({ success: false, message: "User not found" });
+      }
+
+      // Verify current password
+      const valid = await bcrypt.compare(currentPassword, user.passwordHash);
+      if (!valid) {
+        await writeAuditLog(auditFromRequest(req, {
+          action: AuditAction.ADMIN_PASSWORD_CHANGED,
+          resourceType: "admin_user",
+          resourceId: String(user.id),
+          outcome: "failure",
+          details: { reason: "invalid_current_password" },
+        }));
+        return res.status(401).json({ success: false, message: "Current password is incorrect" });
+      }
+
+      // Check password history (prevent reuse of last 5)
+      const history = await storage.getPasswordHistory(user.id, PASSWORD_HISTORY_COUNT);
+      for (const entry of history) {
+        const reused = await bcrypt.compare(newPassword, entry.passwordHash);
+        if (reused) {
+          return res.status(400).json({
+            success: false,
+            message: `Cannot reuse any of your last ${PASSWORD_HISTORY_COUNT} passwords`,
+          });
+        }
+      }
+
+      // Hash and save
+      const newHash = await bcrypt.hash(newPassword, 12);
+      await storage.addPasswordHistory(user.id, user.passwordHash);
+      await storage.updateAdminUser(user.id, {
+        passwordHash: newHash,
+        passwordChangedAt: new Date(),
+      });
+
+      // Invalidate all sessions except current
+      await storage.deleteUserSessions(user.id);
+      // Re-create current session
+      const token = crypto.randomBytes(48).toString("hex");
+      const expiresAt = new Date(Date.now() + MAX_SESSION_LIFETIME_MS);
+      const ip = getClientIp(req);
+      const ua = (req.headers["user-agent"] || "").substring(0, 500);
+      await storage.createAdminSession(user.id, token, expiresAt, ip, ua);
+      setSessionCookie(res, token);
+
+      await writeAuditLog(auditFromRequest(req, {
+        action: AuditAction.ADMIN_PASSWORD_CHANGED,
+        resourceType: "admin_user",
+        resourceId: String(user.id),
+        outcome: "success",
+      }));
+
+      res.json({ success: true, message: "Password changed successfully", token });
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ success: false, message: "Invalid password data", errors: error.errors });
+      }
+      console.error("Password change error:", error);
+      res.status(500).json({ success: false, message: "Failed to change password" });
+    }
+  });
+
+  // ---------------------------------------------------------------
+  // DASHBOARD (no PHI -- separated per HIPAA minimum necessary)
+  // ---------------------------------------------------------------
+  app.get("/api/admin/dashboard", adminAuth, requirePermission(Permission.VIEW_DASHBOARD), async (req, res) => {
     try {
       const now = new Date();
       const monthNames = ["JAN", "FEB", "MAR", "APR", "MAY", "JUN", "JUL", "AUG", "SEP", "OCT", "NOV", "DEC"];
@@ -145,7 +383,6 @@ export async function registerAdminRoutes(app: Express) {
       const year = parseInt(req.query.year as string) || now.getFullYear();
       const snapshots = await storage.getAggregatedSnapshots(month, year);
       const practicesList = await storage.getPractices();
-      const inquiries = await storage.getContactInquiries();
 
       const departmentsByPractice: Record<number, string[]> = {};
       for (const s of snapshots) {
@@ -162,14 +399,18 @@ export async function registerAdminRoutes(app: Express) {
         departmentsByPractice[Number(key)].sort();
       }
 
-      res.json({ success: true, snapshots, practices: practicesList, departmentsByPractice, inquiries, month, year });
+      // NOTE: inquiries intentionally NOT included -- requires VIEW_INQUIRIES permission
+      res.json({ success: true, snapshots, practices: practicesList, departmentsByPractice, month, year });
     } catch (error) {
       console.error("Dashboard error:", error);
       res.status(500).json({ success: false, message: "Failed to load dashboard" });
     }
   });
 
-  app.get("/api/admin/practices", adminAuth, async (req, res) => {
+  // ---------------------------------------------------------------
+  // PRACTICES
+  // ---------------------------------------------------------------
+  app.get("/api/admin/practices", adminAuth, requirePermission(Permission.VIEW_PRACTICES), async (req, res) => {
     try {
       const practices = await storage.getPractices();
       res.json({ success: true, practices });
@@ -178,7 +419,7 @@ export async function registerAdminRoutes(app: Express) {
     }
   });
 
-  app.post("/api/admin/practices", adminAuth, async (req, res) => {
+  app.post("/api/admin/practices", adminAuth, requirePermission(Permission.MANAGE_PRACTICES), async (req, res) => {
     try {
       const practiceSchema = z.object({
         name: z.string().min(1),
@@ -189,6 +430,15 @@ export async function registerAdminRoutes(app: Express) {
       });
       const validated = practiceSchema.parse(req.body);
       const practice = await storage.createPractice(validated);
+
+      await writeAuditLog(auditFromRequest(req, {
+        action: AuditAction.PRACTICE_CREATED,
+        resourceType: "practice",
+        resourceId: String(practice.id),
+        outcome: "success",
+        details: { name: practice.name },
+      }));
+
       res.json({ success: true, practice });
     } catch (error) {
       if (error instanceof z.ZodError) {
@@ -198,7 +448,10 @@ export async function registerAdminRoutes(app: Express) {
     }
   });
 
-  app.get("/api/admin/snapshots", adminAuth, async (req, res) => {
+  // ---------------------------------------------------------------
+  // SNAPSHOTS
+  // ---------------------------------------------------------------
+  app.get("/api/admin/snapshots", adminAuth, requirePermission(Permission.VIEW_SNAPSHOTS), async (req, res) => {
     try {
       const { practiceId, programType, month, year } = req.query;
       const snapshots = await storage.getProgramSnapshots(
@@ -213,17 +466,39 @@ export async function registerAdminRoutes(app: Express) {
     }
   });
 
-  app.get("/api/admin/inquiries", adminAuth, async (req, res) => {
+  // ---------------------------------------------------------------
+  // INQUIRIES (PII + PHI access -- audit logged)
+  // ---------------------------------------------------------------
+  app.get("/api/admin/inquiries", adminAuth, requirePermission(Permission.VIEW_INQUIRIES), async (req, res) => {
     try {
       const contactInquiries = await storage.getContactInquiries();
       const nightInquiries = await storage.getNightCoverageInquiries();
       const woundReferrals = await storage.getWoundCareReferrals();
+
+      // Audit log: PHI access (wound referrals contain patient data)
+      await writeAuditLog(auditFromRequest(req, {
+        action: AuditAction.PHI_READ,
+        resourceType: "wound_care_referral",
+        outcome: "success",
+        phiAccessed: true,
+        details: { count: woundReferrals.length },
+      }));
+      await writeAuditLog(auditFromRequest(req, {
+        action: AuditAction.PII_READ,
+        resourceType: "contact_inquiry",
+        outcome: "success",
+        details: { contactCount: contactInquiries.length, nightCount: nightInquiries.length },
+      }));
+
       res.json({ success: true, contactInquiries, nightInquiries, woundReferrals });
     } catch (error) {
       res.status(500).json({ success: false, message: "Failed to load inquiries" });
     }
   });
 
+  // ---------------------------------------------------------------
+  // THOROUGHCARE SYNC
+  // ---------------------------------------------------------------
   app.get("/api/admin/tc/status", adminAuth, async (_req, res) => {
     try {
       const syncStatus = getSyncStatus();
@@ -233,9 +508,18 @@ export async function registerAdminRoutes(app: Express) {
     }
   });
 
-  app.post("/api/admin/tc/sync", adminAuth, async (req, res) => {
+  app.post("/api/admin/tc/sync", adminAuth, requirePermission(Permission.TRIGGER_SYNC), async (req, res) => {
     try {
       const { month, year } = req.body || {};
+
+      await writeAuditLog(auditFromRequest(req, {
+        action: AuditAction.TC_SYNC_STARTED,
+        resourceType: "tc_sync",
+        outcome: "success",
+        phiAccessed: true,
+        details: { month, year, type: "full" },
+      }));
+
       res.json({ success: true, message: "Sync started" });
       runFullSync(month, year).catch((err) => {
         console.error("[TC Sync] Background sync error:", err);
@@ -245,10 +529,19 @@ export async function registerAdminRoutes(app: Express) {
     }
   });
 
-  app.post("/api/admin/tc/sync-historical", adminAuth, async (req, res) => {
+  app.post("/api/admin/tc/sync-historical", adminAuth, requirePermission(Permission.TRIGGER_SYNC), async (req, res) => {
     try {
       const { months } = req.body || {};
       const totalMonths = Math.min(Math.max(months || 24, 1), 36);
+
+      await writeAuditLog(auditFromRequest(req, {
+        action: AuditAction.TC_SYNC_STARTED,
+        resourceType: "tc_sync",
+        outcome: "success",
+        phiAccessed: true,
+        details: { totalMonths, type: "historical" },
+      }));
+
       res.json({ success: true, message: `Historical sync started (${totalMonths} months)` });
       runHistoricalSync(totalMonths).catch((err) => {
         console.error("[TC Historical Sync] Background sync error:", err);
@@ -258,7 +551,7 @@ export async function registerAdminRoutes(app: Express) {
     }
   });
 
-  app.get("/api/admin/tc/test", adminAuth, async (_req, res) => {
+  app.get("/api/admin/tc/test", adminAuth, requirePermission(Permission.TRIGGER_SYNC), async (_req, res) => {
     try {
       const result = await testConnection();
       res.json(result);
@@ -267,7 +560,7 @@ export async function registerAdminRoutes(app: Express) {
     }
   });
 
-  app.get("/api/admin/tc/sample-enrollments", adminAuth, async (_req, res) => {
+  app.get("/api/admin/tc/sample-enrollments", adminAuth, requirePermission(Permission.VIEW_TC_SAMPLES), async (req, res) => {
     try {
       const { fetchEnrollments } = await import("./thoroughcare-client");
       const enrollments = await fetchEnrollments(undefined, { _count: "10" });
@@ -280,6 +573,15 @@ export async function registerAdminRoutes(app: Express) {
         managingOrganization: e.managingOrganization,
         allKeys: Object.keys(e),
       }));
+
+      await writeAuditLog(auditFromRequest(req, {
+        action: AuditAction.TC_DATA_FETCHED,
+        resourceType: "tc_enrollment",
+        outcome: "success",
+        phiAccessed: true,
+        details: { sampleCount: samples.length },
+      }));
+
       res.json({ success: true, samples });
     } catch (error: any) {
       console.error("[Admin] Sample enrollments error:", error);
@@ -287,7 +589,149 @@ export async function registerAdminRoutes(app: Express) {
     }
   });
 
+  // ---------------------------------------------------------------
+  // AUDIT LOGS (superadmin only -- HIPAA 164.312(b))
+  // ---------------------------------------------------------------
+  app.get("/api/admin/audit-logs", adminAuth, requirePermission(Permission.VIEW_AUDIT_LOGS), async (req, res) => {
+    try {
+      const filters: any = {};
+      if (req.query.action) filters.action = req.query.action;
+      if (req.query.resourceType) filters.resourceType = req.query.resourceType;
+      if (req.query.userId) filters.userId = parseInt(req.query.userId as string);
+      if (req.query.phiOnly === "true") filters.phiOnly = true;
+      if (req.query.startDate) filters.startDate = new Date(req.query.startDate as string);
+      if (req.query.endDate) filters.endDate = new Date(req.query.endDate as string);
+      if (req.query.limit) filters.limit = parseInt(req.query.limit as string);
+      if (req.query.offset) filters.offset = parseInt(req.query.offset as string);
+
+      const logs = await getAuditLogs(filters);
+      res.json({ success: true, logs });
+    } catch (error) {
+      console.error("Audit logs error:", error);
+      res.status(500).json({ success: false, message: "Failed to load audit logs" });
+    }
+  });
+
+  // ---------------------------------------------------------------
+  // USER MANAGEMENT (superadmin only -- HIPAA 164.312(a)(1))
+  // ---------------------------------------------------------------
+  app.get("/api/admin/users", adminAuth, requirePermission(Permission.MANAGE_USERS), async (req, res) => {
+    try {
+      const users = await storage.getAdminUsers();
+      // Strip password hashes before sending
+      const sanitized = users.map(({ passwordHash, ...u }) => u);
+      res.json({ success: true, users: sanitized });
+    } catch (error) {
+      res.status(500).json({ success: false, message: "Failed to load users" });
+    }
+  });
+
+  app.post("/api/admin/users", adminAuth, requirePermission(Permission.MANAGE_USERS), async (req, res) => {
+    try {
+      const schema = z.object({
+        email: z.string().email(),
+        name: z.string().min(1),
+        password: adminPasswordSchema,
+        role: z.enum(["viewer", "admin", "superadmin"]),
+      });
+      const { email, name, password, role } = schema.parse(req.body);
+
+      const existing = await storage.getAdminUserByEmail(email);
+      if (existing) {
+        return res.status(409).json({ success: false, message: "User with this email already exists" });
+      }
+
+      const passwordHash = await bcrypt.hash(password, 12);
+      const user = await storage.createAdminUser({
+        email, name, passwordHash, role,
+      });
+
+      // Update createdBy
+      await storage.updateAdminUser(user.id, { createdBy: req.adminUser!.id });
+
+      await writeAuditLog(auditFromRequest(req, {
+        action: AuditAction.ADMIN_USER_CREATED,
+        resourceType: "admin_user",
+        resourceId: String(user.id),
+        outcome: "success",
+        details: { email, role },
+      }));
+
+      res.json({ success: true, user: { id: user.id, email: user.email, name: user.name, role: user.role } });
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ success: false, message: "Invalid user data", errors: error.errors });
+      }
+      console.error("Create user error:", error);
+      res.status(500).json({ success: false, message: "Failed to create user" });
+    }
+  });
+
+  app.put("/api/admin/users/:id/role", adminAuth, requirePermission(Permission.MANAGE_USERS), async (req, res) => {
+    try {
+      const userId = parseInt(req.params.id);
+      const { role } = z.object({ role: z.enum(["viewer", "admin", "superadmin"]) }).parse(req.body);
+
+      const user = await storage.getAdminUserById(userId);
+      if (!user) {
+        return res.status(404).json({ success: false, message: "User not found" });
+      }
+
+      const oldRole = user.role;
+      await storage.updateAdminUser(userId, { role });
+
+      await writeAuditLog(auditFromRequest(req, {
+        action: AuditAction.ADMIN_ROLE_CHANGED,
+        resourceType: "admin_user",
+        resourceId: String(userId),
+        outcome: "success",
+        details: { oldRole, newRole: role, targetEmail: user.email },
+      }));
+
+      res.json({ success: true });
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ success: false, message: "Invalid role" });
+      }
+      res.status(500).json({ success: false, message: "Failed to update role" });
+    }
+  });
+
+  app.put("/api/admin/users/:id/deactivate", adminAuth, requirePermission(Permission.MANAGE_USERS), async (req, res) => {
+    try {
+      const userId = parseInt(req.params.id);
+
+      // Prevent self-deactivation
+      if (userId === req.adminUser!.id) {
+        return res.status(400).json({ success: false, message: "Cannot deactivate your own account" });
+      }
+
+      const user = await storage.getAdminUserById(userId);
+      if (!user) {
+        return res.status(404).json({ success: false, message: "User not found" });
+      }
+
+      await storage.updateAdminUser(userId, { isActive: 0 });
+      await storage.deleteUserSessions(userId);
+
+      await writeAuditLog(auditFromRequest(req, {
+        action: AuditAction.ADMIN_USER_DEACTIVATED,
+        resourceType: "admin_user",
+        resourceId: String(userId),
+        outcome: "success",
+        details: { targetEmail: user.email },
+      }));
+
+      res.json({ success: true });
+    } catch (error) {
+      res.status(500).json({ success: false, message: "Failed to deactivate user" });
+    }
+  });
 }
+
+// ================================================================
+// Admin seed (uses env var for password -- never hardcoded)
+// ================================================================
 
 export async function seedAdminUsers() {
   const defaultPassword = process.env.ADMIN_DEFAULT_PASSWORD;
@@ -301,8 +745,8 @@ export async function seedAdminUsers() {
   }
 
   const admins = [
-    { email: "alexander.barrett@lynkhealthcare.com", name: "Alexander Barrett" },
-    { email: "will.moon@lynkhealthcare.com", name: "Will Moon" },
+    { email: "alexander.barrett@lynkhealthcare.com", name: "Alexander Barrett", role: "superadmin" as const },
+    { email: "will.moon@lynkhealthcare.com", name: "Will Moon", role: "admin" as const },
   ];
 
   for (const admin of admins) {
@@ -313,9 +757,9 @@ export async function seedAdminUsers() {
         email: admin.email,
         name: admin.name,
         passwordHash,
-        role: "admin",
+        role: admin.role,
       });
-      console.log(`[Admin] Created admin account: ${admin.email}`);
+      console.log(`[Admin] Created ${admin.role} account: ${admin.email}`);
     }
   }
 }

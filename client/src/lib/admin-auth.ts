@@ -1,3 +1,11 @@
+/**
+ * Admin Authentication Client (HIPAA-compliant)
+ *
+ * Auth tokens are stored in httpOnly cookies (set by server).
+ * Only non-sensitive user display info is stored client-side.
+ * localStorage token support retained during migration period.
+ */
+
 const TOKEN_KEY = "lynk_admin_token";
 const USER_KEY = "lynk_admin_user";
 
@@ -16,6 +24,7 @@ export function getAdminUser(): { id: number; email: string; name: string; role:
 }
 
 export function setAdminAuth(token: string, user: { id: number; email: string; name: string; role: string }) {
+  // Store token for backward compatibility; httpOnly cookie is the primary auth mechanism
   localStorage.setItem(TOKEN_KEY, token);
   localStorage.setItem(USER_KEY, JSON.stringify(user));
 }
@@ -29,8 +38,10 @@ export async function adminFetch(url: string, options: RequestInit = {}) {
   const token = getAdminToken();
   const res = await fetch(url, {
     ...options,
+    credentials: "same-origin", // Send httpOnly cookies automatically
     headers: {
       "Content-Type": "application/json",
+      // Include Bearer token as fallback during migration to cookie-only auth
       ...(token ? { Authorization: `Bearer ${token}` } : {}),
       ...options.headers,
     },

@@ -2,10 +2,23 @@ import express, { type Request, Response, NextFunction } from "express";
 import helmet from "helmet";
 import cors from "cors";
 import rateLimit from "express-rate-limit";
+import cookieParser from "cookie-parser";
 import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
+import { storage } from "./storage";
 
 const app = express();
+
+// Trust proxy (required for correct IP detection behind reverse proxy)
+app.set("trust proxy", 1);
+
+// HTTPS enforcement in production (HIPAA 164.312(e)(1))
+app.use((req, res, next) => {
+  if (req.headers["x-forwarded-proto"] !== "https" && process.env.NODE_ENV === "production") {
+    return res.redirect(301, `https://${req.headers.host}${req.url}`);
+  }
+  next();
+});
 
 // Security headers via helmet
 app.use(helmet({
@@ -49,6 +62,9 @@ app.use(rateLimit({
   skip: (req) => !req.path.startsWith("/api"),
 }));
 
+// Cookie parser (for httpOnly session cookies -- HIPAA 164.312(d))
+app.use(cookieParser());
+
 // Request body size limits
 app.use(express.json({ limit: "1mb" }));
 app.use(express.urlencoded({ extended: false, limit: "1mb" }));
@@ -56,7 +72,7 @@ app.use(express.urlencoded({ extended: false, limit: "1mb" }));
 // Cache-control headers middleware for static assets
 app.use((req, res, next) => {
   const requestPath = req.path;
-  
+
   // Service worker, version.json, and manifest should never be cached
   if (requestPath === '/sw.js' || requestPath === '/version.json' || requestPath === '/manifest.json') {
     res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
@@ -77,33 +93,34 @@ app.use((req, res, next) => {
     res.setHeader('Pragma', 'no-cache');
     res.setHeader('Expires', '0');
   }
-  
+
   next();
 });
+
+// PHI-safe request logging (HIPAA -- never log response bodies that may contain PHI/PII)
+const PHI_ENDPOINTS = [
+  "/api/admin/inquiries",
+  "/api/admin/dashboard",
+  "/api/admin/tc/sample-enrollments",
+  "/api/referrals/wound-care",
+  "/api/contact",
+  "/api/contact-night-coverage",
+  "/api/contact-inquiries",
+  "/api/admin/users",
+  "/api/admin/audit-logs",
+];
 
 app.use((req, res, next) => {
   const start = Date.now();
   const path = req.path;
-  let capturedJsonResponse: Record<string, any> | undefined = undefined;
-
-  const originalResJson = res.json;
-  res.json = function (bodyJson, ...args) {
-    capturedJsonResponse = bodyJson;
-    return originalResJson.apply(res, [bodyJson, ...args]);
-  };
 
   res.on("finish", () => {
     const duration = Date.now() - start;
     if (path.startsWith("/api")) {
-      let logLine = `${req.method} ${path} ${res.statusCode} in ${duration}ms`;
-      if (capturedJsonResponse) {
-        logLine += ` :: ${JSON.stringify(capturedJsonResponse)}`;
-      }
-
-      if (logLine.length > 80) {
-        logLine = logLine.slice(0, 79) + "…";
-      }
-
+      const isPhi = PHI_ENDPOINTS.some((ep) => path.startsWith(ep));
+      const logLine = isPhi
+        ? `${req.method} ${path} ${res.statusCode} in ${duration}ms :: [REDACTED]`
+        : `${req.method} ${path} ${res.statusCode} in ${duration}ms`;
       log(logLine);
     }
   });
@@ -136,6 +153,15 @@ app.use((req, res, next) => {
   } else {
     serveStatic(app);
   }
+
+  // Session cleanup job (HIPAA -- remove expired/inactive sessions)
+  setInterval(async () => {
+    try {
+      await storage.cleanExpiredSessions();
+    } catch (err) {
+      console.error("[Session Cleanup] Error:", err);
+    }
+  }, 5 * 60 * 1000); // Every 5 minutes
 
   // ALWAYS serve the app on port 5000
   // this serves both the API and the client.
