@@ -695,3 +695,55 @@ export const insertBillingEvaluationFormSchema = createInsertSchema(billingEvalu
 
 export type InsertBillingEvaluationForm = z.infer<typeof insertBillingEvaluationFormSchema>;
 export type BillingEvaluationForm = typeof billingEvaluationForms.$inferSelect;
+
+// ============================================================
+// Invoices
+// ============================================================
+
+export const invoices = pgTable("invoices", {
+  id: serial("id").primaryKey(),
+  invoiceNumber: text("invoice_number").notNull(),
+  practiceId: integer("practice_id").notNull(),
+  practiceName: text("practice_name").notNull(),
+  month: text("month").notNull(),
+  year: integer("year").notNull(),
+  totalAmountCents: integer("total_amount_cents").notNull().default(0),
+  totalClaims: integer("total_claims").notNull().default(0),
+  status: text("status").notNull().default("pending_review"),
+  generatedAt: timestamp("generated_at").defaultNow(),
+  reviewedBy: integer("reviewed_by"),
+  reviewedAt: timestamp("reviewed_at"),
+  approvedBy: integer("approved_by"),
+  approvedAt: timestamp("approved_at"),
+  notes: text("notes"),
+});
+
+export const insertInvoiceSchema = createInsertSchema(invoices).omit({
+  id: true,
+  generatedAt: true,
+  reviewedBy: true,
+  reviewedAt: true,
+  approvedBy: true,
+  approvedAt: true,
+});
+
+export type InsertInvoice = z.infer<typeof insertInvoiceSchema>;
+export type Invoice = typeof invoices.$inferSelect;
+
+export const invoiceLineItems = pgTable("invoice_line_items", {
+  id: serial("id").primaryKey(),
+  invoiceId: integer("invoice_id").notNull(),
+  programType: text("program_type").notNull(),
+  cptCode: text("cpt_code").notNull(),
+  description: text("description"),
+  claimCount: integer("claim_count").notNull().default(0),
+  rateCents: integer("rate_cents").notNull().default(0),
+  totalCents: integer("total_cents").notNull().default(0),
+});
+
+export const insertInvoiceLineItemSchema = createInsertSchema(invoiceLineItems).omit({
+  id: true,
+});
+
+export type InsertInvoiceLineItem = z.infer<typeof insertInvoiceLineItemSchema>;
+export type InvoiceLineItem = typeof invoiceLineItems.$inferSelect;
