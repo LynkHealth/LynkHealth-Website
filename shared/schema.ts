@@ -665,3 +665,33 @@ export const insertPoorEngagementFormSchema = createInsertSchema(poorEngagementF
 
 export type InsertPoorEngagementForm = z.infer<typeof insertPoorEngagementFormSchema>;
 export type PoorEngagementForm = typeof poorEngagementForms.$inferSelect;
+
+export const billingEvaluationForms = pgTable("billing_evaluation_forms", {
+  id: serial("id").primaryKey(),
+  patientName: text("patient_name").notNull(),
+  patientDob: text("patient_dob").notNull(),
+  clinicPartnerName: text("clinic_partner_name").notNull(),
+  employeeName: text("employee_name").notNull(),
+  description: text("description").notNull(),
+  issueType: text("issue_type").notNull(),
+  issueTypeOther: text("issue_type_other"),
+  patientCommunicated: boolean("patient_communicated").notNull().default(false),
+  requestedAction: text("requested_action").notNull(),
+  status: text("status").notNull().default("pending"),
+  submittedBy: integer("submitted_by"),
+  reviewedBy: integer("reviewed_by"),
+  reviewedAt: timestamp("reviewed_at"),
+  reviewNotes: text("review_notes"),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const insertBillingEvaluationFormSchema = createInsertSchema(billingEvaluationForms).omit({
+  id: true,
+  createdAt: true,
+  reviewedBy: true,
+  reviewedAt: true,
+  reviewNotes: true,
+});
+
+export type InsertBillingEvaluationForm = z.infer<typeof insertBillingEvaluationFormSchema>;
+export type BillingEvaluationForm = typeof billingEvaluationForms.$inferSelect;
