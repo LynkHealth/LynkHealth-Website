@@ -780,10 +780,13 @@ function processClaimData(
   if (claim.item && Array.isArray(claim.item)) {
     for (const item of claim.item) {
       const cptCode = item.productOrService?.coding?.[0]?.code;
+      const multiplier = item.productOrService?.coding?.[0]?.multiplier || 1;
       if (cptCode && rates[cptCode]) {
         const codeRev = rates[cptCode];
-        claimRevenue += codeRev;
-        codeBreakdown.push({ cptCode, revenue: codeRev });
+        for (let m = 0; m < multiplier; m++) {
+          claimRevenue += codeRev;
+          codeBreakdown.push({ cptCode, revenue: codeRev });
+        }
       }
     }
   }
@@ -791,10 +794,13 @@ function processClaimData(
   if (codeBreakdown.length === 0 && claim.procedure) {
     for (const proc of claim.procedure) {
       const cptCode = proc.concept?.coding?.[0]?.code;
+      const multiplier = proc.concept?.coding?.[0]?.multiplier || 1;
       if (cptCode && rates[cptCode]) {
         const codeRev = rates[cptCode];
-        claimRevenue += codeRev;
-        codeBreakdown.push({ cptCode, revenue: codeRev });
+        for (let m = 0; m < multiplier; m++) {
+          claimRevenue += codeRev;
+          codeBreakdown.push({ cptCode, revenue: codeRev });
+        }
       }
     }
   }
