@@ -253,26 +253,9 @@ const PROGRAM_COLORS: Record<string, string> = {
   TCM: "bg-orange-50 text-orange-700 border-orange-200",
 };
 
-function InvoicesTab() {
-  const MONTHS = ["JAN", "FEB", "MAR", "APR", "MAY", "JUN", "JUL", "AUG", "SEP", "OCT", "NOV", "DEC"];
-  const MONTH_DISPLAY: Record<string, string> = {
-    JAN: "January", FEB: "February", MAR: "March", APR: "April",
-    MAY: "May", JUN: "June", JUL: "July", AUG: "August",
-    SEP: "September", OCT: "October", NOV: "November", DEC: "December"
-  };
+function PracticeDetailView({ practice, onBack }: { practice: any; onBack: () => void }) {
   const PROGRAMS = ["CCM", "RPM", "BHI", "PCM", "RTM", "APCM", "AWV", "TCM"];
   const now = new Date();
-  const prevMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1);
-  const [genMonth, setGenMonth] = useState(MONTHS[prevMonth.getMonth()]);
-  const [genYear, setGenYear] = useState(prevMonth.getFullYear());
-  const [invoiceList, setInvoiceList] = useState<any[]>([]);
-  const [statusFilter, setStatusFilter] = useState("all");
-  const [loading, setLoading] = useState(true);
-  const [generating, setGenerating] = useState(false);
-  const [selectedInvoice, setSelectedInvoice] = useState<any>(null);
-  const [lineItems, setLineItems] = useState<any[]>([]);
-  const [detailLoading, setDetailLoading] = useState(false);
-
   const [rateProgram, setRateProgram] = useState("CCM");
   const [rateYear, setRateYear] = useState(now.getFullYear());
   const [allRates, setAllRates] = useState<any[]>([]);
@@ -281,17 +264,21 @@ function InvoicesTab() {
   const [editRateValue, setEditRateValue] = useState("");
   const [savingRate, setSavingRate] = useState(false);
 
+  const formatCurrency = (cents: number) => {
+    return `$${(cents / 100).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+  };
+
   const loadRates = async () => {
     setRatesLoading(true);
     try {
-      const res = await adminFetch(`/api/admin/invoice-rates/${rateYear}`);
+      const res = await adminFetch(`/api/admin/invoice-rates/${practice.id}/${rateYear}`);
       const data = await res.json();
       if (data.success) setAllRates(data.rates);
     } catch (e) { console.error(e); }
     setRatesLoading(false);
   };
 
-  useEffect(() => { loadRates(); }, [rateYear]);
+  useEffect(() => { loadRates(); }, [rateYear, practice.id]);
 
   const filteredRates = allRates.filter((r: any) => r.program === rateProgram);
 
@@ -303,6 +290,7 @@ function InvoicesTab() {
       const res = await adminFetch("/api/admin/invoice-rates", {
         method: "PUT",
         body: JSON.stringify({
+          practiceId: practice.id,
           cptCode: rate.cptCode,
           program: rate.program,
           description: rate.description,
@@ -323,6 +311,157 @@ function InvoicesTab() {
     } catch (e) { console.error(e); }
     setSavingRate(false);
   };
+
+  let depts: string[] = [];
+  try { depts = practice.departments ? JSON.parse(practice.departments) : []; } catch {}
+
+  return (
+    <div className="space-y-4">
+      <div className="flex items-center gap-3">
+        <Button variant="ghost" size="sm" onClick={onBack}>
+          <ChevronLeft className="w-4 h-4 mr-1" /> Back to Practices
+        </Button>
+      </div>
+
+      <Card>
+        <CardHeader className="pb-3">
+          <div className="flex items-center justify-between">
+            <div>
+              <CardTitle className="text-lg">{practice.name}</CardTitle>
+              {practice.thoroughcareAlias && (
+                <p className="text-sm text-slate-500 mt-1">ThoroughCare Alias: {practice.thoroughcareAlias}</p>
+              )}
+            </div>
+            <span className={`px-2 py-0.5 rounded text-xs font-medium ${
+              practice.status === "active" ? "bg-green-100 text-green-700" : "bg-slate-100 text-slate-600"
+            }`}>{practice.status}</span>
+          </div>
+        </CardHeader>
+        <CardContent>
+          {depts.length > 0 && (
+            <div className="mb-4">
+              <p className="text-xs text-slate-500 mb-2">Departments / Locations</p>
+              <div className="flex flex-wrap gap-1">
+                {depts.map((d: string, i: number) => (
+                  <span key={i} className="bg-slate-100 text-slate-600 px-2 py-1 rounded text-xs">{d.replace(/\s*\[\d+\]\s*$/, '')}</span>
+                ))}
+              </div>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader className="pb-3">
+          <CardTitle className="text-base">Billing Rates</CardTitle>
+          <p className="text-xs text-slate-500">Set custom invoice rates for this practice. The claim rate is the Medicare fee schedule rate. The invoice rate is what you charge this practice.</p>
+        </CardHeader>
+        <CardContent>
+          <div className="flex items-end gap-3 mb-4">
+            <div>
+              <label className="text-xs text-slate-500 mb-1 block">Program</label>
+              <select className="border rounded px-3 py-1.5 text-sm" value={rateProgram} onChange={(e) => setRateProgram(e.target.value)}>
+                {PROGRAMS.map(p => <option key={p} value={p}>{p}</option>)}
+              </select>
+            </div>
+            <div>
+              <label className="text-xs text-slate-500 mb-1 block">Year</label>
+              <select className="border rounded px-3 py-1.5 text-sm" value={rateYear} onChange={(e) => setRateYear(parseInt(e.target.value))}>
+                {[2024, 2025, 2026].map(y => <option key={y} value={y}>{y}</option>)}
+              </select>
+            </div>
+          </div>
+
+          {ratesLoading ? (
+            <div className="flex items-center justify-center py-6">
+              <Loader2 className="w-5 h-5 animate-spin text-slate-400" />
+            </div>
+          ) : filteredRates.length === 0 ? (
+            <p className="text-sm text-slate-500 text-center py-4">No billing codes found for {rateProgram} in {rateYear}.</p>
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="border-b bg-slate-50">
+                    <th className="text-left py-2 px-3 font-medium">CPT Code</th>
+                    <th className="text-left py-2 px-3 font-medium">Description</th>
+                    <th className="text-right py-2 px-3 font-medium">Claim Rate</th>
+                    <th className="text-right py-2 px-3 font-medium">Invoice Rate</th>
+                    <th className="text-center py-2 px-3 font-medium w-20">Edit</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {filteredRates.map((r: any) => (
+                    <tr key={r.id} className="border-b hover:bg-slate-50">
+                      <td className="py-2 px-3 font-mono text-xs">{r.cptCode}</td>
+                      <td className="py-2 px-3 text-slate-600 text-xs">{r.description || "—"}</td>
+                      <td className="py-2 px-3 text-right text-slate-500">{formatCurrency(r.claimRateCents)}</td>
+                      <td className="py-2 px-3 text-right">
+                        {editingRateId === r.id ? (
+                          <input
+                            type="number"
+                            step="0.01"
+                            className="border rounded px-2 py-1 text-sm text-right w-24"
+                            value={editRateValue}
+                            onChange={(e) => setEditRateValue(e.target.value)}
+                            onKeyDown={(e) => {
+                              if (e.key === "Enter") saveRate(r);
+                              if (e.key === "Escape") setEditingRateId(null);
+                            }}
+                            autoFocus
+                          />
+                        ) : (
+                          <span className={`font-medium ${r.invoiceRateCents !== r.claimRateCents ? "text-blue-700" : ""}`}>
+                            {formatCurrency(r.invoiceRateCents)}
+                          </span>
+                        )}
+                      </td>
+                      <td className="py-2 px-3 text-center">
+                        {editingRateId === r.id ? (
+                          <div className="flex items-center justify-center gap-1">
+                            <Button variant="ghost" size="sm" onClick={() => saveRate(r)} disabled={savingRate}>
+                              {savingRate ? <Loader2 className="w-3 h-3 animate-spin" /> : <CircleCheck className="w-4 h-4 text-green-600" />}
+                            </Button>
+                            <Button variant="ghost" size="sm" onClick={() => setEditingRateId(null)}>
+                              <CircleX className="w-4 h-4 text-slate-400" />
+                            </Button>
+                          </div>
+                        ) : (
+                          <Button variant="ghost" size="sm" onClick={() => { setEditingRateId(r.id); setEditRateValue((r.invoiceRateCents / 100).toFixed(2)); }}>
+                            <Pencil className="w-3.5 h-3.5 text-slate-400" />
+                          </Button>
+                        )}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+    </div>
+  );
+}
+
+function InvoicesTab() {
+  const MONTHS = ["JAN", "FEB", "MAR", "APR", "MAY", "JUN", "JUL", "AUG", "SEP", "OCT", "NOV", "DEC"];
+  const MONTH_DISPLAY: Record<string, string> = {
+    JAN: "January", FEB: "February", MAR: "March", APR: "April",
+    MAY: "May", JUN: "June", JUL: "July", AUG: "August",
+    SEP: "September", OCT: "October", NOV: "November", DEC: "December"
+  };
+  const now = new Date();
+  const prevMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+  const [genMonth, setGenMonth] = useState(MONTHS[prevMonth.getMonth()]);
+  const [genYear, setGenYear] = useState(prevMonth.getFullYear());
+  const [invoiceList, setInvoiceList] = useState<any[]>([]);
+  const [statusFilter, setStatusFilter] = useState("all");
+  const [loading, setLoading] = useState(true);
+  const [generating, setGenerating] = useState(false);
+  const [selectedInvoice, setSelectedInvoice] = useState<any>(null);
+  const [lineItems, setLineItems] = useState<any[]>([]);
+  const [detailLoading, setDetailLoading] = useState(false);
 
   const loadInvoices = async () => {
     setLoading(true);
@@ -546,96 +685,6 @@ function InvoicesTab() {
     <div className="space-y-4">
       <Card>
         <CardHeader className="pb-3">
-          <CardTitle className="text-base">Billing Rates</CardTitle>
-          <p className="text-xs text-slate-500">Set the invoice rate for each CPT code by program. The claim rate is the Medicare fee schedule rate. The invoice rate is what you charge the practice.</p>
-        </CardHeader>
-        <CardContent>
-          <div className="flex items-end gap-3 mb-4">
-            <div>
-              <label className="text-xs text-slate-500 mb-1 block">Program</label>
-              <select className="border rounded px-3 py-1.5 text-sm" value={rateProgram} onChange={(e) => setRateProgram(e.target.value)}>
-                {PROGRAMS.map(p => <option key={p} value={p}>{p}</option>)}
-              </select>
-            </div>
-            <div>
-              <label className="text-xs text-slate-500 mb-1 block">Year</label>
-              <select className="border rounded px-3 py-1.5 text-sm" value={rateYear} onChange={(e) => setRateYear(parseInt(e.target.value))}>
-                {[2024, 2025, 2026].map(y => <option key={y} value={y}>{y}</option>)}
-              </select>
-            </div>
-          </div>
-
-          {ratesLoading ? (
-            <div className="flex items-center justify-center py-6">
-              <Loader2 className="w-5 h-5 animate-spin text-slate-400" />
-            </div>
-          ) : filteredRates.length === 0 ? (
-            <p className="text-sm text-slate-500 text-center py-4">No billing codes found for {rateProgram} in {rateYear}.</p>
-          ) : (
-            <div className="overflow-x-auto">
-              <table className="w-full text-sm">
-                <thead>
-                  <tr className="border-b bg-slate-50">
-                    <th className="text-left py-2 px-3 font-medium">CPT Code</th>
-                    <th className="text-left py-2 px-3 font-medium">Description</th>
-                    <th className="text-right py-2 px-3 font-medium">Claim Rate</th>
-                    <th className="text-right py-2 px-3 font-medium">Invoice Rate</th>
-                    <th className="text-center py-2 px-3 font-medium w-20">Edit</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {filteredRates.map((r: any) => (
-                    <tr key={r.id} className="border-b hover:bg-slate-50">
-                      <td className="py-2 px-3 font-mono text-xs">{r.cptCode}</td>
-                      <td className="py-2 px-3 text-slate-600 text-xs">{r.description || "—"}</td>
-                      <td className="py-2 px-3 text-right text-slate-500">{formatCurrency(r.claimRateCents)}</td>
-                      <td className="py-2 px-3 text-right">
-                        {editingRateId === r.id ? (
-                          <input
-                            type="number"
-                            step="0.01"
-                            className="border rounded px-2 py-1 text-sm text-right w-24"
-                            value={editRateValue}
-                            onChange={(e) => setEditRateValue(e.target.value)}
-                            onKeyDown={(e) => {
-                              if (e.key === "Enter") saveRate(r);
-                              if (e.key === "Escape") setEditingRateId(null);
-                            }}
-                            autoFocus
-                          />
-                        ) : (
-                          <span className={`font-medium ${r.invoiceRateCents !== r.claimRateCents ? "text-blue-700" : ""}`}>
-                            {formatCurrency(r.invoiceRateCents)}
-                          </span>
-                        )}
-                      </td>
-                      <td className="py-2 px-3 text-center">
-                        {editingRateId === r.id ? (
-                          <div className="flex items-center justify-center gap-1">
-                            <Button variant="ghost" size="sm" onClick={() => saveRate(r)} disabled={savingRate}>
-                              {savingRate ? <Loader2 className="w-3 h-3 animate-spin" /> : <CircleCheck className="w-4 h-4 text-green-600" />}
-                            </Button>
-                            <Button variant="ghost" size="sm" onClick={() => setEditingRateId(null)}>
-                              <CircleX className="w-4 h-4 text-slate-400" />
-                            </Button>
-                          </div>
-                        ) : (
-                          <Button variant="ghost" size="sm" onClick={() => { setEditingRateId(r.id); setEditRateValue((r.invoiceRateCents / 100).toFixed(2)); }}>
-                            <Pencil className="w-3.5 h-3.5 text-slate-400" />
-                          </Button>
-                        )}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          )}
-        </CardContent>
-      </Card>
-
-      <Card>
-        <CardHeader className="pb-3">
           <CardTitle className="text-base">Generate Invoices</CardTitle>
         </CardHeader>
         <CardContent>
@@ -657,7 +706,7 @@ function InvoicesTab() {
               {generating ? "Generating..." : "Generate Invoices"}
             </Button>
           </div>
-          <p className="text-xs text-slate-400 mt-2">Generates one invoice per practice using the invoice rates above. All practices will get an invoice. Existing invoices for a practice/month will be skipped.</p>
+          <p className="text-xs text-slate-400 mt-2">Generates one invoice per practice using each practice's custom billing rates (set in the Practices tab). All practices will get an invoice. Existing invoices for a practice/month will be skipped.</p>
         </CardContent>
       </Card>
 
@@ -1335,6 +1384,7 @@ export default function AdminDashboard() {
   const [selectedPracticeId, setSelectedPracticeId] = useState<number | "all">("all");
   const [selectedDepartment, setSelectedDepartment] = useState<string | "all">("all");
   const [departmentsByPractice, setDepartmentsByPractice] = useState<Record<number, string[]>>({});
+  const [practiceDetailId, setPracticeDetailId] = useState<number | null>(null);
   const [lynkPracticeId, setLynkPracticeId] = useState<number | null>(null);
   const [currentMonth, setCurrentMonth] = useState(() => {
     const now = new Date();
@@ -2135,10 +2185,18 @@ export default function AdminDashboard() {
                 const otherPractices = practices.filter(p => p.id !== lynkPracticeId);
                 const lynkDepts = lynkPracticeId && departmentsByPractice[lynkPracticeId] ? departmentsByPractice[lynkPracticeId] : [];
                 const totalCount = otherPractices.length + lynkDepts.length;
+
+                if (practiceDetailId !== null) {
+                  const detailPractice = practices.find(p => p.id === practiceDetailId);
+                  if (!detailPractice) return null;
+                  return <PracticeDetailView practice={detailPractice} onBack={() => setPracticeDetailId(null)} />;
+                }
+
                 return (
                 <Card>
                   <CardHeader>
                     <CardTitle className="text-base">Partner Practices ({totalCount})</CardTitle>
+                    <p className="text-xs text-slate-500">Click a practice to view details and manage billing rates.</p>
                   </CardHeader>
                   <CardContent>
                     {totalCount === 0 ? (
@@ -2159,8 +2217,8 @@ export default function AdminDashboard() {
                               let depts: string[] = [];
                               try { depts = p.departments ? JSON.parse(p.departments) : []; } catch {}
                               return (
-                                <tr key={p.id} className="border-b hover:bg-slate-50">
-                                  <td className="py-2 px-3 font-medium">{p.name}</td>
+                                <tr key={p.id} className="border-b hover:bg-slate-50 cursor-pointer" onClick={() => setPracticeDetailId(p.id)}>
+                                  <td className="py-2 px-3 font-medium text-blue-700 hover:underline">{p.name}</td>
                                   <td className="py-2 px-3 text-slate-500">{p.thoroughcareAlias || "—"}</td>
                                   <td className="py-2 px-3">
                                     {depts.length > 0 ? (

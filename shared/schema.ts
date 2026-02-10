@@ -754,6 +754,7 @@ export type InvoiceLineItem = typeof invoiceLineItems.$inferSelect;
 
 export const invoiceRates = pgTable("invoice_rates", {
   id: serial("id").primaryKey(),
+  practiceId: integer("practice_id"),
   cptCode: text("cpt_code").notNull(),
   program: text("program").notNull(),
   description: text("description"),

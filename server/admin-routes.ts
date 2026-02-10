@@ -346,10 +346,11 @@ export async function registerAdminRoutes(app: Express) {
   // Invoice Rate Routes
   // ============================================================
 
-  app.get("/api/admin/invoice-rates/:year", adminAuth, async (req, res) => {
+  app.get("/api/admin/invoice-rates/:practiceId/:year", adminAuth, async (req, res) => {
     try {
+      const practiceId = parseInt(req.params.practiceId);
       const year = parseInt(req.params.year);
-      const rates = await storage.initInvoiceRatesFromBillingCodes(year);
+      const rates = await storage.initInvoiceRatesForPractice(practiceId, year);
       res.json({ success: true, rates });
     } catch (error) {
       console.error("Error loading invoice rates:", error);
@@ -359,11 +360,12 @@ export async function registerAdminRoutes(app: Express) {
 
   app.put("/api/admin/invoice-rates", adminAuth, async (req, res) => {
     try {
-      const { cptCode, program, description, claimRateCents, invoiceRateCents, effectiveYear } = req.body;
-      if (!cptCode || !effectiveYear) {
-        return res.status(400).json({ success: false, message: "CPT code and year are required" });
+      const { practiceId, cptCode, program, description, claimRateCents, invoiceRateCents, effectiveYear } = req.body;
+      if (!cptCode || !effectiveYear || !practiceId) {
+        return res.status(400).json({ success: false, message: "Practice ID, CPT code and year are required" });
       }
       const updated = await storage.upsertInvoiceRate({
+        practiceId,
         cptCode,
         program,
         description,

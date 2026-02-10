@@ -1,6 +1,6 @@
 import { users, contactInquiries, nightCoverageInquiries, woundCareReferrals, adminUsers, adminSessions, practices, programSnapshots, revenueSnapshots, revenueByCode, cptBillingCodes, patients, patientConditions, patientMedications, patientAllergies, patientVitals, patientInsurance, programEnrollments, carePlans, carePlanItems, timeLogs, clinicalTasks, patientAssessments, calendarEvents, claims, carePlanTemplates, carePlanTemplateItems, poorEngagementForms, billingEvaluationForms, invoices, invoiceLineItems, type User, type InsertUser, type ContactInquiry, type InsertContactInquiry, type NightCoverageInquiry, type InsertNightCoverageInquiry, type WoundCareReferral, type InsertWoundCareReferral, type AdminUser, type InsertAdminUser, type AdminSession, type Practice, type InsertPractice, type ProgramSnapshot, type InsertProgramSnapshot, type RevenueSnapshot, type InsertRevenueSnapshot, type RevenueByCode, type CptBillingCode, type InsertCptBillingCode, type Patient, type InsertPatient, type PatientCondition, type InsertPatientCondition, type PatientMedication, type InsertPatientMedication, type PatientAllergy, type InsertPatientAllergy, type PatientVital, type InsertPatientVital, type PatientInsurance, type InsertPatientInsurance, type ProgramEnrollment, type InsertProgramEnrollment, type CarePlan, type InsertCarePlan, type CarePlanItem, type InsertCarePlanItem, type TimeLog, type InsertTimeLog, type ClinicalTask, type InsertClinicalTask, type PatientAssessment, type InsertPatientAssessment, type CalendarEvent, type InsertCalendarEvent, type Claim, type InsertClaim, type CarePlanTemplate, type InsertCarePlanTemplate, type CarePlanTemplateItem, type InsertCarePlanTemplateItem, type PoorEngagementForm, type InsertPoorEngagementForm, type BillingEvaluationForm, type InsertBillingEvaluationForm, type Invoice, type InsertInvoice, type InvoiceLineItem, type InsertInvoiceLineItem, invoiceRates, type InvoiceRate, type InsertInvoiceRate } from "@shared/schema";
 import { db } from "./db";
-import { eq, ne, and, desc, or, ilike, sql, gte, lte } from "drizzle-orm";
+import { eq, ne, and, desc, or, ilike, sql, gte, lte, isNull } from "drizzle-orm";
 
 export interface IStorage {
   getUser(id: number): Promise<User | undefined>;
@@ -132,10 +132,10 @@ export interface IStorage {
   getBillingEvaluationForm(id: number): Promise<BillingEvaluationForm | undefined>;
   updateBillingEvaluationFormStatus(id: number, status: string, reviewedBy: number, reviewNotes?: string): Promise<BillingEvaluationForm | undefined>;
 
-  // Invoice Rates
-  getInvoiceRates(year: number): Promise<InvoiceRate[]>;
+  // Invoice Rates (per-practice)
+  getInvoiceRates(year: number, practiceId?: number | null): Promise<InvoiceRate[]>;
   upsertInvoiceRate(rate: InsertInvoiceRate): Promise<InvoiceRate>;
-  initInvoiceRatesFromBillingCodes(year: number): Promise<InvoiceRate[]>;
+  initInvoiceRatesForPractice(practiceId: number, year: number): Promise<InvoiceRate[]>;
 
   // Invoices
   generateInvoices(month: string, year: number): Promise<Invoice[]>;
@@ -893,18 +893,28 @@ export class DatabaseStorage implements IStorage {
     return updated;
   }
 
-  async getInvoiceRates(year: number): Promise<InvoiceRate[]> {
+  async getInvoiceRates(year: number, practiceId?: number | null): Promise<InvoiceRate[]> {
+    const conditions = [eq(invoiceRates.effectiveYear, year)];
+    if (practiceId !== undefined && practiceId !== null) {
+      conditions.push(eq(invoiceRates.practiceId, practiceId));
+    } else {
+      conditions.push(isNull(invoiceRates.practiceId));
+    }
     return db.select().from(invoiceRates)
-      .where(eq(invoiceRates.effectiveYear, year))
+      .where(and(...conditions))
       .orderBy(invoiceRates.program, invoiceRates.cptCode);
   }
 
   async upsertInvoiceRate(rate: InsertInvoiceRate): Promise<InvoiceRate> {
     const yearVal = rate.effectiveYear ?? 2026;
+    const pidCondition = rate.practiceId
+      ? eq(invoiceRates.practiceId, rate.practiceId)
+      : isNull(invoiceRates.practiceId);
     const existing = await db.select().from(invoiceRates)
       .where(and(
         eq(invoiceRates.cptCode, rate.cptCode),
-        eq(invoiceRates.effectiveYear, yearVal)
+        eq(invoiceRates.effectiveYear, yearVal),
+        pidCondition
       ));
     if (existing.length > 0) {
       const [updated] = await db.update(invoiceRates)
@@ -917,17 +927,16 @@ export class DatabaseStorage implements IStorage {
     return created;
   }
 
-  async initInvoiceRatesFromBillingCodes(year: number): Promise<InvoiceRate[]> {
-    const existingRates = await this.getInvoiceRates(year);
-    const existingCodes = new Set(existingRates.map(r => r.cptCode));
+  async initInvoiceRatesForPractice(practiceId: number, year: number): Promise<InvoiceRate[]> {
+    const existingRates = await this.getInvoiceRates(year, practiceId);
+    if (existingRates.length > 0) return existingRates;
 
     const billingCodes = await db.select().from(cptBillingCodes)
       .where(eq(cptBillingCodes.effectiveYear, year));
 
-    let added = 0;
     for (const bc of billingCodes) {
-      if (existingCodes.has(bc.code)) continue;
       await db.insert(invoiceRates).values({
+        practiceId,
         cptCode: bc.code,
         program: bc.program,
         description: bc.description,
@@ -935,11 +944,9 @@ export class DatabaseStorage implements IStorage {
         invoiceRateCents: bc.rateCents,
         effectiveYear: year,
       });
-      added++;
     }
 
-    if (added > 0) return this.getInvoiceRates(year);
-    return existingRates;
+    return this.getInvoiceRates(year, practiceId);
   }
 
   async generateInvoices(month: string, year: number): Promise<Invoice[]> {
@@ -950,21 +957,13 @@ export class DatabaseStorage implements IStorage {
     const codeData = await db.select().from(revenueByCode)
       .where(and(eq(revenueByCode.month, month), eq(revenueByCode.year, year)));
 
-    const rates = await this.getInvoiceRates(year);
-    const invoiceRateMap: Record<string, number> = {};
-    const rateDescMap: Record<string, string> = {};
-    for (const r of rates) {
-      invoiceRateMap[r.cptCode] = r.invoiceRateCents;
-      if (r.description) rateDescMap[r.cptCode] = r.description;
-    }
-
-    if (rates.length === 0) {
-      const billingCodes = await db.select().from(cptBillingCodes)
-        .where(eq(cptBillingCodes.effectiveYear, year));
-      for (const bc of billingCodes) {
-        invoiceRateMap[bc.code] = bc.rateCents;
-        rateDescMap[bc.code] = bc.description;
-      }
+    const fallbackBillingCodes = await db.select().from(cptBillingCodes)
+      .where(eq(cptBillingCodes.effectiveYear, year));
+    const fallbackRateMap: Record<string, number> = {};
+    const fallbackDescMap: Record<string, string> = {};
+    for (const bc of fallbackBillingCodes) {
+      fallbackRateMap[bc.code] = bc.rateCents;
+      fallbackDescMap[bc.code] = bc.description;
     }
 
     const generatedInvoices: Invoice[] = [];
@@ -982,6 +981,14 @@ export class DatabaseStorage implements IStorage {
           eq(invoices.year, year)
         ));
       if (existing.length > 0) continue;
+
+      const practiceRates = await this.getInvoiceRates(year, practice.id);
+      const invoiceRateMap: Record<string, number> = { ...fallbackRateMap };
+      const rateDescMap: Record<string, string> = { ...fallbackDescMap };
+      for (const r of practiceRates) {
+        invoiceRateMap[r.cptCode] = r.invoiceRateCents;
+        if (r.description) rateDescMap[r.cptCode] = r.description;
+      }
 
       const practiceCodeData = codeData.filter(c => {
         if (c.practiceId !== practice.id) return false;
