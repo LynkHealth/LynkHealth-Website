@@ -9,6 +9,7 @@ import {
   insertTimeLogSchema, insertClinicalTaskSchema, insertPatientAssessmentSchema,
   insertCalendarEventSchema, insertClaimSchema,
   insertCarePlanTemplateSchema, insertCarePlanTemplateItemSchema,
+  insertPoorEngagementFormSchema,
 } from "@shared/schema";
 import { z } from "zod";
 
@@ -1018,6 +1019,56 @@ export function registerClinicalRoutes(app: Express) {
       res.json(series);
     } catch (error) {
       res.status(500).json({ error: "Failed to get enrollment trends" });
+    }
+  });
+
+  // ============================================================
+  // Poor Engagement Forms
+  // ============================================================
+
+  app.post("/api/clinical/forms/poor-engagement", adminAuth, async (req, res) => {
+    try {
+      const parsed = insertPoorEngagementFormSchema.parse({
+        ...req.body,
+        status: "pending",
+        submittedBy: (req as any).adminUser?.id,
+      });
+      const form = await storage.createPoorEngagementForm(parsed);
+      res.status(201).json(form);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ error: "Validation failed", details: error.errors });
+      }
+      console.error("Error submitting poor engagement form:", error);
+      res.status(500).json({ error: "Failed to submit form" });
+    }
+  });
+
+  app.get("/api/clinical/forms/poor-engagement", adminAuth, async (req, res) => {
+    try {
+      const status = req.query.status as string | undefined;
+      const forms = await storage.listPoorEngagementForms(status);
+      res.json(forms);
+    } catch (error) {
+      console.error("Error listing poor engagement forms:", error);
+      res.status(500).json({ error: "Failed to list forms" });
+    }
+  });
+
+  app.patch("/api/clinical/forms/poor-engagement/:id", adminAuth, requireRole("admin", "supervisor"), async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const { status, reviewNotes } = req.body;
+      if (!status || !["approved", "rejected"].includes(status)) {
+        return res.status(400).json({ error: "Status must be 'approved' or 'rejected'" });
+      }
+      const reviewerId = (req as any).adminUser?.id;
+      const updated = await storage.updatePoorEngagementFormStatus(id, status, reviewerId, reviewNotes);
+      if (!updated) return res.status(404).json({ error: "Form not found" });
+      res.json(updated);
+    } catch (error) {
+      console.error("Error updating poor engagement form:", error);
+      res.status(500).json({ error: "Failed to update form" });
     }
   });
 }

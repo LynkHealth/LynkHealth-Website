@@ -635,3 +635,33 @@ export const insertCarePlanTemplateItemSchema = createInsertSchema(carePlanTempl
 
 export type InsertCarePlanTemplateItem = z.infer<typeof insertCarePlanTemplateItemSchema>;
 export type CarePlanTemplateItem = typeof carePlanTemplateItems.$inferSelect;
+
+export const FORM_STATUSES = ["pending", "approved", "rejected"] as const;
+export type FormStatus = typeof FORM_STATUSES[number];
+
+export const poorEngagementForms = pgTable("poor_engagement_forms", {
+  id: serial("id").primaryKey(),
+  careManagerName: text("care_manager_name").notNull(),
+  clinic: text("clinic").notNull(),
+  patientName: text("patient_name").notNull(),
+  patientDob: text("patient_dob").notNull(),
+  guidelinesFollowed: boolean("guidelines_followed").notNull().default(false),
+  notes: text("notes"),
+  status: text("status").notNull().default("pending"),
+  submittedBy: integer("submitted_by"),
+  reviewedBy: integer("reviewed_by"),
+  reviewedAt: timestamp("reviewed_at"),
+  reviewNotes: text("review_notes"),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const insertPoorEngagementFormSchema = createInsertSchema(poorEngagementForms).omit({
+  id: true,
+  createdAt: true,
+  reviewedBy: true,
+  reviewedAt: true,
+  reviewNotes: true,
+});
+
+export type InsertPoorEngagementForm = z.infer<typeof insertPoorEngagementFormSchema>;
+export type PoorEngagementForm = typeof poorEngagementForms.$inferSelect;

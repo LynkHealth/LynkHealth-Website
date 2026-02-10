@@ -1,4 +1,4 @@
-import { users, contactInquiries, nightCoverageInquiries, woundCareReferrals, adminUsers, adminSessions, practices, programSnapshots, revenueSnapshots, revenueByCode, cptBillingCodes, patients, patientConditions, patientMedications, patientAllergies, patientVitals, patientInsurance, programEnrollments, carePlans, carePlanItems, timeLogs, clinicalTasks, patientAssessments, calendarEvents, claims, carePlanTemplates, carePlanTemplateItems, type User, type InsertUser, type ContactInquiry, type InsertContactInquiry, type NightCoverageInquiry, type InsertNightCoverageInquiry, type WoundCareReferral, type InsertWoundCareReferral, type AdminUser, type InsertAdminUser, type AdminSession, type Practice, type InsertPractice, type ProgramSnapshot, type InsertProgramSnapshot, type RevenueSnapshot, type InsertRevenueSnapshot, type RevenueByCode, type CptBillingCode, type InsertCptBillingCode, type Patient, type InsertPatient, type PatientCondition, type InsertPatientCondition, type PatientMedication, type InsertPatientMedication, type PatientAllergy, type InsertPatientAllergy, type PatientVital, type InsertPatientVital, type PatientInsurance, type InsertPatientInsurance, type ProgramEnrollment, type InsertProgramEnrollment, type CarePlan, type InsertCarePlan, type CarePlanItem, type InsertCarePlanItem, type TimeLog, type InsertTimeLog, type ClinicalTask, type InsertClinicalTask, type PatientAssessment, type InsertPatientAssessment, type CalendarEvent, type InsertCalendarEvent, type Claim, type InsertClaim, type CarePlanTemplate, type InsertCarePlanTemplate, type CarePlanTemplateItem, type InsertCarePlanTemplateItem } from "@shared/schema";
+import { users, contactInquiries, nightCoverageInquiries, woundCareReferrals, adminUsers, adminSessions, practices, programSnapshots, revenueSnapshots, revenueByCode, cptBillingCodes, patients, patientConditions, patientMedications, patientAllergies, patientVitals, patientInsurance, programEnrollments, carePlans, carePlanItems, timeLogs, clinicalTasks, patientAssessments, calendarEvents, claims, carePlanTemplates, carePlanTemplateItems, poorEngagementForms, type User, type InsertUser, type ContactInquiry, type InsertContactInquiry, type NightCoverageInquiry, type InsertNightCoverageInquiry, type WoundCareReferral, type InsertWoundCareReferral, type AdminUser, type InsertAdminUser, type AdminSession, type Practice, type InsertPractice, type ProgramSnapshot, type InsertProgramSnapshot, type RevenueSnapshot, type InsertRevenueSnapshot, type RevenueByCode, type CptBillingCode, type InsertCptBillingCode, type Patient, type InsertPatient, type PatientCondition, type InsertPatientCondition, type PatientMedication, type InsertPatientMedication, type PatientAllergy, type InsertPatientAllergy, type PatientVital, type InsertPatientVital, type PatientInsurance, type InsertPatientInsurance, type ProgramEnrollment, type InsertProgramEnrollment, type CarePlan, type InsertCarePlan, type CarePlanItem, type InsertCarePlanItem, type TimeLog, type InsertTimeLog, type ClinicalTask, type InsertClinicalTask, type PatientAssessment, type InsertPatientAssessment, type CalendarEvent, type InsertCalendarEvent, type Claim, type InsertClaim, type CarePlanTemplate, type InsertCarePlanTemplate, type CarePlanTemplateItem, type InsertCarePlanTemplateItem, type PoorEngagementForm, type InsertPoorEngagementForm } from "@shared/schema";
 import { db } from "./db";
 import { eq, and, desc, or, ilike, sql, gte, lte } from "drizzle-orm";
 
@@ -119,6 +119,12 @@ export interface IStorage {
   getCarePlanTemplateItems(templateId: number): Promise<CarePlanTemplateItem[]>;
   createCarePlanTemplateItem(item: InsertCarePlanTemplateItem): Promise<CarePlanTemplateItem>;
   deleteCarePlanTemplateItem(id: number): Promise<void>;
+
+  // Poor Engagement Forms
+  createPoorEngagementForm(form: InsertPoorEngagementForm): Promise<PoorEngagementForm>;
+  listPoorEngagementForms(status?: string): Promise<PoorEngagementForm[]>;
+  getPoorEngagementForm(id: number): Promise<PoorEngagementForm | undefined>;
+  updatePoorEngagementFormStatus(id: number, status: string, reviewedBy: number, reviewNotes?: string): Promise<PoorEngagementForm | undefined>;
 
   // Dashboard Aggregates
   getDashboardStats(userId?: number): Promise<{
@@ -800,6 +806,32 @@ export class DatabaseStorage implements IStorage {
 
   async deleteTask(id: number): Promise<void> {
     await db.delete(clinicalTasks).where(eq(clinicalTasks.id, id));
+  }
+
+  async createPoorEngagementForm(form: InsertPoorEngagementForm): Promise<PoorEngagementForm> {
+    const [created] = await db.insert(poorEngagementForms).values(form).returning();
+    return created;
+  }
+
+  async listPoorEngagementForms(status?: string): Promise<PoorEngagementForm[]> {
+    const conditions = [];
+    if (status) conditions.push(eq(poorEngagementForms.status, status));
+    return db.select().from(poorEngagementForms)
+      .where(conditions.length > 0 ? and(...conditions) : undefined)
+      .orderBy(desc(poorEngagementForms.createdAt));
+  }
+
+  async getPoorEngagementForm(id: number): Promise<PoorEngagementForm | undefined> {
+    const [form] = await db.select().from(poorEngagementForms).where(eq(poorEngagementForms.id, id));
+    return form;
+  }
+
+  async updatePoorEngagementFormStatus(id: number, status: string, reviewedBy: number, reviewNotes?: string): Promise<PoorEngagementForm | undefined> {
+    const [updated] = await db.update(poorEngagementForms)
+      .set({ status, reviewedBy, reviewedAt: new Date(), reviewNotes: reviewNotes || null })
+      .where(eq(poorEngagementForms.id, id))
+      .returning();
+    return updated;
   }
 }
 
