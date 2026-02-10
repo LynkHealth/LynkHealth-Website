@@ -613,10 +613,43 @@ export function registerClinicalRoutes(app: Express) {
   // Analytics Trend Data
   // ============================================================
 
+  const getLynkPracticeId = async () => {
+    const allPractices = await storage.getPractices();
+    return allPractices.find(p => p.name.toLowerCase() === "your clinic")?.id;
+  };
+
+  const filterRevenueSnapshots = (snapshots: any[], practiceId?: number, department?: string, lynkId?: number) => {
+    if (department) {
+      return snapshots.filter(s => s.practiceId === practiceId && s.department === department);
+    }
+    if (practiceId) {
+      return snapshots.filter(s => s.practiceId === practiceId && !s.department);
+    }
+    return snapshots.filter(s => {
+      if (lynkId && s.practiceId === lynkId) return !!s.department;
+      return !s.department;
+    });
+  };
+
+  const filterProgramSnapshots = (snapshots: any[], practiceId?: number, department?: string, lynkId?: number) => {
+    if (department) {
+      return snapshots.filter(s => s.practiceId === practiceId && s.department === department);
+    }
+    if (practiceId) {
+      return snapshots.filter(s => s.practiceId === practiceId && !s.department);
+    }
+    return snapshots.filter(s => {
+      if (lynkId && s.practiceId === lynkId) return !!s.department;
+      return !s.department;
+    });
+  };
+
   app.get("/api/admin/trends/revenue", adminAuth, async (req, res) => {
     try {
       const months = parseInt(req.query.months as string) || 12;
       const practiceId = req.query.practiceId ? parseInt(req.query.practiceId as string) : undefined;
+      const department = req.query.department as string | undefined;
+      const lynkId = await getLynkPracticeId();
       const now = new Date();
       const MONTH_ABBREVS = ["JAN", "FEB", "MAR", "APR", "MAY", "JUN", "JUL", "AUG", "SEP", "OCT", "NOV", "DEC"];
       const series: Array<{ month: string; year: number; totalRevenue: number; totalClaims: number }> = [];
@@ -626,7 +659,7 @@ export function registerClinicalRoutes(app: Express) {
         const month = MONTH_ABBREVS[d.getMonth()];
         const year = d.getFullYear();
         const snapshots = await storage.getRevenueSnapshots(month, year);
-        const filtered = practiceId ? snapshots.filter(s => s.practiceId === practiceId && !s.department) : snapshots.filter(s => !s.department);
+        const filtered = filterRevenueSnapshots(snapshots, practiceId, department, lynkId);
         const totalRevenue = filtered.reduce((sum, s) => sum + (s.totalRevenue || 0), 0);
         const totalClaims = filtered.reduce((sum, s) => sum + (s.claimCount || 0), 0);
         series.push({ month, year, totalRevenue, totalClaims });
@@ -642,6 +675,8 @@ export function registerClinicalRoutes(app: Express) {
     try {
       const months = parseInt(req.query.months as string) || 6;
       const practiceId = req.query.practiceId ? parseInt(req.query.practiceId as string) : undefined;
+      const department = req.query.department as string | undefined;
+      const lynkId = await getLynkPracticeId();
       const now = new Date();
       const MONTH_ABBREVS = ["JAN", "FEB", "MAR", "APR", "MAY", "JUN", "JUL", "AUG", "SEP", "OCT", "NOV", "DEC"];
       const series: Array<{ month: string; year: number; CCM: number; RPM: number; BHI: number; PCM: number; RTM: number; APCM: number; OTHER: number }> = [];
@@ -651,7 +686,7 @@ export function registerClinicalRoutes(app: Express) {
         const month = MONTH_ABBREVS[d.getMonth()];
         const year = d.getFullYear();
         const snapshots = await storage.getRevenueSnapshots(month, year);
-        const filtered = practiceId ? snapshots.filter(s => s.practiceId === practiceId && !s.department) : snapshots.filter(s => !s.department);
+        const filtered = filterRevenueSnapshots(snapshots, practiceId, department, lynkId);
         const byProgram: Record<string, number> = { CCM: 0, RPM: 0, BHI: 0, PCM: 0, RTM: 0, APCM: 0, OTHER: 0 };
         filtered.forEach(s => {
           const key = byProgram.hasOwnProperty(s.programType) ? s.programType : "OTHER";
@@ -963,6 +998,8 @@ export function registerClinicalRoutes(app: Express) {
     try {
       const months = parseInt(req.query.months as string) || 12;
       const practiceId = req.query.practiceId ? parseInt(req.query.practiceId as string) : undefined;
+      const department = req.query.department as string | undefined;
+      const lynkId = await getLynkPracticeId();
       const now = new Date();
       const MONTH_ABBREVS = ["JAN", "FEB", "MAR", "APR", "MAY", "JUN", "JUL", "AUG", "SEP", "OCT", "NOV", "DEC"];
       const series: Array<{ month: string; year: number; enrolled: number; inactive: number }> = [];
@@ -972,7 +1009,7 @@ export function registerClinicalRoutes(app: Express) {
         const month = MONTH_ABBREVS[d.getMonth()];
         const year = d.getFullYear();
         const snapshots = await storage.getAggregatedSnapshots(month, year);
-        const filtered = practiceId ? snapshots.filter(s => s.practiceId === practiceId && !s.department) : snapshots.filter(s => !s.department);
+        const filtered = filterProgramSnapshots(snapshots, practiceId, department, lynkId);
         const enrolled = filtered.reduce((sum, s) => sum + (s.patientsEnrolled || 0), 0);
         const inactive = filtered.reduce((sum, s) => sum + (s.inactive || 0), 0);
         series.push({ month, year, enrolled, inactive });

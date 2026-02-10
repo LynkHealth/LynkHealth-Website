@@ -529,7 +529,7 @@ function BillingCodesTab() {
   );
 }
 
-function AnalyticsTab({ selectedMonth, currentYear, selectedPractice }: { selectedMonth: string; currentYear: number; selectedPractice: string }) {
+function AnalyticsTab({ selectedMonth, currentYear, selectedPractice, selectedDepartment = "all" }: { selectedMonth: string; currentYear: number; selectedPractice: string; selectedDepartment?: string | "all" }) {
   const [trendMonths, setTrendMonths] = useState(6);
   const [revenueTrends, setRevenueTrends] = useState<any[]>([]);
   const [enrollmentTrends, setEnrollmentTrends] = useState<any[]>([]);
@@ -542,10 +542,11 @@ function AnalyticsTab({ selectedMonth, currentYear, selectedPractice }: { select
       setTrendsLoading(true);
       try {
         const practiceParam = selectedPractice !== "all" ? `&practiceId=${selectedPractice}` : "";
+        const deptParam = selectedDepartment !== "all" ? `&department=${encodeURIComponent(selectedDepartment)}` : "";
         const [revRes, enrRes, progRes, compRes] = await Promise.all([
-          adminFetch(`/api/admin/trends/revenue?months=${trendMonths}${practiceParam}`),
-          adminFetch(`/api/admin/trends/enrollments?months=${trendMonths}${practiceParam}`),
-          adminFetch(`/api/admin/trends/revenue-by-program?months=${trendMonths}${practiceParam}`),
+          adminFetch(`/api/admin/trends/revenue?months=${trendMonths}${practiceParam}${deptParam}`),
+          adminFetch(`/api/admin/trends/enrollments?months=${trendMonths}${practiceParam}${deptParam}`),
+          adminFetch(`/api/admin/trends/revenue-by-program?months=${trendMonths}${practiceParam}${deptParam}`),
           adminFetch(`/api/admin/trends/practice-comparison?month=${selectedMonth}&year=${currentYear}`),
         ]);
         if (revRes.ok) setRevenueTrends(await revRes.json());
@@ -556,7 +557,7 @@ function AnalyticsTab({ selectedMonth, currentYear, selectedPractice }: { select
       setTrendsLoading(false);
     };
     load();
-  }, [trendMonths, selectedPractice, selectedMonth, currentYear]);
+  }, [trendMonths, selectedPractice, selectedDepartment, selectedMonth, currentYear]);
 
   const handleExport = async (type: string) => {
     const url = `/api/admin/export/${type}?month=${selectedMonth}&year=${currentYear}`;
@@ -859,6 +860,7 @@ export default function AdminDashboard() {
   const [selectedPracticeId, setSelectedPracticeId] = useState<number | "all">("all");
   const [selectedDepartment, setSelectedDepartment] = useState<string | "all">("all");
   const [departmentsByPractice, setDepartmentsByPractice] = useState<Record<number, string[]>>({});
+  const [lynkPracticeId, setLynkPracticeId] = useState<number | null>(null);
   const [currentMonth, setCurrentMonth] = useState(() => {
     const now = new Date();
     return MONTHS[now.getMonth()];
@@ -911,6 +913,8 @@ export default function AdminDashboard() {
         setRevenue(dashData.revenue || []);
         setRevenueByCode(dashData.revenueByCode || []);
         setCodeDescriptions(dashData.codeDescriptions || {});
+        const lynk = (dashData.practices as Practice[]).find((p: Practice) => p.name.toLowerCase() === "your clinic");
+        if (lynk) setLynkPracticeId(lynk.id);
       }
       if (inquiryData.success) {
         setInquiries(inquiryData);
@@ -1139,20 +1143,31 @@ export default function AdminDashboard() {
               </Button>
               <div className="w-px h-5 bg-slate-200 mx-1" />
               <select
-                value={selectedPracticeId === "all" ? "all" : String(selectedPracticeId)}
+                value={selectedPracticeId === "all" ? "all" : selectedDepartment !== "all" ? `dept:${selectedDepartment}` : String(selectedPracticeId)}
                 onChange={(e) => {
-                  const val = e.target.value === "all" ? "all" as const : Number(e.target.value);
-                  setSelectedPracticeId(val);
-                  setSelectedDepartment("all");
+                  const val = e.target.value;
+                  if (val === "all") {
+                    setSelectedPracticeId("all");
+                    setSelectedDepartment("all");
+                  } else if (val.startsWith("dept:")) {
+                    setSelectedPracticeId(lynkPracticeId!);
+                    setSelectedDepartment(val.slice(5));
+                  } else {
+                    setSelectedPracticeId(Number(val));
+                    setSelectedDepartment("all");
+                  }
                 }}
                 className="text-xs border border-slate-200 rounded-md px-2 py-1.5 bg-white text-slate-700"
               >
                 <option value="all">All Practices</option>
-                {practices.map((p) => (
+                {practices.filter(p => p.id !== lynkPracticeId).map((p) => (
                   <option key={p.id} value={p.id}>{p.name}</option>
                 ))}
+                {lynkPracticeId && departmentsByPractice[lynkPracticeId] && departmentsByPractice[lynkPracticeId].map((dept) => (
+                  <option key={`dept:${dept}`} value={`dept:${dept}`}>{dept}</option>
+                ))}
               </select>
-              {selectedPracticeId !== "all" && departmentsByPractice[selectedPracticeId] && departmentsByPractice[selectedPracticeId].length > 1 && (
+              {selectedPracticeId !== "all" && selectedPracticeId !== lynkPracticeId && departmentsByPractice[selectedPracticeId] && departmentsByPractice[selectedPracticeId].length > 1 && (
                 <select
                   value={selectedDepartment}
                   onChange={(e) => setSelectedDepartment(e.target.value === "all" ? "all" : e.target.value)}
@@ -1225,7 +1240,10 @@ export default function AdminDashboard() {
                   {(() => {
                     let filtered: ProgramSnapshot[];
                     if (selectedPracticeId === "all") {
-                      filtered = snapshots.filter((s) => !s.department);
+                      filtered = snapshots.filter((s) => {
+                        if (s.practiceId === lynkPracticeId) return !!s.department;
+                        return !s.department;
+                      });
                     } else if (selectedDepartment === "all") {
                       filtered = snapshots.filter((s) => s.practiceId === selectedPracticeId && !s.department);
                     } else {
@@ -1233,6 +1251,7 @@ export default function AdminDashboard() {
                     }
                     const selectedName = selectedPracticeId === "all"
                       ? "All Practices"
+                      : selectedDepartment !== "all" ? selectedDepartment
                       : practices.find((p) => p.id === selectedPracticeId)?.name || "";
                     return (
                       <>
@@ -1240,10 +1259,12 @@ export default function AdminDashboard() {
                           <Card>
                             <CardContent className="p-4 text-center">
                               <p className="text-2xl font-bold text-blue-600">
-                                {selectedPracticeId === "all" ? practices.length : selectedDepartment !== "all" ? selectedDepartment : selectedName}
+                                {selectedPracticeId === "all"
+                                  ? practices.filter(p => p.id !== lynkPracticeId).length + (lynkPracticeId && departmentsByPractice[lynkPracticeId] ? departmentsByPractice[lynkPracticeId].length : 0)
+                                  : selectedDepartment !== "all" ? selectedDepartment : selectedName}
                               </p>
                               <p className="text-xs text-slate-500 mt-1">
-                                {selectedPracticeId === "all" ? "Partner Practices" : selectedDepartment !== "all" ? "Location" : "Practice"}
+                                {selectedPracticeId === "all" ? "Partner Practices" : "Practice"}
                               </p>
                             </CardContent>
                           </Card>
@@ -1276,7 +1297,10 @@ export default function AdminDashboard() {
                         {(() => {
                           let filteredRevenue: RevenueSnapshot[];
                           if (selectedPracticeId === "all") {
-                            filteredRevenue = revenue.filter((r) => !r.department);
+                            filteredRevenue = revenue.filter((r) => {
+                              if (r.practiceId === lynkPracticeId) return !!r.department;
+                              return !r.department;
+                            });
                           } else if (selectedDepartment === "all") {
                             filteredRevenue = revenue.filter((r) => r.practiceId === selectedPracticeId && !r.department);
                           } else {
@@ -1284,7 +1308,10 @@ export default function AdminDashboard() {
                           }
                           let filteredCodeRevenue: RevenueByCode[];
                           if (selectedPracticeId === "all") {
-                            filteredCodeRevenue = revenueByCode.filter((r) => !r.department);
+                            filteredCodeRevenue = revenueByCode.filter((r) => {
+                              if (r.practiceId === lynkPracticeId) return !!r.department;
+                              return !r.department;
+                            });
                           } else if (selectedDepartment === "all") {
                             filteredCodeRevenue = revenueByCode.filter((r) => r.practiceId === selectedPracticeId && !r.department);
                           } else {
@@ -1615,15 +1642,19 @@ export default function AdminDashboard() {
                 <BillingCodesTab />
               )}
 
-              {activeTab === "analytics" && <AnalyticsTab selectedMonth={currentMonth} currentYear={currentYear} selectedPractice={selectedPracticeId === "all" ? "all" : String(selectedPracticeId)} />}
+              {activeTab === "analytics" && <AnalyticsTab selectedMonth={currentMonth} currentYear={currentYear} selectedPractice={selectedPracticeId === "all" ? "all" : String(selectedPracticeId)} selectedDepartment={selectedDepartment} />}
 
-              {activeTab === "practices" && (
+              {activeTab === "practices" && (() => {
+                const otherPractices = practices.filter(p => p.id !== lynkPracticeId);
+                const lynkDepts = lynkPracticeId && departmentsByPractice[lynkPracticeId] ? departmentsByPractice[lynkPracticeId] : [];
+                const totalCount = otherPractices.length + lynkDepts.length;
+                return (
                 <Card>
                   <CardHeader>
-                    <CardTitle className="text-base">Partner Practices ({practices.length})</CardTitle>
+                    <CardTitle className="text-base">Partner Practices ({totalCount})</CardTitle>
                   </CardHeader>
                   <CardContent>
-                    {practices.length === 0 ? (
+                    {totalCount === 0 ? (
                       <p className="text-sm text-slate-500">No practices synced yet. Click "Sync ThoroughCare" on the Dashboard tab to pull practice data.</p>
                     ) : (
                       <div className="overflow-x-auto">
@@ -1637,7 +1668,7 @@ export default function AdminDashboard() {
                             </tr>
                           </thead>
                           <tbody>
-                            {practices.map((p: any) => {
+                            {otherPractices.map((p: any) => {
                               let depts: string[] = [];
                               try { depts = p.departments ? JSON.parse(p.departments) : []; } catch {}
                               return (
@@ -1662,13 +1693,24 @@ export default function AdminDashboard() {
                                 </tr>
                               );
                             })}
+                            {lynkDepts.map((dept) => (
+                              <tr key={`lynk-${dept}`} className="border-b hover:bg-slate-50">
+                                <td className="py-2 px-3 font-medium">{dept}</td>
+                                <td className="py-2 px-3 text-slate-500">lynk</td>
+                                <td className="py-2 px-3">—</td>
+                                <td className="py-2 px-3">
+                                  <span className="px-2 py-0.5 rounded text-xs font-medium bg-green-100 text-green-700">active</span>
+                                </td>
+                              </tr>
+                            ))}
                           </tbody>
                         </table>
                       </div>
                     )}
                   </CardContent>
                 </Card>
-              )}
+                );
+              })()}
             </>
           )}
         </div>
