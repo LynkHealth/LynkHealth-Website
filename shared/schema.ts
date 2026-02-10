@@ -1,6 +1,15 @@
-import { pgTable, text, serial, timestamp, integer, varchar } from "drizzle-orm/pg-core";
+import { pgTable, text, serial, timestamp, integer, varchar, date, boolean } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
+
+export const PROGRAM_TYPES = ["CCM", "PCM", "BHI", "RPM", "RTM", "TCM", "APCM", "AWV", "CCCM", "CCO"] as const;
+export type ProgramType = typeof PROGRAM_TYPES[number];
+
+export const ENROLLMENT_STATUSES = ["enrolled", "not_enrolled", "inactive", "deceased", "discharged", "declined", "pending_consent"] as const;
+export type EnrollmentStatus = typeof ENROLLMENT_STATUSES[number];
+
+export const USER_ROLES = ["admin", "supervisor", "care_manager", "provider"] as const;
+export type UserRole = typeof USER_ROLES[number];
 
 export const contactInquiries = pgTable("contact_inquiries", {
   id: serial("id").primaryKey(),
@@ -260,3 +269,328 @@ export const adminLoginSchema = z.object({
 });
 
 export type AdminLoginInput = z.infer<typeof adminLoginSchema>;
+
+// ============================================================
+// Clinical Platform Tables
+// ============================================================
+
+export const patients = pgTable("patients", {
+  id: serial("id").primaryKey(),
+  practiceId: integer("practice_id").notNull(),
+  mrn: text("mrn"),
+  firstName: text("first_name").notNull(),
+  lastName: text("last_name").notNull(),
+  dateOfBirth: text("date_of_birth"),
+  gender: text("gender"),
+  email: text("email"),
+  phone: text("phone"),
+  address: text("address"),
+  city: text("city"),
+  state: text("state"),
+  zipCode: text("zip_code"),
+  emergencyContactName: text("emergency_contact_name"),
+  emergencyContactPhone: text("emergency_contact_phone"),
+  primaryProviderId: integer("primary_provider_id"),
+  assignedCareManagerId: integer("assigned_care_manager_id"),
+  riskLevel: text("risk_level").default("low"),
+  status: text("status").notNull().default("active"),
+  consentDate: text("consent_date"),
+  consentStatus: text("consent_status").default("pending"),
+  notes: text("notes"),
+  thoroughcareId: text("thoroughcare_id"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+export const insertPatientSchema = createInsertSchema(patients).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export type InsertPatient = z.infer<typeof insertPatientSchema>;
+export type Patient = typeof patients.$inferSelect;
+
+export const patientConditions = pgTable("patient_conditions", {
+  id: serial("id").primaryKey(),
+  patientId: integer("patient_id").notNull(),
+  icdCode: text("icd_code").notNull(),
+  description: text("description").notNull(),
+  status: text("status").notNull().default("active"),
+  onsetDate: text("onset_date"),
+  isPrimary: integer("is_primary").default(0),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+export const insertPatientConditionSchema = createInsertSchema(patientConditions).omit({
+  id: true,
+  createdAt: true,
+});
+
+export type InsertPatientCondition = z.infer<typeof insertPatientConditionSchema>;
+export type PatientCondition = typeof patientConditions.$inferSelect;
+
+export const patientMedications = pgTable("patient_medications", {
+  id: serial("id").primaryKey(),
+  patientId: integer("patient_id").notNull(),
+  name: text("name").notNull(),
+  dosage: text("dosage"),
+  frequency: text("frequency"),
+  prescribedBy: text("prescribed_by"),
+  startDate: text("start_date"),
+  endDate: text("end_date"),
+  status: text("status").notNull().default("active"),
+  notes: text("notes"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+export const insertPatientMedicationSchema = createInsertSchema(patientMedications).omit({
+  id: true,
+  createdAt: true,
+});
+
+export type InsertPatientMedication = z.infer<typeof insertPatientMedicationSchema>;
+export type PatientMedication = typeof patientMedications.$inferSelect;
+
+export const patientAllergies = pgTable("patient_allergies", {
+  id: serial("id").primaryKey(),
+  patientId: integer("patient_id").notNull(),
+  allergen: text("allergen").notNull(),
+  reaction: text("reaction"),
+  severity: text("severity").default("moderate"),
+  status: text("status").notNull().default("active"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+export const insertPatientAllergySchema = createInsertSchema(patientAllergies).omit({
+  id: true,
+  createdAt: true,
+});
+
+export type InsertPatientAllergy = z.infer<typeof insertPatientAllergySchema>;
+export type PatientAllergy = typeof patientAllergies.$inferSelect;
+
+export const patientVitals = pgTable("patient_vitals", {
+  id: serial("id").primaryKey(),
+  patientId: integer("patient_id").notNull(),
+  vitalType: text("vital_type").notNull(),
+  value: text("value").notNull(),
+  unit: text("unit"),
+  recordedAt: timestamp("recorded_at").defaultNow().notNull(),
+  recordedBy: integer("recorded_by"),
+  source: text("source").default("manual"),
+  notes: text("notes"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+export const insertPatientVitalSchema = createInsertSchema(patientVitals).omit({
+  id: true,
+  createdAt: true,
+});
+
+export type InsertPatientVital = z.infer<typeof insertPatientVitalSchema>;
+export type PatientVital = typeof patientVitals.$inferSelect;
+
+export const patientInsurance = pgTable("patient_insurance", {
+  id: serial("id").primaryKey(),
+  patientId: integer("patient_id").notNull(),
+  insuranceType: text("insurance_type").notNull().default("primary"),
+  payerName: text("payer_name").notNull(),
+  memberId: text("member_id"),
+  groupNumber: text("group_number"),
+  planName: text("plan_name"),
+  effectiveDate: text("effective_date"),
+  terminationDate: text("termination_date"),
+  status: text("status").notNull().default("active"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+export const insertPatientInsuranceSchema = createInsertSchema(patientInsurance).omit({
+  id: true,
+  createdAt: true,
+});
+
+export type InsertPatientInsurance = z.infer<typeof insertPatientInsuranceSchema>;
+export type PatientInsurance = typeof patientInsurance.$inferSelect;
+
+export const programEnrollments = pgTable("program_enrollments", {
+  id: serial("id").primaryKey(),
+  patientId: integer("patient_id").notNull(),
+  practiceId: integer("practice_id").notNull(),
+  programType: text("program_type").notNull(),
+  status: text("status").notNull().default("enrolled"),
+  enrolledAt: timestamp("enrolled_at").defaultNow().notNull(),
+  inactiveAt: timestamp("inactive_at"),
+  inactiveReason: text("inactive_reason"),
+  consentObtained: integer("consent_obtained").default(0),
+  consentDate: text("consent_date"),
+  assignedCareManagerId: integer("assigned_care_manager_id"),
+  notes: text("notes"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+export const insertProgramEnrollmentSchema = createInsertSchema(programEnrollments).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export type InsertProgramEnrollment = z.infer<typeof insertProgramEnrollmentSchema>;
+export type ProgramEnrollment = typeof programEnrollments.$inferSelect;
+
+export const carePlans = pgTable("care_plans", {
+  id: serial("id").primaryKey(),
+  patientId: integer("patient_id").notNull(),
+  enrollmentId: integer("enrollment_id").notNull(),
+  title: text("title").notNull(),
+  status: text("status").notNull().default("active"),
+  createdBy: integer("created_by"),
+  signedOffBy: integer("signed_off_by"),
+  signedOffAt: timestamp("signed_off_at"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+export const insertCarePlanSchema = createInsertSchema(carePlans).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export type InsertCarePlan = z.infer<typeof insertCarePlanSchema>;
+export type CarePlan = typeof carePlans.$inferSelect;
+
+export const carePlanItems = pgTable("care_plan_items", {
+  id: serial("id").primaryKey(),
+  carePlanId: integer("care_plan_id").notNull(),
+  itemType: text("item_type").notNull().default("goal"),
+  description: text("description").notNull(),
+  status: text("status").notNull().default("active"),
+  targetDate: text("target_date"),
+  completedAt: timestamp("completed_at"),
+  notes: text("notes"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+export const insertCarePlanItemSchema = createInsertSchema(carePlanItems).omit({
+  id: true,
+  createdAt: true,
+});
+
+export type InsertCarePlanItem = z.infer<typeof insertCarePlanItemSchema>;
+export type CarePlanItem = typeof carePlanItems.$inferSelect;
+
+export const timeLogs = pgTable("time_logs", {
+  id: serial("id").primaryKey(),
+  patientId: integer("patient_id").notNull(),
+  enrollmentId: integer("enrollment_id"),
+  userId: integer("user_id").notNull(),
+  programType: text("program_type").notNull(),
+  durationSeconds: integer("duration_seconds").notNull(),
+  activityType: text("activity_type").notNull().default("care_coordination"),
+  description: text("description"),
+  logDate: text("log_date").notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+export const insertTimeLogSchema = createInsertSchema(timeLogs).omit({
+  id: true,
+  createdAt: true,
+});
+
+export type InsertTimeLog = z.infer<typeof insertTimeLogSchema>;
+export type TimeLog = typeof timeLogs.$inferSelect;
+
+export const clinicalTasks = pgTable("clinical_tasks", {
+  id: serial("id").primaryKey(),
+  patientId: integer("patient_id"),
+  assignedTo: integer("assigned_to"),
+  createdBy: integer("created_by").notNull(),
+  title: text("title").notNull(),
+  description: text("description"),
+  priority: text("priority").notNull().default("normal"),
+  status: text("status").notNull().default("pending"),
+  dueDate: text("due_date"),
+  completedAt: timestamp("completed_at"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+export const insertClinicalTaskSchema = createInsertSchema(clinicalTasks).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export type InsertClinicalTask = z.infer<typeof insertClinicalTaskSchema>;
+export type ClinicalTask = typeof clinicalTasks.$inferSelect;
+
+export const patientAssessments = pgTable("patient_assessments", {
+  id: serial("id").primaryKey(),
+  patientId: integer("patient_id").notNull(),
+  assessmentType: text("assessment_type").notNull(),
+  score: integer("score"),
+  maxScore: integer("max_score"),
+  riskLevel: text("risk_level"),
+  responses: text("responses"),
+  completedBy: integer("completed_by"),
+  completedAt: timestamp("completed_at"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+export const insertPatientAssessmentSchema = createInsertSchema(patientAssessments).omit({
+  id: true,
+  createdAt: true,
+});
+
+export type InsertPatientAssessment = z.infer<typeof insertPatientAssessmentSchema>;
+export type PatientAssessment = typeof patientAssessments.$inferSelect;
+
+export const calendarEvents = pgTable("calendar_events", {
+  id: serial("id").primaryKey(),
+  patientId: integer("patient_id"),
+  userId: integer("user_id").notNull(),
+  title: text("title").notNull(),
+  eventType: text("event_type").notNull().default("call"),
+  startTime: timestamp("start_time").notNull(),
+  endTime: timestamp("end_time"),
+  status: text("status").notNull().default("scheduled"),
+  outcome: text("outcome"),
+  notes: text("notes"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+export const insertCalendarEventSchema = createInsertSchema(calendarEvents).omit({
+  id: true,
+  createdAt: true,
+});
+
+export type InsertCalendarEvent = z.infer<typeof insertCalendarEventSchema>;
+export type CalendarEvent = typeof calendarEvents.$inferSelect;
+
+export const claims = pgTable("claims", {
+  id: serial("id").primaryKey(),
+  patientId: integer("patient_id").notNull(),
+  enrollmentId: integer("enrollment_id"),
+  practiceId: integer("practice_id").notNull(),
+  programType: text("program_type").notNull(),
+  cptCode: text("cpt_code").notNull(),
+  icdCodes: text("icd_codes"),
+  serviceDate: text("service_date").notNull(),
+  totalMinutes: integer("total_minutes").default(0),
+  amountCents: integer("amount_cents").default(0),
+  status: text("status").notNull().default("ready"),
+  submittedAt: timestamp("submitted_at"),
+  paidAt: timestamp("paid_at"),
+  notes: text("notes"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+export const insertClaimSchema = createInsertSchema(claims).omit({
+  id: true,
+  createdAt: true,
+});
+
+export type InsertClaim = z.infer<typeof insertClaimSchema>;
+export type Claim = typeof claims.$inferSelect;

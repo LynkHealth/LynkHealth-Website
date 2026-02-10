@@ -31,11 +31,30 @@ import SNFPage from "@/pages/who-we-work-with/snf";
 import HomeHealthPage from "@/pages/who-we-work-with/home-health";
 import AdminLogin from "@/pages/admin/login";
 import AdminDashboard from "@/pages/admin/dashboard";
+import ClinicalLayout from "@/pages/clinical/layout";
+import PatientList from "@/pages/clinical/patients";
+import PatientChart from "@/pages/clinical/patient-chart";
+import Worklists from "@/pages/clinical/worklists";
 
 function Router() {
   useScrollToTop();
   const [location] = useLocation();
   const isAdmin = location.startsWith("/admin");
+  const isClinical = location.startsWith("/clinical");
+
+  if (isClinical) {
+    return (
+      <ClinicalLayout>
+        <Switch>
+          <Route path="/clinical/patients" component={PatientList} />
+          <Route path="/clinical/patients/:id" component={PatientChart} />
+          <Route path="/clinical/worklists" component={Worklists} />
+          <Route path="/clinical/worklists/:programType" component={Worklists} />
+          <Route path="/clinical">{() => { window.location.href = "/clinical/patients"; return null; }}</Route>
+        </Switch>
+      </ClinicalLayout>
+    );
+  }
 
   if (isAdmin) {
     return (
