@@ -533,6 +533,8 @@ function AnalyticsTab({ selectedMonth, currentYear, selectedPractice }: { select
   const [trendMonths, setTrendMonths] = useState(6);
   const [revenueTrends, setRevenueTrends] = useState<any[]>([]);
   const [enrollmentTrends, setEnrollmentTrends] = useState<any[]>([]);
+  const [revenueByProgram, setRevenueByProgram] = useState<any[]>([]);
+  const [practiceComparison, setPracticeComparison] = useState<any[]>([]);
   const [trendsLoading, setTrendsLoading] = useState(true);
 
   useEffect(() => {
@@ -540,21 +542,24 @@ function AnalyticsTab({ selectedMonth, currentYear, selectedPractice }: { select
       setTrendsLoading(true);
       try {
         const practiceParam = selectedPractice !== "all" ? `&practiceId=${selectedPractice}` : "";
-        const [revRes, enrRes] = await Promise.all([
+        const [revRes, enrRes, progRes, compRes] = await Promise.all([
           adminFetch(`/api/admin/trends/revenue?months=${trendMonths}${practiceParam}`),
           adminFetch(`/api/admin/trends/enrollments?months=${trendMonths}${practiceParam}`),
+          adminFetch(`/api/admin/trends/revenue-by-program?months=${trendMonths}${practiceParam}`),
+          adminFetch(`/api/admin/trends/practice-comparison?month=${selectedMonth}&year=${currentYear}`),
         ]);
         if (revRes.ok) setRevenueTrends(await revRes.json());
         if (enrRes.ok) setEnrollmentTrends(await enrRes.json());
+        if (progRes.ok) setRevenueByProgram(await progRes.json());
+        if (compRes.ok) setPracticeComparison(await compRes.json());
       } catch {}
       setTrendsLoading(false);
     };
     load();
-  }, [trendMonths, selectedPractice]);
+  }, [trendMonths, selectedPractice, selectedMonth, currentYear]);
 
   const handleExport = async (type: string) => {
-    const monthName = MONTH_NAMES[selectedMonth] || selectedMonth;
-    const url = `/api/admin/export/${type}?month=${monthName}&year=${currentYear}`;
+    const url = `/api/admin/export/${type}?month=${selectedMonth}&year=${currentYear}`;
     try {
       const res = await adminFetch(url);
       if (!res.ok) throw new Error("Export failed");
@@ -568,25 +573,52 @@ function AnalyticsTab({ selectedMonth, currentYear, selectedPractice }: { select
   };
 
   const formatRevenue = (cents: number) => `$${(cents / 100).toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`;
+  const formatRevenueShort = (cents: number) => {
+    const dollars = cents / 100;
+    if (dollars >= 1000000) return `$${(dollars / 1000000).toFixed(1)}M`;
+    if (dollars >= 1000) return `$${(dollars / 1000).toFixed(0)}K`;
+    return `$${dollars.toFixed(0)}`;
+  };
+
   const chartData = revenueTrends.map((r, i) => ({
-    label: `${r.month.slice(0, 3)} ${r.year}`,
+    label: `${r.month} '${String(r.year).slice(2)}`,
     revenue: Math.round(r.totalRevenue / 100),
     claims: r.totalClaims,
     enrolled: enrollmentTrends[i]?.enrolled || 0,
     inactive: enrollmentTrends[i]?.inactive || 0,
   }));
 
+  const programChartData = revenueByProgram.map((r) => ({
+    label: `${r.month} '${String(r.year).slice(2)}`,
+    CCM: Math.round((r.CCM || 0) / 100),
+    RPM: Math.round((r.RPM || 0) / 100),
+    BHI: Math.round((r.BHI || 0) / 100),
+    PCM: Math.round((r.PCM || 0) / 100),
+    RTM: Math.round((r.RTM || 0) / 100),
+    APCM: Math.round((r.APCM || 0) / 100),
+  }));
+
   const totalRevenue = revenueTrends.reduce((s, r) => s + r.totalRevenue, 0);
   const totalClaims = revenueTrends.reduce((s, r) => s + r.totalClaims, 0);
   const totalEnrolled = enrollmentTrends.length > 0 ? enrollmentTrends[enrollmentTrends.length - 1]?.enrolled || 0 : 0;
+  const totalInactive = enrollmentTrends.length > 0 ? enrollmentTrends[enrollmentTrends.length - 1]?.inactive || 0 : 0;
+
+  const avgRevenuePerMonth = revenueTrends.length > 0 ? totalRevenue / revenueTrends.length : 0;
+  const latestRevenue = revenueTrends.length > 0 ? revenueTrends[revenueTrends.length - 1]?.totalRevenue || 0 : 0;
+  const previousRevenue = revenueTrends.length > 1 ? revenueTrends[revenueTrends.length - 2]?.totalRevenue || 0 : 0;
+  const revenueChange = previousRevenue > 0 ? ((latestRevenue - previousRevenue) / previousRevenue * 100).toFixed(1) : "0";
+
+  const PROGRAM_COLORS: Record<string, string> = {
+    CCM: "#2563eb", RPM: "#7c3aed", BHI: "#059669", PCM: "#d97706", RTM: "#dc2626", APCM: "#0891b2",
+  };
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between flex-wrap gap-2">
         <div className="flex gap-2">
           {[3, 6, 12].map((m) => (
             <Button key={m} variant={trendMonths === m ? "default" : "outline"} size="sm" onClick={() => setTrendMonths(m)}>
-              {m}mo
+              {m} Months
             </Button>
           ))}
         </div>
@@ -600,29 +632,55 @@ function AnalyticsTab({ selectedMonth, currentYear, selectedPractice }: { select
         </div>
       </div>
 
-      <div className="grid grid-cols-3 gap-4">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         <Card>
           <CardContent className="pt-4">
-            <p className="text-sm text-slate-500">Total Revenue ({trendMonths}mo)</p>
+            <div className="flex items-center gap-2 mb-1">
+              <DollarSign className="w-4 h-4 text-green-600" />
+              <p className="text-sm text-slate-500">Total Revenue ({trendMonths}mo)</p>
+            </div>
             <p className="text-2xl font-bold text-green-600">{formatRevenue(totalRevenue)}</p>
+            <p className="text-xs text-slate-400 mt-1">Avg {formatRevenue(avgRevenuePerMonth)}/mo</p>
           </CardContent>
         </Card>
         <Card>
           <CardContent className="pt-4">
-            <p className="text-sm text-slate-500">Total Claims ({trendMonths}mo)</p>
+            <div className="flex items-center gap-2 mb-1">
+              <TrendingUp className="w-4 h-4 text-blue-600" />
+              <p className="text-sm text-slate-500">Month-over-Month</p>
+            </div>
+            <p className={`text-2xl font-bold ${Number(revenueChange) >= 0 ? "text-green-600" : "text-red-600"}`}>
+              {Number(revenueChange) >= 0 ? "+" : ""}{revenueChange}%
+            </p>
+            <p className="text-xs text-slate-400 mt-1">Latest: {formatRevenue(latestRevenue)}</p>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="pt-4">
+            <div className="flex items-center gap-2 mb-1">
+              <Receipt className="w-4 h-4 text-blue-600" />
+              <p className="text-sm text-slate-500">Total Claims ({trendMonths}mo)</p>
+            </div>
             <p className="text-2xl font-bold text-blue-600">{totalClaims.toLocaleString()}</p>
+            <p className="text-xs text-slate-400 mt-1">Avg {Math.round(totalClaims / (trendMonths || 1)).toLocaleString()}/mo</p>
           </CardContent>
         </Card>
         <Card>
           <CardContent className="pt-4">
-            <p className="text-sm text-slate-500">Current Enrolled</p>
+            <div className="flex items-center gap-2 mb-1">
+              <Activity className="w-4 h-4 text-purple-600" />
+              <p className="text-sm text-slate-500">Current Enrolled</p>
+            </div>
             <p className="text-2xl font-bold text-purple-600">{totalEnrolled.toLocaleString()}</p>
+            <p className="text-xs text-slate-400 mt-1">{totalInactive.toLocaleString()} inactive</p>
           </CardContent>
         </Card>
       </div>
 
       {trendsLoading ? (
-        <div className="text-center py-12 text-slate-500">Loading trend data...</div>
+        <div className="flex items-center justify-center py-12 text-slate-500">
+          <Loader2 className="w-5 h-5 animate-spin mr-2" /> Loading analytics...
+        </div>
       ) : (
         <>
           <Card>
@@ -635,9 +693,34 @@ function AnalyticsTab({ selectedMonth, currentYear, selectedPractice }: { select
                   <BarChart data={chartData}>
                     <CartesianGrid strokeDasharray="3 3" />
                     <XAxis dataKey="label" fontSize={12} />
-                    <YAxis fontSize={12} tickFormatter={(v) => `$${v.toLocaleString()}`} />
+                    <YAxis fontSize={12} tickFormatter={(v) => `$${v >= 1000 ? `${(v/1000).toFixed(0)}K` : v}`} />
                     <Tooltip formatter={(v: number) => [`$${v.toLocaleString()}`, "Revenue"]} />
                     <Bar dataKey="revenue" fill="#2563eb" radius={[4, 4, 0, 0]} />
+                  </BarChart>
+                </ResponsiveContainer>
+              )}
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader><CardTitle className="text-base">Revenue by Program</CardTitle></CardHeader>
+            <CardContent>
+              {programChartData.length === 0 ? (
+                <p className="text-sm text-slate-500 py-8 text-center">No program data available.</p>
+              ) : (
+                <ResponsiveContainer width="100%" height={350}>
+                  <BarChart data={programChartData}>
+                    <CartesianGrid strokeDasharray="3 3" />
+                    <XAxis dataKey="label" fontSize={12} />
+                    <YAxis fontSize={12} tickFormatter={(v) => `$${v >= 1000 ? `${(v/1000).toFixed(0)}K` : v}`} />
+                    <Tooltip formatter={(v: number) => [`$${v.toLocaleString()}`, ""]} />
+                    <Legend />
+                    <Bar dataKey="CCM" stackId="a" fill={PROGRAM_COLORS.CCM} name="CCM" />
+                    <Bar dataKey="RPM" stackId="a" fill={PROGRAM_COLORS.RPM} name="RPM" />
+                    <Bar dataKey="BHI" stackId="a" fill={PROGRAM_COLORS.BHI} name="BHI" />
+                    <Bar dataKey="PCM" stackId="a" fill={PROGRAM_COLORS.PCM} name="PCM" />
+                    <Bar dataKey="RTM" stackId="a" fill={PROGRAM_COLORS.RTM} name="RTM" />
+                    <Bar dataKey="APCM" stackId="a" fill={PROGRAM_COLORS.APCM} name="APCM" />
                   </BarChart>
                 </ResponsiveContainer>
               )}
@@ -683,6 +766,66 @@ function AnalyticsTab({ selectedMonth, currentYear, selectedPractice }: { select
               )}
             </CardContent>
           </Card>
+
+          {selectedPractice === "all" && practiceComparison.length > 0 && (
+            <Card>
+              <CardHeader><CardTitle className="text-base">Practice Comparison ({MONTH_NAMES[selectedMonth]} {currentYear})</CardTitle></CardHeader>
+              <CardContent>
+                <div className="overflow-x-auto">
+                  <table className="w-full text-sm">
+                    <thead>
+                      <tr className="border-b">
+                        <th className="text-left py-2 px-3 font-medium text-slate-600">Practice</th>
+                        <th className="text-right py-2 px-3 font-medium text-slate-600">Revenue</th>
+                        <th className="text-right py-2 px-3 font-medium text-slate-600">Claims</th>
+                        <th className="text-right py-2 px-3 font-medium text-slate-600">Enrolled</th>
+                        <th className="text-right py-2 px-3 font-medium text-slate-600">Rev/Patient</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {practiceComparison.map((p: any) => (
+                        <tr key={p.practiceId} className="border-b hover:bg-slate-50">
+                          <td className="py-2 px-3 font-medium">{p.name}</td>
+                          <td className="py-2 px-3 text-right text-green-600 font-medium">{formatRevenue(p.revenue)}</td>
+                          <td className="py-2 px-3 text-right">{p.claims.toLocaleString()}</td>
+                          <td className="py-2 px-3 text-right">{p.enrolled.toLocaleString()}</td>
+                          <td className="py-2 px-3 text-right text-blue-600">{p.enrolled > 0 ? formatRevenue(Math.round(p.revenue / p.enrolled)) : "-"}</td>
+                        </tr>
+                      ))}
+                      <tr className="bg-slate-50 font-bold">
+                        <td className="py-2 px-3">Total</td>
+                        <td className="py-2 px-3 text-right text-green-600">{formatRevenue(practiceComparison.reduce((s: number, p: any) => s + p.revenue, 0))}</td>
+                        <td className="py-2 px-3 text-right">{practiceComparison.reduce((s: number, p: any) => s + p.claims, 0).toLocaleString()}</td>
+                        <td className="py-2 px-3 text-right">{practiceComparison.reduce((s: number, p: any) => s + p.enrolled, 0).toLocaleString()}</td>
+                        <td className="py-2 px-3 text-right text-blue-600">
+                          {practiceComparison.reduce((s: number, p: any) => s + p.enrolled, 0) > 0
+                            ? formatRevenue(Math.round(practiceComparison.reduce((s: number, p: any) => s + p.revenue, 0) / practiceComparison.reduce((s: number, p: any) => s + p.enrolled, 0)))
+                            : "-"}
+                        </td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
+          {selectedPractice === "all" && practiceComparison.length > 0 && (
+            <Card>
+              <CardHeader><CardTitle className="text-base">Revenue by Practice ({MONTH_NAMES[selectedMonth]} {currentYear})</CardTitle></CardHeader>
+              <CardContent>
+                <ResponsiveContainer width="100%" height={Math.max(200, practiceComparison.length * 50)}>
+                  <BarChart data={practiceComparison.map((p: any) => ({ name: p.name.length > 25 ? p.name.slice(0, 25) + "..." : p.name, revenue: Math.round(p.revenue / 100) }))} layout="vertical">
+                    <CartesianGrid strokeDasharray="3 3" />
+                    <XAxis type="number" fontSize={12} tickFormatter={(v) => `$${v >= 1000 ? `${(v/1000).toFixed(0)}K` : v}`} />
+                    <YAxis type="category" dataKey="name" fontSize={11} width={180} />
+                    <Tooltip formatter={(v: number) => [`$${v.toLocaleString()}`, "Revenue"]} />
+                    <Bar dataKey="revenue" fill="#2563eb" radius={[0, 4, 4, 0]} />
+                  </BarChart>
+                </ResponsiveContainer>
+              </CardContent>
+            </Card>
+          )}
         </>
       )}
     </div>
