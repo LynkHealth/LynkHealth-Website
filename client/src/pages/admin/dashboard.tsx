@@ -992,15 +992,17 @@ export default function AdminDashboard() {
                             : filteredRevenue.reduce((sum, r) => sum + (r.claimCount || 0), 0);
 
                           if (totalRev > 0 || totalClaims > 0) {
-                            const aggregated = new Map<string, { programType: string; claimCount: number; totalRevenue: number }>();
+                            const aggregated = new Map<string, { programType: string; claimCount: number; totalRevenue: number; concatenated: number; nonConcatenated: number }>();
                             filteredRevenue.forEach((r) => {
                               const key = r.programType || "Unknown";
                               const existing = aggregated.get(key);
                               if (existing) {
                                 existing.claimCount += r.claimCount || 0;
                                 existing.totalRevenue += r.totalRevenue || 0;
+                                existing.concatenated += r.concatenatedCount || 0;
+                                existing.nonConcatenated += r.nonConcatenatedCount || 0;
                               } else {
-                                aggregated.set(key, { programType: key, claimCount: r.claimCount || 0, totalRevenue: r.totalRevenue || 0 });
+                                aggregated.set(key, { programType: key, claimCount: r.claimCount || 0, totalRevenue: r.totalRevenue || 0, concatenated: r.concatenatedCount || 0, nonConcatenated: r.nonConcatenatedCount || 0 });
                               }
                             });
                             const programRevenue = Array.from(aggregated.values())
@@ -1043,6 +1045,26 @@ export default function AdminDashboard() {
                                         ${(totalRev / 100).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                                       </p>
                                       <p className="text-xs text-green-600">{totalClaims.toLocaleString()} claims submitted</p>
+                                      {(() => {
+                                        const totalConcat = programRevenue.reduce((s, r) => s + r.concatenated, 0);
+                                        const totalNonConcat = programRevenue.reduce((s, r) => s + r.nonConcatenated, 0);
+                                        const totalActual = totalConcat + totalNonConcat;
+                                        if (totalActual > 0) {
+                                          return (
+                                            <p className="text-xs text-slate-500 mt-0.5">
+                                              <span className="inline-flex items-center gap-1 mr-2">
+                                                <span className="w-1.5 h-1.5 rounded-full bg-blue-400 inline-block"></span>
+                                                {totalNonConcat.toLocaleString()} single-code
+                                              </span>
+                                              <span className="inline-flex items-center gap-1">
+                                                <span className="w-1.5 h-1.5 rounded-full bg-amber-400 inline-block"></span>
+                                                {totalConcat.toLocaleString()} multi-code
+                                              </span>
+                                            </p>
+                                          );
+                                        }
+                                        return null;
+                                      })()}
                                     </div>
                                   </div>
                                 </CardHeader>
@@ -1094,22 +1116,49 @@ export default function AdminDashboard() {
                                                   ${(displayClaims ? (displayRevenue / displayClaims / 100) : 0).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                                                 </td>
                                               </tr>
-                                              {isExpanded && programCodes.map((c) => (
-                                                <tr key={`${r.programType}-${c.cptCode}`} className="border-b border-slate-50 bg-slate-50/50">
-                                                  <td className="py-1.5"></td>
-                                                  <td className="px-3 py-1.5 pl-8">
-                                                    <span className="text-xs font-mono font-medium text-slate-600">{c.cptCode}</span>
-                                                    <span className="text-xs text-slate-400 ml-2">{codeDescriptions[c.cptCode] || ""}</span>
-                                                  </td>
-                                                  <td className="px-3 py-1.5 text-xs text-right text-slate-500">{c.claimCount.toLocaleString()}</td>
-                                                  <td className="px-3 py-1.5 text-xs text-right text-green-600">
-                                                    ${(c.totalRevenue / 100).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                                                  </td>
-                                                  <td className="px-3 py-1.5 text-xs text-right text-slate-400">
-                                                    ${(c.claimCount ? (c.totalRevenue / c.claimCount / 100) : 0).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                                                  </td>
-                                                </tr>
-                                              ))}
+                                              {isExpanded && (
+                                                <>
+                                                  {(r.concatenated > 0 || r.nonConcatenated > 0) && (
+                                                    <tr className="border-b border-slate-100 bg-blue-50/40">
+                                                      <td className="py-1.5"></td>
+                                                      <td colSpan={4} className="px-3 py-1.5 pl-8">
+                                                        <div className="flex items-center gap-4 text-xs">
+                                                          <span className="text-slate-500 font-medium">Claim Breakdown:</span>
+                                                          <span className="inline-flex items-center gap-1">
+                                                            <span className="w-2 h-2 rounded-full bg-blue-400 inline-block"></span>
+                                                            <span className="text-slate-600">{r.nonConcatenated.toLocaleString()} single-code</span>
+                                                          </span>
+                                                          <span className="inline-flex items-center gap-1">
+                                                            <span className="w-2 h-2 rounded-full bg-amber-400 inline-block"></span>
+                                                            <span className="text-slate-600">{r.concatenated.toLocaleString()} multi-code (concatenated)</span>
+                                                          </span>
+                                                          {(r.concatenated + r.nonConcatenated) > 0 && (
+                                                            <span className="text-slate-400 ml-1">
+                                                              ({Math.round((r.concatenated / (r.concatenated + r.nonConcatenated)) * 100)}% concatenated)
+                                                            </span>
+                                                          )}
+                                                        </div>
+                                                      </td>
+                                                    </tr>
+                                                  )}
+                                                  {programCodes.map((c) => (
+                                                    <tr key={`${r.programType}-${c.cptCode}`} className="border-b border-slate-50 bg-slate-50/50">
+                                                      <td className="py-1.5"></td>
+                                                      <td className="px-3 py-1.5 pl-8">
+                                                        <span className="text-xs font-mono font-medium text-slate-600">{c.cptCode}</span>
+                                                        <span className="text-xs text-slate-400 ml-2">{codeDescriptions[c.cptCode] || ""}</span>
+                                                      </td>
+                                                      <td className="px-3 py-1.5 text-xs text-right text-slate-500">{c.claimCount.toLocaleString()}</td>
+                                                      <td className="px-3 py-1.5 text-xs text-right text-green-600">
+                                                        ${(c.totalRevenue / 100).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                                                      </td>
+                                                      <td className="px-3 py-1.5 text-xs text-right text-slate-400">
+                                                        ${(c.claimCount ? (c.totalRevenue / c.claimCount / 100) : 0).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                                                      </td>
+                                                    </tr>
+                                                  ))}
+                                                </>
+                                              )}
                                             </>
                                           );
                                         })}

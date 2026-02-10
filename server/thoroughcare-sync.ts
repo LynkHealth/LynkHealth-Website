@@ -805,7 +805,7 @@ function processClaimData(
 async function storeRevenueForMonth(
   month: string,
   year: number,
-  revenueByKey: Map<string, { practiceId: number; department: string | null; programType: string; revenue: number; count: number }>,
+  revenueByKey: Map<string, { practiceId: number; department: string | null; programType: string; revenue: number; count: number; concatenated: number; nonConcatenated: number }>,
   codeRevenueByKey?: Map<string, { practiceId: number; department: string | null; programType: string; cptCode: string; revenue: number; count: number }>
 ) {
   await db.delete(revenueSnapshots)
@@ -819,6 +819,8 @@ async function storeRevenueForMonth(
       month,
       year,
       claimCount: entry.count,
+      concatenatedCount: entry.concatenated,
+      nonConcatenatedCount: entry.nonConcatenated,
       totalRevenue: entry.revenue,
       source: "thoroughcare",
       syncedAt: new Date(),
@@ -887,7 +889,7 @@ async function syncClaimsForMonth(
   }
 
   const dbRates = await loadCptRatesFromDb(year);
-  const revenueByKey = new Map<string, { practiceId: number; department: string | null; programType: string; revenue: number; count: number }>();
+  const revenueByKey = new Map<string, { practiceId: number; department: string | null; programType: string; revenue: number; count: number; concatenated: number; nonConcatenated: number }>();
   const codeRevenueByKey = new Map<string, { practiceId: number; department: string | null; programType: string; cptCode: string; revenue: number; count: number }>();
   let totalRevenueCents = 0;
 
@@ -896,14 +898,16 @@ async function syncClaimsForMonth(
     if (!result) continue;
 
     totalRevenueCents += result.revenue;
+    const isConcatenated = result.codeBreakdown.length > 1;
 
     const orgKey = `${result.practiceId}|null|${result.programType}`;
     if (!revenueByKey.has(orgKey)) {
-      revenueByKey.set(orgKey, { practiceId: result.practiceId, department: null, programType: result.programType, revenue: 0, count: 0 });
+      revenueByKey.set(orgKey, { practiceId: result.practiceId, department: null, programType: result.programType, revenue: 0, count: 0, concatenated: 0, nonConcatenated: 0 });
     }
     const orgEntry = revenueByKey.get(orgKey)!;
     orgEntry.revenue += result.revenue;
     orgEntry.count++;
+    if (isConcatenated) orgEntry.concatenated++; else orgEntry.nonConcatenated++;
 
     for (const cb of result.codeBreakdown) {
       const codeOrgKey = `${result.practiceId}|null|${result.programType}|${cb.cptCode}`;
@@ -928,11 +932,12 @@ async function syncClaimsForMonth(
     if (result.department) {
       const deptKey = `${result.practiceId}|${result.department}|${result.programType}`;
       if (!revenueByKey.has(deptKey)) {
-        revenueByKey.set(deptKey, { practiceId: result.practiceId, department: result.department, programType: result.programType, revenue: 0, count: 0 });
+        revenueByKey.set(deptKey, { practiceId: result.practiceId, department: result.department, programType: result.programType, revenue: 0, count: 0, concatenated: 0, nonConcatenated: 0 });
       }
       const deptEntry = revenueByKey.get(deptKey)!;
       deptEntry.revenue += result.revenue;
       deptEntry.count++;
+      if (isConcatenated) deptEntry.concatenated++; else deptEntry.nonConcatenated++;
     }
   }
 
@@ -1083,7 +1088,7 @@ export async function runHistoricalRevenueSync(totalMonths: number = 24): Promis
       updateProgress("Processing", pct, `Processing ${month} ${year}: ${monthClaims.length} claims...`);
 
       const dbRates = ratesByYear.get(year) || CPT_RATES;
-      const revenueByKey = new Map<string, { practiceId: number; department: string | null; programType: string; revenue: number; count: number }>();
+      const revenueByKey = new Map<string, { practiceId: number; department: string | null; programType: string; revenue: number; count: number; concatenated: number; nonConcatenated: number }>();
       const codeRevenueByKey = new Map<string, { practiceId: number; department: string | null; programType: string; cptCode: string; revenue: number; count: number }>();
 
       for (const claim of monthClaims) {
@@ -1092,14 +1097,16 @@ export async function runHistoricalRevenueSync(totalMonths: number = 24): Promis
 
         totalRevenueCents += result.revenue;
         totalClaims++;
+        const isConcatenated = result.codeBreakdown.length > 1;
 
         const orgKey = `${result.practiceId}|null|${result.programType}`;
         if (!revenueByKey.has(orgKey)) {
-          revenueByKey.set(orgKey, { practiceId: result.practiceId, department: null, programType: result.programType, revenue: 0, count: 0 });
+          revenueByKey.set(orgKey, { practiceId: result.practiceId, department: null, programType: result.programType, revenue: 0, count: 0, concatenated: 0, nonConcatenated: 0 });
         }
         const orgEntry = revenueByKey.get(orgKey)!;
         orgEntry.revenue += result.revenue;
         orgEntry.count++;
+        if (isConcatenated) orgEntry.concatenated++; else orgEntry.nonConcatenated++;
 
         for (const cb of result.codeBreakdown) {
           const codeOrgKey = `${result.practiceId}|null|${result.programType}|${cb.cptCode}`;
@@ -1124,11 +1131,12 @@ export async function runHistoricalRevenueSync(totalMonths: number = 24): Promis
         if (result.department) {
           const deptKey = `${result.practiceId}|${result.department}|${result.programType}`;
           if (!revenueByKey.has(deptKey)) {
-            revenueByKey.set(deptKey, { practiceId: result.practiceId, department: result.department, programType: result.programType, revenue: 0, count: 0 });
+            revenueByKey.set(deptKey, { practiceId: result.practiceId, department: result.department, programType: result.programType, revenue: 0, count: 0, concatenated: 0, nonConcatenated: 0 });
           }
           const deptEntry = revenueByKey.get(deptKey)!;
           deptEntry.revenue += result.revenue;
           deptEntry.count++;
+          if (isConcatenated) deptEntry.concatenated++; else deptEntry.nonConcatenated++;
         }
       }
 

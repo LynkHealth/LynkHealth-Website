@@ -194,6 +194,8 @@ export const revenueSnapshots = pgTable("revenue_snapshots", {
   month: text("month").notNull(),
   year: integer("year").notNull(),
   claimCount: integer("claim_count").default(0),
+  concatenatedCount: integer("concatenated_count").default(0),
+  nonConcatenatedCount: integer("non_concatenated_count").default(0),
   totalRevenue: integer("total_revenue").default(0),
   source: text("source").default("thoroughcare"),
   syncedAt: timestamp("synced_at"),
