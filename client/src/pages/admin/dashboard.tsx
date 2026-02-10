@@ -28,7 +28,7 @@ import {
   HeartPulse,
 } from "lucide-react";
 import type { ProgramSnapshot, Practice, ContactInquiry, RevenueSnapshot, RevenueByCode, CptBillingCode } from "@shared/schema";
-import { DollarSign, TrendingUp, Receipt, Pencil, Check, Trash2, Plus, ChevronDown, ChevronUp, Download, BarChart3 } from "lucide-react";
+import { DollarSign, TrendingUp, Receipt, Pencil, Check, Trash2, Plus, ChevronDown, ChevronUp, Download, BarChart3, FileCheck, Eye, Clock, CircleCheck, CircleX } from "lucide-react";
 import { LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from "recharts";
 
 const MONTHS = ["JAN", "FEB", "MAR", "APR", "MAY", "JUN", "JUL", "AUG", "SEP", "OCT", "NOV", "DEC"];
@@ -252,6 +252,336 @@ const PROGRAM_COLORS: Record<string, string> = {
   AWV: "bg-rose-50 text-rose-700 border-rose-200",
   TCM: "bg-orange-50 text-orange-700 border-orange-200",
 };
+
+function InvoicesTab() {
+  const MONTHS = ["JAN", "FEB", "MAR", "APR", "MAY", "JUN", "JUL", "AUG", "SEP", "OCT", "NOV", "DEC"];
+  const MONTH_DISPLAY: Record<string, string> = {
+    JAN: "January", FEB: "February", MAR: "March", APR: "April",
+    MAY: "May", JUN: "June", JUL: "July", AUG: "August",
+    SEP: "September", OCT: "October", NOV: "November", DEC: "December"
+  };
+  const now = new Date();
+  const prevMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+  const [genMonth, setGenMonth] = useState(MONTHS[prevMonth.getMonth()]);
+  const [genYear, setGenYear] = useState(prevMonth.getFullYear());
+  const [invoiceList, setInvoiceList] = useState<any[]>([]);
+  const [statusFilter, setStatusFilter] = useState("all");
+  const [loading, setLoading] = useState(true);
+  const [generating, setGenerating] = useState(false);
+  const [selectedInvoice, setSelectedInvoice] = useState<any>(null);
+  const [lineItems, setLineItems] = useState<any[]>([]);
+  const [detailLoading, setDetailLoading] = useState(false);
+
+  const loadInvoices = async () => {
+    setLoading(true);
+    try {
+      const params = new URLSearchParams();
+      if (statusFilter !== "all") params.set("status", statusFilter);
+      const res = await adminFetch(`/api/admin/invoices?${params}`);
+      const data = await res.json();
+      if (data.success) setInvoiceList(data.invoices);
+    } catch (e) { console.error(e); }
+    setLoading(false);
+  };
+
+  useEffect(() => { loadInvoices(); }, [statusFilter]);
+
+  const handleGenerate = async () => {
+    setGenerating(true);
+    try {
+      const res = await adminFetch("/api/admin/invoices/generate", {
+        method: "POST",
+        body: JSON.stringify({ month: genMonth, year: genYear }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        loadInvoices();
+      }
+    } catch (e) { console.error(e); }
+    setGenerating(false);
+  };
+
+  const viewInvoice = async (id: number) => {
+    setDetailLoading(true);
+    try {
+      const res = await adminFetch(`/api/admin/invoices/${id}`);
+      const data = await res.json();
+      if (data.success) {
+        setSelectedInvoice(data.invoice);
+        setLineItems(data.lineItems);
+      }
+    } catch (e) { console.error(e); }
+    setDetailLoading(false);
+  };
+
+  const updateStatus = async (id: number, status: string) => {
+    try {
+      const res = await adminFetch(`/api/admin/invoices/${id}/status`, {
+        method: "PUT",
+        body: JSON.stringify({ status }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        setSelectedInvoice(data.invoice);
+        loadInvoices();
+      }
+    } catch (e) { console.error(e); }
+  };
+
+  const deleteInvoice = async (id: number) => {
+    if (!confirm("Delete this invoice? This cannot be undone.")) return;
+    try {
+      await adminFetch(`/api/admin/invoices/${id}`, { method: "DELETE" });
+      setSelectedInvoice(null);
+      loadInvoices();
+    } catch (e) { console.error(e); }
+  };
+
+  const statusBadge = (status: string) => {
+    const styles: Record<string, string> = {
+      pending_review: "bg-amber-100 text-amber-700",
+      approved: "bg-green-100 text-green-700",
+      rejected: "bg-red-100 text-red-700",
+      sent: "bg-blue-100 text-blue-700",
+      paid: "bg-emerald-100 text-emerald-700",
+    };
+    const labels: Record<string, string> = {
+      pending_review: "Pending Review",
+      approved: "Approved",
+      rejected: "Rejected",
+      sent: "Sent",
+      paid: "Paid",
+    };
+    return (
+      <span className={`px-2 py-0.5 rounded text-xs font-medium ${styles[status] || "bg-slate-100 text-slate-600"}`}>
+        {labels[status] || status}
+      </span>
+    );
+  };
+
+  const formatCurrency = (cents: number) => {
+    return `$${(cents / 100).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+  };
+
+  const programBadge = (program: string) => {
+    const colors: Record<string, string> = {
+      CCM: "bg-blue-100 text-blue-700",
+      RPM: "bg-purple-100 text-purple-700",
+      BHI: "bg-pink-100 text-pink-700",
+      PCM: "bg-cyan-100 text-cyan-700",
+      RTM: "bg-teal-100 text-teal-700",
+      APCM: "bg-indigo-100 text-indigo-700",
+    };
+    return <span className={`px-1.5 py-0.5 rounded text-xs font-medium ${colors[program] || "bg-slate-100 text-slate-600"}`}>{program}</span>;
+  };
+
+  if (selectedInvoice) {
+    return (
+      <div className="space-y-4">
+        <div className="flex items-center gap-3">
+          <Button variant="ghost" size="sm" onClick={() => setSelectedInvoice(null)}>
+            <ChevronLeft className="w-4 h-4 mr-1" /> Back to Invoices
+          </Button>
+        </div>
+
+        <Card>
+          <CardHeader className="pb-3">
+            <div className="flex items-center justify-between">
+              <div>
+                <CardTitle className="text-lg">{selectedInvoice.invoiceNumber}</CardTitle>
+                <p className="text-sm text-slate-500 mt-1">{selectedInvoice.practiceName} — {MONTH_DISPLAY[selectedInvoice.month]} {selectedInvoice.year}</p>
+              </div>
+              <div className="flex items-center gap-2">
+                {statusBadge(selectedInvoice.status)}
+              </div>
+            </div>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-3 gap-4 mb-6">
+              <div className="bg-slate-50 rounded-lg p-3">
+                <p className="text-xs text-slate-500">Total Amount</p>
+                <p className="text-xl font-bold text-slate-800">{formatCurrency(selectedInvoice.totalAmountCents)}</p>
+              </div>
+              <div className="bg-slate-50 rounded-lg p-3">
+                <p className="text-xs text-slate-500">Total Claims</p>
+                <p className="text-xl font-bold text-slate-800">{selectedInvoice.totalClaims}</p>
+              </div>
+              <div className="bg-slate-50 rounded-lg p-3">
+                <p className="text-xs text-slate-500">Generated</p>
+                <p className="text-sm font-medium text-slate-800">{new Date(selectedInvoice.generatedAt).toLocaleDateString()}</p>
+              </div>
+            </div>
+
+            <h3 className="text-sm font-semibold text-slate-700 mb-3">Line Items</h3>
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="border-b bg-slate-50">
+                    <th className="text-left py-2 px-3 font-medium">Program</th>
+                    <th className="text-left py-2 px-3 font-medium">CPT Code</th>
+                    <th className="text-left py-2 px-3 font-medium">Description</th>
+                    <th className="text-right py-2 px-3 font-medium">Claims</th>
+                    <th className="text-right py-2 px-3 font-medium">Rate</th>
+                    <th className="text-right py-2 px-3 font-medium">Total</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {lineItems.map((li: any) => (
+                    <tr key={li.id} className="border-b hover:bg-slate-50">
+                      <td className="py-2 px-3">{programBadge(li.programType)}</td>
+                      <td className="py-2 px-3 font-mono text-xs">{li.cptCode}</td>
+                      <td className="py-2 px-3 text-slate-600 text-xs">{li.description || "—"}</td>
+                      <td className="py-2 px-3 text-right">{li.claimCount}</td>
+                      <td className="py-2 px-3 text-right">{formatCurrency(li.rateCents)}</td>
+                      <td className="py-2 px-3 text-right font-medium">{formatCurrency(li.totalCents)}</td>
+                    </tr>
+                  ))}
+                </tbody>
+                <tfoot>
+                  <tr className="border-t-2 font-semibold">
+                    <td colSpan={3} className="py-2 px-3">Total</td>
+                    <td className="py-2 px-3 text-right">{selectedInvoice.totalClaims}</td>
+                    <td className="py-2 px-3"></td>
+                    <td className="py-2 px-3 text-right">{formatCurrency(selectedInvoice.totalAmountCents)}</td>
+                  </tr>
+                </tfoot>
+              </table>
+            </div>
+
+            {selectedInvoice.notes && (
+              <div className="mt-4 p-3 bg-slate-50 rounded-lg">
+                <p className="text-xs text-slate-500 mb-1">Notes</p>
+                <p className="text-sm text-slate-700">{selectedInvoice.notes}</p>
+              </div>
+            )}
+
+            <div className="flex items-center gap-2 mt-6 pt-4 border-t">
+              {selectedInvoice.status === "pending_review" && (
+                <>
+                  <Button size="sm" className="bg-green-600 hover:bg-green-700" onClick={() => updateStatus(selectedInvoice.id, "approved")}>
+                    <CircleCheck className="w-4 h-4 mr-1" /> Approve
+                  </Button>
+                  <Button size="sm" variant="destructive" onClick={() => updateStatus(selectedInvoice.id, "rejected")}>
+                    <CircleX className="w-4 h-4 mr-1" /> Reject
+                  </Button>
+                </>
+              )}
+              {selectedInvoice.status === "approved" && (
+                <Button size="sm" className="bg-blue-600 hover:bg-blue-700" onClick={() => updateStatus(selectedInvoice.id, "sent")}>
+                  <Mail className="w-4 h-4 mr-1" /> Mark as Sent
+                </Button>
+              )}
+              {selectedInvoice.status === "sent" && (
+                <Button size="sm" className="bg-emerald-600 hover:bg-emerald-700" onClick={() => updateStatus(selectedInvoice.id, "paid")}>
+                  <DollarSign className="w-4 h-4 mr-1" /> Mark as Paid
+                </Button>
+              )}
+              {(selectedInvoice.status === "pending_review" || selectedInvoice.status === "rejected") && (
+                <Button size="sm" variant="ghost" className="text-red-600 hover:text-red-700 ml-auto" onClick={() => deleteInvoice(selectedInvoice.id)}>
+                  <Trash2 className="w-4 h-4 mr-1" /> Delete
+                </Button>
+              )}
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-4">
+      <Card>
+        <CardHeader className="pb-3">
+          <CardTitle className="text-base">Generate Invoices</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="flex items-end gap-3">
+            <div>
+              <label className="text-xs text-slate-500 mb-1 block">Month</label>
+              <select className="border rounded px-3 py-1.5 text-sm" value={genMonth} onChange={(e) => setGenMonth(e.target.value)}>
+                {MONTHS.map(m => <option key={m} value={m}>{MONTH_DISPLAY[m]}</option>)}
+              </select>
+            </div>
+            <div>
+              <label className="text-xs text-slate-500 mb-1 block">Year</label>
+              <select className="border rounded px-3 py-1.5 text-sm" value={genYear} onChange={(e) => setGenYear(parseInt(e.target.value))}>
+                {[2024, 2025, 2026].map(y => <option key={y} value={y}>{y}</option>)}
+              </select>
+            </div>
+            <Button size="sm" onClick={handleGenerate} disabled={generating}>
+              {generating ? <Loader2 className="w-4 h-4 mr-1 animate-spin" /> : <FileCheck className="w-4 h-4 mr-1" />}
+              {generating ? "Generating..." : "Generate Invoices"}
+            </Button>
+          </div>
+          <p className="text-xs text-slate-400 mt-2">Generates one invoice per practice from billing claims for the selected month. Invoices already generated for a practice/month will be skipped.</p>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader className="pb-3">
+          <div className="flex items-center justify-between">
+            <CardTitle className="text-base">Invoices</CardTitle>
+            <div className="flex items-center gap-2">
+              <select className="border rounded px-2 py-1 text-sm" value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)}>
+                <option value="all">All Statuses</option>
+                <option value="pending_review">Pending Review</option>
+                <option value="approved">Approved</option>
+                <option value="rejected">Rejected</option>
+                <option value="sent">Sent</option>
+                <option value="paid">Paid</option>
+              </select>
+              <Button variant="ghost" size="sm" onClick={loadInvoices}>
+                <RefreshCw className="w-4 h-4" />
+              </Button>
+            </div>
+          </div>
+        </CardHeader>
+        <CardContent>
+          {loading ? (
+            <div className="flex items-center justify-center py-8">
+              <Loader2 className="w-5 h-5 animate-spin text-slate-400" />
+            </div>
+          ) : invoiceList.length === 0 ? (
+            <p className="text-sm text-slate-500 text-center py-8">No invoices found. Use the generator above to create invoices from billing data.</p>
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="border-b bg-slate-50">
+                    <th className="text-left py-2 px-3 font-medium">Invoice #</th>
+                    <th className="text-left py-2 px-3 font-medium">Practice</th>
+                    <th className="text-left py-2 px-3 font-medium">Period</th>
+                    <th className="text-right py-2 px-3 font-medium">Claims</th>
+                    <th className="text-right py-2 px-3 font-medium">Amount</th>
+                    <th className="text-center py-2 px-3 font-medium">Status</th>
+                    <th className="text-center py-2 px-3 font-medium">Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {invoiceList.map((inv: any) => (
+                    <tr key={inv.id} className="border-b hover:bg-slate-50">
+                      <td className="py-2 px-3 font-mono text-xs">{inv.invoiceNumber}</td>
+                      <td className="py-2 px-3 font-medium">{inv.practiceName}</td>
+                      <td className="py-2 px-3 text-slate-600">{MONTH_DISPLAY[inv.month]} {inv.year}</td>
+                      <td className="py-2 px-3 text-right">{inv.totalClaims}</td>
+                      <td className="py-2 px-3 text-right font-medium">{formatCurrency(inv.totalAmountCents)}</td>
+                      <td className="py-2 px-3 text-center">{statusBadge(inv.status)}</td>
+                      <td className="py-2 px-3 text-center">
+                        <Button variant="ghost" size="sm" onClick={() => viewInvoice(inv.id)}>
+                          <Eye className="w-4 h-4" />
+                        </Button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+    </div>
+  );
+}
 
 function BillingCodesTab() {
   const [codes, setCodes] = useState<CptBillingCode[]>([]);
@@ -1009,6 +1339,7 @@ export default function AdminDashboard() {
     { id: "dashboard", label: "Dashboard", icon: LayoutDashboard },
     { id: "analytics", label: "Analytics", icon: BarChart3 },
     { id: "billing", label: "Billing Codes", icon: Receipt },
+    { id: "invoices", label: "Invoices", icon: FileCheck },
     { id: "inquiries", label: "Inquiries", icon: Mail },
     { id: "practices", label: "Practices", icon: Building2 },
   ];
@@ -1087,6 +1418,7 @@ export default function AdminDashboard() {
               {activeTab === "dashboard" && "Clinic Dashboard"}
               {activeTab === "analytics" && "Analytics & Trends"}
               {activeTab === "billing" && "Billing Codes & Rates"}
+              {activeTab === "invoices" && "Invoice Management"}
               {activeTab === "inquiries" && "Contact Inquiries"}
               {activeTab === "practices" && "Partner Practices"}
             </h1>
@@ -1650,6 +1982,8 @@ export default function AdminDashboard() {
               {activeTab === "billing" && (
                 <BillingCodesTab />
               )}
+
+              {activeTab === "invoices" && <InvoicesTab />}
 
               {activeTab === "analytics" && <AnalyticsTab selectedMonth={currentMonth} currentYear={currentYear} selectedPractice={selectedPracticeId === "all" ? "all" : String(selectedPracticeId)} selectedDepartment={selectedDepartment} />}
 

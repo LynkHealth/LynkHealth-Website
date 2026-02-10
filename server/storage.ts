@@ -1,4 +1,4 @@
-import { users, contactInquiries, nightCoverageInquiries, woundCareReferrals, adminUsers, adminSessions, practices, programSnapshots, revenueSnapshots, revenueByCode, cptBillingCodes, patients, patientConditions, patientMedications, patientAllergies, patientVitals, patientInsurance, programEnrollments, carePlans, carePlanItems, timeLogs, clinicalTasks, patientAssessments, calendarEvents, claims, carePlanTemplates, carePlanTemplateItems, poorEngagementForms, billingEvaluationForms, type User, type InsertUser, type ContactInquiry, type InsertContactInquiry, type NightCoverageInquiry, type InsertNightCoverageInquiry, type WoundCareReferral, type InsertWoundCareReferral, type AdminUser, type InsertAdminUser, type AdminSession, type Practice, type InsertPractice, type ProgramSnapshot, type InsertProgramSnapshot, type RevenueSnapshot, type InsertRevenueSnapshot, type RevenueByCode, type CptBillingCode, type InsertCptBillingCode, type Patient, type InsertPatient, type PatientCondition, type InsertPatientCondition, type PatientMedication, type InsertPatientMedication, type PatientAllergy, type InsertPatientAllergy, type PatientVital, type InsertPatientVital, type PatientInsurance, type InsertPatientInsurance, type ProgramEnrollment, type InsertProgramEnrollment, type CarePlan, type InsertCarePlan, type CarePlanItem, type InsertCarePlanItem, type TimeLog, type InsertTimeLog, type ClinicalTask, type InsertClinicalTask, type PatientAssessment, type InsertPatientAssessment, type CalendarEvent, type InsertCalendarEvent, type Claim, type InsertClaim, type CarePlanTemplate, type InsertCarePlanTemplate, type CarePlanTemplateItem, type InsertCarePlanTemplateItem, type PoorEngagementForm, type InsertPoorEngagementForm, type BillingEvaluationForm, type InsertBillingEvaluationForm } from "@shared/schema";
+import { users, contactInquiries, nightCoverageInquiries, woundCareReferrals, adminUsers, adminSessions, practices, programSnapshots, revenueSnapshots, revenueByCode, cptBillingCodes, patients, patientConditions, patientMedications, patientAllergies, patientVitals, patientInsurance, programEnrollments, carePlans, carePlanItems, timeLogs, clinicalTasks, patientAssessments, calendarEvents, claims, carePlanTemplates, carePlanTemplateItems, poorEngagementForms, billingEvaluationForms, invoices, invoiceLineItems, type User, type InsertUser, type ContactInquiry, type InsertContactInquiry, type NightCoverageInquiry, type InsertNightCoverageInquiry, type WoundCareReferral, type InsertWoundCareReferral, type AdminUser, type InsertAdminUser, type AdminSession, type Practice, type InsertPractice, type ProgramSnapshot, type InsertProgramSnapshot, type RevenueSnapshot, type InsertRevenueSnapshot, type RevenueByCode, type CptBillingCode, type InsertCptBillingCode, type Patient, type InsertPatient, type PatientCondition, type InsertPatientCondition, type PatientMedication, type InsertPatientMedication, type PatientAllergy, type InsertPatientAllergy, type PatientVital, type InsertPatientVital, type PatientInsurance, type InsertPatientInsurance, type ProgramEnrollment, type InsertProgramEnrollment, type CarePlan, type InsertCarePlan, type CarePlanItem, type InsertCarePlanItem, type TimeLog, type InsertTimeLog, type ClinicalTask, type InsertClinicalTask, type PatientAssessment, type InsertPatientAssessment, type CalendarEvent, type InsertCalendarEvent, type Claim, type InsertClaim, type CarePlanTemplate, type InsertCarePlanTemplate, type CarePlanTemplateItem, type InsertCarePlanTemplateItem, type PoorEngagementForm, type InsertPoorEngagementForm, type BillingEvaluationForm, type InsertBillingEvaluationForm, type Invoice, type InsertInvoice, type InvoiceLineItem, type InsertInvoiceLineItem } from "@shared/schema";
 import { db } from "./db";
 import { eq, ne, and, desc, or, ilike, sql, gte, lte } from "drizzle-orm";
 
@@ -131,6 +131,14 @@ export interface IStorage {
   listBillingEvaluationForms(status?: string): Promise<BillingEvaluationForm[]>;
   getBillingEvaluationForm(id: number): Promise<BillingEvaluationForm | undefined>;
   updateBillingEvaluationFormStatus(id: number, status: string, reviewedBy: number, reviewNotes?: string): Promise<BillingEvaluationForm | undefined>;
+
+  // Invoices
+  generateInvoices(month: string, year: number): Promise<Invoice[]>;
+  listInvoices(status?: string, practiceId?: number): Promise<Invoice[]>;
+  getInvoice(id: number): Promise<Invoice | undefined>;
+  getInvoiceLineItems(invoiceId: number): Promise<InvoiceLineItem[]>;
+  updateInvoiceStatus(id: number, status: string, userId: number, notes?: string): Promise<Invoice | undefined>;
+  deleteInvoice(id: number): Promise<void>;
 
   // Dashboard Aggregates
   getDashboardStats(userId?: number): Promise<{
@@ -878,6 +886,140 @@ export class DatabaseStorage implements IStorage {
       .where(eq(billingEvaluationForms.id, id))
       .returning();
     return updated;
+  }
+
+  async generateInvoices(month: string, year: number): Promise<Invoice[]> {
+    const allPractices = await db.select().from(practices)
+      .where(ne(practices.name, "Lynk Demo"))
+      .orderBy(practices.name);
+
+    const codeData = await db.select().from(revenueByCode)
+      .where(and(eq(revenueByCode.month, month), eq(revenueByCode.year, year)));
+
+    const billingCodes = await db.select().from(cptBillingCodes)
+      .where(eq(cptBillingCodes.effectiveYear, year));
+    const codeDescMap: Record<string, string> = {};
+    const codeRateMap: Record<string, number> = {};
+    for (const bc of billingCodes) {
+      codeDescMap[bc.code] = bc.description;
+      codeRateMap[bc.code] = bc.rateCents;
+    }
+
+    const generatedInvoices: Invoice[] = [];
+    const MONTH_NAMES: Record<string, string> = {
+      JAN: "January", FEB: "February", MAR: "March", APR: "April",
+      MAY: "May", JUN: "June", JUL: "July", AUG: "August",
+      SEP: "September", OCT: "October", NOV: "November", DEC: "December"
+    };
+
+    for (const practice of allPractices) {
+      const existing = await db.select().from(invoices)
+        .where(and(
+          eq(invoices.practiceId, practice.id),
+          eq(invoices.month, month),
+          eq(invoices.year, year)
+        ));
+      if (existing.length > 0) continue;
+
+      const practiceCodeData = codeData.filter(c => {
+        if (c.practiceId !== practice.id) return false;
+        return !c.department;
+      });
+
+      if (practiceCodeData.length === 0) continue;
+
+      const lineItemsData: { programType: string; cptCode: string; description: string | null; claimCount: number; rateCents: number; totalCents: number }[] = [];
+      let totalAmountCents = 0;
+      let totalClaims = 0;
+
+      for (const row of practiceCodeData) {
+        const claimCount = row.claimCount || 0;
+        const totalCents = row.totalRevenue || 0;
+        const rateCents = claimCount > 0 ? Math.round(totalCents / claimCount) : (codeRateMap[row.cptCode] || 0);
+        lineItemsData.push({
+          programType: row.programType,
+          cptCode: row.cptCode,
+          description: codeDescMap[row.cptCode] || null,
+          claimCount,
+          rateCents,
+          totalCents,
+        });
+        totalAmountCents += totalCents;
+        totalClaims += claimCount;
+      }
+
+      if (totalClaims === 0) continue;
+
+      const invoiceNumber = `INV-${practice.id}-${year}-${month}`;
+      const [invoice] = await db.insert(invoices).values({
+        invoiceNumber,
+        practiceId: practice.id,
+        practiceName: practice.name,
+        month,
+        year,
+        totalAmountCents,
+        totalClaims,
+        status: "pending_review",
+        notes: `Auto-generated invoice for ${MONTH_NAMES[month] || month} ${year}`,
+      }).returning();
+
+      for (const li of lineItemsData) {
+        await db.insert(invoiceLineItems).values({
+          invoiceId: invoice.id,
+          programType: li.programType,
+          cptCode: li.cptCode,
+          description: li.description,
+          claimCount: li.claimCount,
+          rateCents: li.rateCents,
+          totalCents: li.totalCents,
+        });
+      }
+
+      generatedInvoices.push(invoice);
+    }
+
+    return generatedInvoices;
+  }
+
+  async listInvoices(status?: string, practiceId?: number): Promise<Invoice[]> {
+    const conditions: any[] = [];
+    if (status) conditions.push(eq(invoices.status, status));
+    if (practiceId) conditions.push(eq(invoices.practiceId, practiceId));
+    return db.select().from(invoices)
+      .where(conditions.length > 0 ? and(...conditions) : undefined)
+      .orderBy(desc(invoices.generatedAt));
+  }
+
+  async getInvoice(id: number): Promise<Invoice | undefined> {
+    const [invoice] = await db.select().from(invoices).where(eq(invoices.id, id));
+    return invoice;
+  }
+
+  async getInvoiceLineItems(invoiceId: number): Promise<InvoiceLineItem[]> {
+    return db.select().from(invoiceLineItems)
+      .where(eq(invoiceLineItems.invoiceId, invoiceId))
+      .orderBy(invoiceLineItems.programType, invoiceLineItems.cptCode);
+  }
+
+  async updateInvoiceStatus(id: number, status: string, userId: number, notes?: string): Promise<Invoice | undefined> {
+    const updates: Record<string, any> = { status };
+    if (status === "approved") {
+      updates.approvedBy = userId;
+      updates.approvedAt = new Date();
+    }
+    updates.reviewedBy = userId;
+    updates.reviewedAt = new Date();
+    if (notes !== undefined) updates.notes = notes;
+    const [updated] = await db.update(invoices)
+      .set(updates)
+      .where(eq(invoices.id, id))
+      .returning();
+    return updated;
+  }
+
+  async deleteInvoice(id: number): Promise<void> {
+    await db.delete(invoiceLineItems).where(eq(invoiceLineItems.invoiceId, id));
+    await db.delete(invoices).where(eq(invoices.id, id));
   }
 }
 

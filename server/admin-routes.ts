@@ -342,6 +342,77 @@ export async function registerAdminRoutes(app: Express) {
     }
   });
 
+  // ============================================================
+  // Invoice Routes
+  // ============================================================
+
+  app.post("/api/admin/invoices/generate", adminAuth, async (req, res) => {
+    try {
+      const { month, year } = req.body;
+      if (!month || !year) {
+        return res.status(400).json({ success: false, message: "Month and year are required" });
+      }
+      const generated = await storage.generateInvoices(month, parseInt(year));
+      res.json({ success: true, invoices: generated, count: generated.length });
+    } catch (error) {
+      console.error("Invoice generation error:", error);
+      res.status(500).json({ success: false, message: "Failed to generate invoices" });
+    }
+  });
+
+  app.get("/api/admin/invoices", adminAuth, async (req, res) => {
+    try {
+      const status = req.query.status as string | undefined;
+      const practiceId = req.query.practiceId ? parseInt(req.query.practiceId as string) : undefined;
+      const invoiceList = await storage.listInvoices(status, practiceId);
+      res.json({ success: true, invoices: invoiceList });
+    } catch (error) {
+      res.status(500).json({ success: false, message: "Failed to list invoices" });
+    }
+  });
+
+  app.get("/api/admin/invoices/:id", adminAuth, async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const invoice = await storage.getInvoice(id);
+      if (!invoice) {
+        return res.status(404).json({ success: false, message: "Invoice not found" });
+      }
+      const lineItems = await storage.getInvoiceLineItems(id);
+      res.json({ success: true, invoice, lineItems });
+    } catch (error) {
+      res.status(500).json({ success: false, message: "Failed to load invoice" });
+    }
+  });
+
+  app.put("/api/admin/invoices/:id/status", adminAuth, async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const { status, notes } = req.body;
+      if (!status) {
+        return res.status(400).json({ success: false, message: "Status is required" });
+      }
+      const userId = req.adminUser?.id || 0;
+      const updated = await storage.updateInvoiceStatus(id, status, userId, notes);
+      if (!updated) {
+        return res.status(404).json({ success: false, message: "Invoice not found" });
+      }
+      res.json({ success: true, invoice: updated });
+    } catch (error) {
+      res.status(500).json({ success: false, message: "Failed to update invoice status" });
+    }
+  });
+
+  app.delete("/api/admin/invoices/:id", adminAuth, async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      await storage.deleteInvoice(id);
+      res.json({ success: true });
+    } catch (error) {
+      res.status(500).json({ success: false, message: "Failed to delete invoice" });
+    }
+  });
+
 }
 
 export async function seedBillingCodes() {
