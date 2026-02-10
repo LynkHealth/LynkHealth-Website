@@ -25,6 +25,7 @@ import {
   Stethoscope,
   Shield,
   Zap,
+  HeartPulse,
 } from "lucide-react";
 import type { ProgramSnapshot, Practice, ContactInquiry, RevenueSnapshot, RevenueByCode, CptBillingCode } from "@shared/schema";
 import { DollarSign, TrendingUp, Receipt, Pencil, Check, Trash2, Plus, ChevronDown, ChevronUp, Download, BarChart3 } from "lucide-react";
@@ -1052,6 +1053,14 @@ export default function AdminDashboard() {
               {sidebarOpen && <span>{item.label}</span>}
             </button>
           ))}
+          <div className="border-t border-slate-700 mt-3 pt-3">
+            <Link href="/clinical/dashboard">
+              <div className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-colors text-teal-300 hover:bg-slate-700 hover:text-teal-200 cursor-pointer">
+                <HeartPulse className="w-5 h-5 flex-shrink-0" />
+                {sidebarOpen && <span>Clinical Platform</span>}
+              </div>
+            </Link>
+          </div>
         </nav>
         <div className="p-4 border-t border-slate-700">
           {sidebarOpen && (
