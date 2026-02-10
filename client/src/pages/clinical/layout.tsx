@@ -1,11 +1,12 @@
 import { Link, useLocation } from "wouter";
-import { Users, ClipboardList, LayoutDashboard, LogOut } from "lucide-react";
+import { Users, ClipboardList, LayoutDashboard, LogOut, UserCog } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import type { ReactNode } from "react";
 
 const navItems = [
   { label: "Patients", path: "/clinical/patients", icon: Users },
   { label: "Worklists", path: "/clinical/worklists", icon: ClipboardList },
+  { label: "Users", path: "/clinical/users", icon: UserCog },
   { label: "Admin", path: "/admin", icon: LayoutDashboard },
 ];
 

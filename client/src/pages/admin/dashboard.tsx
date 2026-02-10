@@ -27,7 +27,8 @@ import {
   Zap,
 } from "lucide-react";
 import type { ProgramSnapshot, Practice, ContactInquiry, RevenueSnapshot, RevenueByCode, CptBillingCode } from "@shared/schema";
-import { DollarSign, TrendingUp, Receipt, Pencil, Check, Trash2, Plus, ChevronDown, ChevronUp } from "lucide-react";
+import { DollarSign, TrendingUp, Receipt, Pencil, Check, Trash2, Plus, ChevronDown, ChevronUp, Download, BarChart3 } from "lucide-react";
+import { LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from "recharts";
 
 const MONTHS = ["JAN", "FEB", "MAR", "APR", "MAY", "JUN", "JUL", "AUG", "SEP", "OCT", "NOV", "DEC"];
 const MONTH_NAMES: Record<string, string> = {
@@ -528,6 +529,166 @@ function BillingCodesTab() {
   );
 }
 
+function AnalyticsTab({ selectedMonth, currentYear, selectedPractice }: { selectedMonth: string; currentYear: number; selectedPractice: string }) {
+  const [trendMonths, setTrendMonths] = useState(6);
+  const [revenueTrends, setRevenueTrends] = useState<any[]>([]);
+  const [enrollmentTrends, setEnrollmentTrends] = useState<any[]>([]);
+  const [trendsLoading, setTrendsLoading] = useState(true);
+
+  useEffect(() => {
+    const load = async () => {
+      setTrendsLoading(true);
+      try {
+        const practiceParam = selectedPractice !== "all" ? `&practiceId=${selectedPractice}` : "";
+        const [revRes, enrRes] = await Promise.all([
+          adminFetch(`/api/admin/trends/revenue?months=${trendMonths}${practiceParam}`),
+          adminFetch(`/api/admin/trends/enrollments?months=${trendMonths}${practiceParam}`),
+        ]);
+        if (revRes.ok) setRevenueTrends(await revRes.json());
+        if (enrRes.ok) setEnrollmentTrends(await enrRes.json());
+      } catch {}
+      setTrendsLoading(false);
+    };
+    load();
+  }, [trendMonths, selectedPractice]);
+
+  const handleExport = async (type: string) => {
+    const monthName = MONTH_NAMES[selectedMonth] || selectedMonth;
+    const url = `/api/admin/export/${type}?month=${monthName}&year=${currentYear}`;
+    try {
+      const res = await adminFetch(url);
+      if (!res.ok) throw new Error("Export failed");
+      const blob = await res.blob();
+      const a = document.createElement("a");
+      a.href = URL.createObjectURL(blob);
+      a.download = `${type}_${selectedMonth}_${currentYear}.csv`;
+      a.click();
+      URL.revokeObjectURL(a.href);
+    } catch {}
+  };
+
+  const formatRevenue = (cents: number) => `$${(cents / 100).toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`;
+  const chartData = revenueTrends.map((r, i) => ({
+    label: `${r.month.slice(0, 3)} ${r.year}`,
+    revenue: Math.round(r.totalRevenue / 100),
+    claims: r.totalClaims,
+    enrolled: enrollmentTrends[i]?.enrolled || 0,
+    inactive: enrollmentTrends[i]?.inactive || 0,
+  }));
+
+  const totalRevenue = revenueTrends.reduce((s, r) => s + r.totalRevenue, 0);
+  const totalClaims = revenueTrends.reduce((s, r) => s + r.totalClaims, 0);
+  const totalEnrolled = enrollmentTrends.length > 0 ? enrollmentTrends[enrollmentTrends.length - 1]?.enrolled || 0 : 0;
+
+  return (
+    <div className="space-y-6">
+      <div className="flex items-center justify-between">
+        <div className="flex gap-2">
+          {[3, 6, 12].map((m) => (
+            <Button key={m} variant={trendMonths === m ? "default" : "outline"} size="sm" onClick={() => setTrendMonths(m)}>
+              {m}mo
+            </Button>
+          ))}
+        </div>
+        <div className="flex gap-2">
+          <Button variant="outline" size="sm" onClick={() => handleExport("revenue")}>
+            <Download className="w-4 h-4 mr-1" /> Revenue CSV
+          </Button>
+          <Button variant="outline" size="sm" onClick={() => handleExport("enrollments")}>
+            <Download className="w-4 h-4 mr-1" /> Enrollment CSV
+          </Button>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-3 gap-4">
+        <Card>
+          <CardContent className="pt-4">
+            <p className="text-sm text-slate-500">Total Revenue ({trendMonths}mo)</p>
+            <p className="text-2xl font-bold text-green-600">{formatRevenue(totalRevenue)}</p>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="pt-4">
+            <p className="text-sm text-slate-500">Total Claims ({trendMonths}mo)</p>
+            <p className="text-2xl font-bold text-blue-600">{totalClaims.toLocaleString()}</p>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="pt-4">
+            <p className="text-sm text-slate-500">Current Enrolled</p>
+            <p className="text-2xl font-bold text-purple-600">{totalEnrolled.toLocaleString()}</p>
+          </CardContent>
+        </Card>
+      </div>
+
+      {trendsLoading ? (
+        <div className="text-center py-12 text-slate-500">Loading trend data...</div>
+      ) : (
+        <>
+          <Card>
+            <CardHeader><CardTitle className="text-base">Revenue Trend</CardTitle></CardHeader>
+            <CardContent>
+              {chartData.length === 0 ? (
+                <p className="text-sm text-slate-500 py-8 text-center">No revenue data available. Run a ThoroughCare sync first.</p>
+              ) : (
+                <ResponsiveContainer width="100%" height={300}>
+                  <BarChart data={chartData}>
+                    <CartesianGrid strokeDasharray="3 3" />
+                    <XAxis dataKey="label" fontSize={12} />
+                    <YAxis fontSize={12} tickFormatter={(v) => `$${v.toLocaleString()}`} />
+                    <Tooltip formatter={(v: number) => [`$${v.toLocaleString()}`, "Revenue"]} />
+                    <Bar dataKey="revenue" fill="#2563eb" radius={[4, 4, 0, 0]} />
+                  </BarChart>
+                </ResponsiveContainer>
+              )}
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader><CardTitle className="text-base">Enrollment Trend</CardTitle></CardHeader>
+            <CardContent>
+              {chartData.length === 0 ? (
+                <p className="text-sm text-slate-500 py-8 text-center">No enrollment data available. Run a ThoroughCare sync first.</p>
+              ) : (
+                <ResponsiveContainer width="100%" height={300}>
+                  <LineChart data={chartData}>
+                    <CartesianGrid strokeDasharray="3 3" />
+                    <XAxis dataKey="label" fontSize={12} />
+                    <YAxis fontSize={12} />
+                    <Tooltip />
+                    <Legend />
+                    <Line type="monotone" dataKey="enrolled" stroke="#7c3aed" strokeWidth={2} dot={{ r: 3 }} name="Enrolled" />
+                    <Line type="monotone" dataKey="inactive" stroke="#ef4444" strokeWidth={2} dot={{ r: 3 }} name="Inactive" />
+                  </LineChart>
+                </ResponsiveContainer>
+              )}
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader><CardTitle className="text-base">Claims Volume</CardTitle></CardHeader>
+            <CardContent>
+              {chartData.length === 0 ? (
+                <p className="text-sm text-slate-500 py-8 text-center">No claims data available.</p>
+              ) : (
+                <ResponsiveContainer width="100%" height={250}>
+                  <BarChart data={chartData}>
+                    <CartesianGrid strokeDasharray="3 3" />
+                    <XAxis dataKey="label" fontSize={12} />
+                    <YAxis fontSize={12} />
+                    <Tooltip />
+                    <Bar dataKey="claims" fill="#10b981" radius={[4, 4, 0, 0]} name="Claims" />
+                  </BarChart>
+                </ResponsiveContainer>
+              )}
+            </CardContent>
+          </Card>
+        </>
+      )}
+    </div>
+  );
+}
+
 export default function AdminDashboard() {
   const [, setLocation] = useLocation();
   const [sidebarOpen, setSidebarOpen] = useState(true);
@@ -698,6 +859,7 @@ export default function AdminDashboard() {
 
   const sidebarItems = [
     { id: "dashboard", label: "Dashboard", icon: LayoutDashboard },
+    { id: "analytics", label: "Analytics", icon: BarChart3 },
     { id: "billing", label: "Billing Codes", icon: Receipt },
     { id: "inquiries", label: "Inquiries", icon: Mail },
     { id: "practices", label: "Practices", icon: Building2 },
@@ -767,6 +929,7 @@ export default function AdminDashboard() {
             </Button>
             <h1 className="text-lg font-semibold text-slate-800">
               {activeTab === "dashboard" && "Clinic Dashboard"}
+              {activeTab === "analytics" && "Analytics & Trends"}
               {activeTab === "billing" && "Billing Codes & Rates"}
               {activeTab === "inquiries" && "Contact Inquiries"}
               {activeTab === "practices" && "Partner Practices"}
@@ -1308,6 +1471,8 @@ export default function AdminDashboard() {
               {activeTab === "billing" && (
                 <BillingCodesTab />
               )}
+
+              {activeTab === "analytics" && <AnalyticsTab selectedMonth={selectedMonth} currentYear={currentYear} selectedPractice={selectedPracticeId === "all" ? "all" : String(selectedPracticeId)} />}
 
               {activeTab === "practices" && (
                 <Card>

@@ -18,11 +18,13 @@ export function getAdminUser(): { id: number; email: string; name: string; role:
 export function setAdminAuth(token: string, user: { id: number; email: string; name: string; role: string }) {
   localStorage.setItem(TOKEN_KEY, token);
   localStorage.setItem(USER_KEY, JSON.stringify(user));
+  document.cookie = `admin_token=${token}; path=/; max-age=${7 * 24 * 60 * 60}; SameSite=Lax`;
 }
 
 export function clearAdminAuth() {
   localStorage.removeItem(TOKEN_KEY);
   localStorage.removeItem(USER_KEY);
+  document.cookie = "admin_token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 UTC";
 }
 
 export async function adminFetch(url: string, options: RequestInit = {}) {

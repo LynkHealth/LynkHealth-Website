@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Link, useRoute } from "wouter";
+import { adminFetch } from "@/lib/admin-auth";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -63,8 +64,7 @@ export default function Worklists() {
       const p = new URLSearchParams({ page: String(page), limit: "25", status: statusFilter });
       if (programFilter !== "all") p.set("programType", programFilter);
       if (debouncedSearch) p.set("search", debouncedSearch);
-      const res = await fetch(`/api/clinical/worklists?${p}`, { credentials: "include" });
-      if (!res.ok) throw new Error("Failed to fetch worklist");
+      const res = await adminFetch(`/api/clinical/worklists?${p}`);
       return res.json();
     },
   });

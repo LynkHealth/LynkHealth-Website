@@ -4,7 +4,8 @@ import { useQuery, useMutation } from "@tanstack/react-query";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { apiRequest, queryClient } from "@/lib/queryClient";
+import { queryClient } from "@/lib/queryClient";
+import { adminFetch } from "@/lib/admin-auth";
 import { useToast } from "@/hooks/use-toast";
 import { Search, Plus, ChevronLeft, ChevronRight, User } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -102,8 +103,7 @@ export default function PatientsPage() {
     queryFn: async () => {
       const params = new URLSearchParams({ page: String(page), limit: '25' });
       if (search) params.set('search', search);
-      const res = await fetch(`/api/clinical/patients?${params}`, { credentials: 'include' });
-      if (!res.ok) throw new Error('Failed to fetch');
+      const res = await adminFetch(`/api/clinical/patients?${params}`);
       return res.json() as Promise<{ patients: Patient[], total: number }>;
     }
   });
@@ -123,7 +123,11 @@ export default function PatientsPage() {
 
   const createMutation = useMutation({
     mutationFn: async (values: CreatePatientForm) => {
-      const res = await apiRequest('POST', '/api/clinical/patients', values);
+      const res = await adminFetch('/api/clinical/patients', {
+        method: 'POST',
+        body: JSON.stringify(values),
+      });
+      if (!res.ok) throw new Error(await res.text());
       return res.json();
     },
     onSuccess: () => {

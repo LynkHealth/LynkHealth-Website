@@ -35,6 +35,7 @@ import ClinicalLayout from "@/pages/clinical/layout";
 import PatientList from "@/pages/clinical/patients";
 import PatientChart from "@/pages/clinical/patient-chart";
 import Worklists from "@/pages/clinical/worklists";
+import UserManagement from "@/pages/clinical/users";
 
 function Router() {
   useScrollToTop();
@@ -50,6 +51,7 @@ function Router() {
           <Route path="/clinical/patients/:id" component={PatientChart} />
           <Route path="/clinical/worklists" component={Worklists} />
           <Route path="/clinical/worklists/:programType" component={Worklists} />
+          <Route path="/clinical/users" component={UserManagement} />
           <Route path="/clinical">{() => { window.location.href = "/clinical/patients"; return null; }}</Route>
         </Switch>
       </ClinicalLayout>

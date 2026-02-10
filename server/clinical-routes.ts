@@ -1,6 +1,7 @@
 import type { Express, Request, Response, NextFunction } from "express";
 import { storage } from "./storage";
 import { adminAuth } from "./admin-routes";
+import bcrypt from "bcryptjs";
 import {
   insertPatientSchema, insertPatientConditionSchema, insertPatientMedicationSchema,
   insertPatientAllergySchema, insertPatientVitalSchema, insertPatientInsuranceSchema,
@@ -617,9 +618,27 @@ export function registerClinicalRoutes(app: Express) {
     }
   });
 
+  app.post("/api/admin/users", adminAuth, async (req, res) => {
+    try {
+      const { email, password, role, name } = req.body;
+      if (!email || !password || !name) return res.status(400).json({ error: "Email, name, and password required" });
+      const passwordHash = await bcrypt.hash(password, 10);
+      const user = await storage.createAdminUser({ email, passwordHash, role: role || "care_manager", name });
+      res.status(201).json({ ...user, passwordHash: undefined });
+    } catch (error: any) {
+      if (error.message?.includes("duplicate") || error.code === "23505") return res.status(409).json({ error: "Email already exists" });
+      res.status(500).json({ error: "Failed to create user" });
+    }
+  });
+
   app.put("/api/admin/users/:id", adminAuth, async (req, res) => {
     try {
-      const user = await storage.updateAdminUser(parseInt(req.params.id), req.body);
+      const updates: any = { ...req.body };
+      if (updates.password) {
+        updates.passwordHash = await bcrypt.hash(updates.password, 10);
+        delete updates.password;
+      }
+      const user = await storage.updateAdminUser(parseInt(req.params.id), updates);
       if (!user) return res.status(404).json({ error: "User not found" });
       res.json({ ...user, passwordHash: undefined });
     } catch (error) {

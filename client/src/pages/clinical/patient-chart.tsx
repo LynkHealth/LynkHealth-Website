@@ -4,7 +4,8 @@ import { useQuery, useMutation } from "@tanstack/react-query";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { apiRequest, queryClient } from "@/lib/queryClient";
+import { queryClient } from "@/lib/queryClient";
+import { adminFetch } from "@/lib/admin-auth";
 import { useToast } from "@/hooks/use-toast";
 import { ArrowLeft, Heart, Pill, AlertTriangle, Activity, Shield, ClipboardList, Clock, FileText, Plus, Trash2, Edit } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -38,15 +39,15 @@ function InfoRow({ label, value }: { label: string; value: string | null | undef
 function OverviewTab({ patient, id }: { patient: Patient; id: string }) {
   const { data: conditions } = useQuery<PatientCondition[]>({
     queryKey: ['/api/clinical/patients', id, 'conditions'],
-    queryFn: async () => { const res = await fetch(`/api/clinical/patients/${id}/conditions`, { credentials: 'include' }); if (!res.ok) throw new Error('Failed'); return res.json(); },
+    queryFn: async () => { const res = await adminFetch(`/api/clinical/patients/${id}/conditions`); return res.json(); },
   });
   const { data: medications } = useQuery<PatientMedication[]>({
     queryKey: ['/api/clinical/patients', id, 'medications'],
-    queryFn: async () => { const res = await fetch(`/api/clinical/patients/${id}/medications`, { credentials: 'include' }); if (!res.ok) throw new Error('Failed'); return res.json(); },
+    queryFn: async () => { const res = await adminFetch(`/api/clinical/patients/${id}/medications`); return res.json(); },
   });
   const { data: enrollments } = useQuery<ProgramEnrollment[]>({
     queryKey: ['/api/clinical/patients', id, 'enrollments'],
-    queryFn: async () => { const res = await fetch(`/api/clinical/patients/${id}/enrollments`, { credentials: 'include' }); if (!res.ok) throw new Error('Failed'); return res.json(); },
+    queryFn: async () => { const res = await adminFetch(`/api/clinical/patients/${id}/enrollments`); return res.json(); },
   });
 
   return (
@@ -110,16 +111,16 @@ function ConditionsTab({ id }: { id: string }) {
   const [open, setOpen] = useState(false);
   const { data: conditions, isLoading } = useQuery<PatientCondition[]>({
     queryKey: ['/api/clinical/patients', id, 'conditions'],
-    queryFn: async () => { const res = await fetch(`/api/clinical/patients/${id}/conditions`, { credentials: 'include' }); if (!res.ok) throw new Error('Failed'); return res.json(); },
+    queryFn: async () => { const res = await adminFetch(`/api/clinical/patients/${id}/conditions`); return res.json(); },
   });
   const form = useForm({ resolver: zodResolver(insertPatientConditionSchema.omit({ patientId: true })), defaultValues: { icdCode: "", description: "", status: "active", onsetDate: "", isPrimary: 0 } });
   const addMut = useMutation({
-    mutationFn: async (vals: any) => { await apiRequest('POST', `/api/clinical/patients/${id}/conditions`, vals); },
+    mutationFn: async (vals: any) => { const res = await adminFetch(`/api/clinical/patients/${id}/conditions`, { method: 'POST', body: JSON.stringify(vals) }); if (!res.ok) throw new Error(await res.text()); },
     onSuccess: () => { queryClient.invalidateQueries({ queryKey: ['/api/clinical/patients', id, 'conditions'] }); toast({ title: "Condition added" }); setOpen(false); form.reset(); },
     onError: (e: Error) => { toast({ title: "Error", description: e.message, variant: "destructive" }); },
   });
   const delMut = useMutation({
-    mutationFn: async (cid: number) => { await apiRequest('DELETE', `/api/clinical/conditions/${cid}`); },
+    mutationFn: async (cid: number) => { const res = await adminFetch(`/api/clinical/conditions/${cid}`, { method: 'DELETE' }); if (!res.ok) throw new Error(await res.text()); },
     onSuccess: () => { queryClient.invalidateQueries({ queryKey: ['/api/clinical/patients', id, 'conditions'] }); toast({ title: "Condition removed" }); },
     onError: (e: Error) => { toast({ title: "Error", description: e.message, variant: "destructive" }); },
   });
@@ -172,16 +173,16 @@ function MedicationsTab({ id }: { id: string }) {
   const [open, setOpen] = useState(false);
   const { data: meds, isLoading } = useQuery<PatientMedication[]>({
     queryKey: ['/api/clinical/patients', id, 'medications'],
-    queryFn: async () => { const res = await fetch(`/api/clinical/patients/${id}/medications`, { credentials: 'include' }); if (!res.ok) throw new Error('Failed'); return res.json(); },
+    queryFn: async () => { const res = await adminFetch(`/api/clinical/patients/${id}/medications`); return res.json(); },
   });
   const form = useForm({ defaultValues: { name: "", dosage: "", frequency: "", prescribedBy: "", status: "active" } });
   const addMut = useMutation({
-    mutationFn: async (vals: any) => { await apiRequest('POST', `/api/clinical/patients/${id}/medications`, vals); },
+    mutationFn: async (vals: any) => { const res = await adminFetch(`/api/clinical/patients/${id}/medications`, { method: 'POST', body: JSON.stringify(vals) }); if (!res.ok) throw new Error(await res.text()); },
     onSuccess: () => { queryClient.invalidateQueries({ queryKey: ['/api/clinical/patients', id, 'medications'] }); toast({ title: "Medication added" }); setOpen(false); form.reset(); },
     onError: (e: Error) => { toast({ title: "Error", description: e.message, variant: "destructive" }); },
   });
   const delMut = useMutation({
-    mutationFn: async (mid: number) => { await apiRequest('DELETE', `/api/clinical/medications/${mid}`); },
+    mutationFn: async (mid: number) => { const res = await adminFetch(`/api/clinical/medications/${mid}`, { method: 'DELETE' }); if (!res.ok) throw new Error(await res.text()); },
     onSuccess: () => { queryClient.invalidateQueries({ queryKey: ['/api/clinical/patients', id, 'medications'] }); toast({ title: "Medication removed" }); },
     onError: (e: Error) => { toast({ title: "Error", description: e.message, variant: "destructive" }); },
   });
@@ -234,16 +235,16 @@ function AllergiesTab({ id }: { id: string }) {
   const [open, setOpen] = useState(false);
   const { data: allergies, isLoading } = useQuery<PatientAllergy[]>({
     queryKey: ['/api/clinical/patients', id, 'allergies'],
-    queryFn: async () => { const res = await fetch(`/api/clinical/patients/${id}/allergies`, { credentials: 'include' }); if (!res.ok) throw new Error('Failed'); return res.json(); },
+    queryFn: async () => { const res = await adminFetch(`/api/clinical/patients/${id}/allergies`); return res.json(); },
   });
   const form = useForm({ defaultValues: { allergen: "", reaction: "", severity: "moderate", status: "active" } });
   const addMut = useMutation({
-    mutationFn: async (vals: any) => { await apiRequest('POST', `/api/clinical/patients/${id}/allergies`, vals); },
+    mutationFn: async (vals: any) => { const res = await adminFetch(`/api/clinical/patients/${id}/allergies`, { method: 'POST', body: JSON.stringify(vals) }); if (!res.ok) throw new Error(await res.text()); },
     onSuccess: () => { queryClient.invalidateQueries({ queryKey: ['/api/clinical/patients', id, 'allergies'] }); toast({ title: "Allergy added" }); setOpen(false); form.reset(); },
     onError: (e: Error) => { toast({ title: "Error", description: e.message, variant: "destructive" }); },
   });
   const delMut = useMutation({
-    mutationFn: async (aid: number) => { await apiRequest('DELETE', `/api/clinical/allergies/${aid}`); },
+    mutationFn: async (aid: number) => { const res = await adminFetch(`/api/clinical/allergies/${aid}`, { method: 'DELETE' }); if (!res.ok) throw new Error(await res.text()); },
     onSuccess: () => { queryClient.invalidateQueries({ queryKey: ['/api/clinical/patients', id, 'allergies'] }); toast({ title: "Allergy removed" }); },
     onError: (e: Error) => { toast({ title: "Error", description: e.message, variant: "destructive" }); },
   });
@@ -294,11 +295,11 @@ function VitalsTab({ id }: { id: string }) {
   const [open, setOpen] = useState(false);
   const { data: vitals, isLoading } = useQuery<PatientVital[]>({
     queryKey: ['/api/clinical/patients', id, 'vitals'],
-    queryFn: async () => { const res = await fetch(`/api/clinical/patients/${id}/vitals?limit=50`, { credentials: 'include' }); if (!res.ok) throw new Error('Failed'); return res.json(); },
+    queryFn: async () => { const res = await adminFetch(`/api/clinical/patients/${id}/vitals?limit=50`); return res.json(); },
   });
   const form = useForm({ defaultValues: { vitalType: "blood_pressure", value: "", unit: "" } });
   const addMut = useMutation({
-    mutationFn: async (vals: any) => { await apiRequest('POST', `/api/clinical/patients/${id}/vitals`, vals); },
+    mutationFn: async (vals: any) => { const res = await adminFetch(`/api/clinical/patients/${id}/vitals`, { method: 'POST', body: JSON.stringify(vals) }); if (!res.ok) throw new Error(await res.text()); },
     onSuccess: () => { queryClient.invalidateQueries({ queryKey: ['/api/clinical/patients', id, 'vitals'] }); toast({ title: "Vital recorded" }); setOpen(false); form.reset(); },
     onError: (e: Error) => { toast({ title: "Error", description: e.message, variant: "destructive" }); },
   });
@@ -347,16 +348,16 @@ function InsuranceTab({ id }: { id: string }) {
   const [open, setOpen] = useState(false);
   const { data: insurance, isLoading } = useQuery<PatientInsurance[]>({
     queryKey: ['/api/clinical/patients', id, 'insurance'],
-    queryFn: async () => { const res = await fetch(`/api/clinical/patients/${id}/insurance`, { credentials: 'include' }); if (!res.ok) throw new Error('Failed'); return res.json(); },
+    queryFn: async () => { const res = await adminFetch(`/api/clinical/patients/${id}/insurance`); return res.json(); },
   });
   const form = useForm({ defaultValues: { payerName: "", memberId: "", groupNumber: "", planName: "", insuranceType: "primary", status: "active" } });
   const addMut = useMutation({
-    mutationFn: async (vals: any) => { await apiRequest('POST', `/api/clinical/patients/${id}/insurance`, vals); },
+    mutationFn: async (vals: any) => { const res = await adminFetch(`/api/clinical/patients/${id}/insurance`, { method: 'POST', body: JSON.stringify(vals) }); if (!res.ok) throw new Error(await res.text()); },
     onSuccess: () => { queryClient.invalidateQueries({ queryKey: ['/api/clinical/patients', id, 'insurance'] }); toast({ title: "Insurance added" }); setOpen(false); form.reset(); },
     onError: (e: Error) => { toast({ title: "Error", description: e.message, variant: "destructive" }); },
   });
   const delMut = useMutation({
-    mutationFn: async (iid: number) => { await apiRequest('DELETE', `/api/clinical/insurance/${iid}`); },
+    mutationFn: async (iid: number) => { const res = await adminFetch(`/api/clinical/insurance/${iid}`, { method: 'DELETE' }); if (!res.ok) throw new Error(await res.text()); },
     onSuccess: () => { queryClient.invalidateQueries({ queryKey: ['/api/clinical/patients', id, 'insurance'] }); toast({ title: "Insurance removed" }); },
     onError: (e: Error) => { toast({ title: "Error", description: e.message, variant: "destructive" }); },
   });
@@ -410,11 +411,11 @@ function EnrollmentsTab({ id, patient }: { id: string; patient: Patient }) {
   const [open, setOpen] = useState(false);
   const { data: enrollments, isLoading } = useQuery<ProgramEnrollment[]>({
     queryKey: ['/api/clinical/patients', id, 'enrollments'],
-    queryFn: async () => { const res = await fetch(`/api/clinical/patients/${id}/enrollments`, { credentials: 'include' }); if (!res.ok) throw new Error('Failed'); return res.json(); },
+    queryFn: async () => { const res = await adminFetch(`/api/clinical/patients/${id}/enrollments`); return res.json(); },
   });
   const form = useForm({ defaultValues: { programType: "CCM" } });
   const addMut = useMutation({
-    mutationFn: async (vals: any) => { await apiRequest('POST', `/api/clinical/enrollments`, { patientId: parseInt(id), practiceId: patient.practiceId, programType: vals.programType }); },
+    mutationFn: async (vals: any) => { const res = await adminFetch(`/api/clinical/enrollments`, { method: 'POST', body: JSON.stringify({ patientId: parseInt(id), practiceId: patient.practiceId, programType: vals.programType }) }); if (!res.ok) throw new Error(await res.text()); },
     onSuccess: () => { queryClient.invalidateQueries({ queryKey: ['/api/clinical/patients', id, 'enrollments'] }); toast({ title: "Enrollment added" }); setOpen(false); form.reset(); },
     onError: (e: Error) => { toast({ title: "Error", description: e.message, variant: "destructive" }); },
   });
@@ -460,7 +461,7 @@ function EnrollmentsTab({ id, patient }: { id: string; patient: Patient }) {
 function CarePlansTab({ id }: { id: string }) {
   const { data: plans, isLoading } = useQuery<CarePlan[]>({
     queryKey: ['/api/clinical/patients', id, 'care-plans'],
-    queryFn: async () => { const res = await fetch(`/api/clinical/patients/${id}/care-plans`, { credentials: 'include' }); if (!res.ok) throw new Error('Failed'); return res.json(); },
+    queryFn: async () => { const res = await adminFetch(`/api/clinical/patients/${id}/care-plans`); return res.json(); },
   });
 
   if (isLoading) return <p>Loading...</p>;
@@ -490,11 +491,11 @@ function TimeLogsTab({ id }: { id: string }) {
   const [open, setOpen] = useState(false);
   const { data: logs, isLoading } = useQuery<TimeLog[]>({
     queryKey: ['/api/clinical/patients', id, 'time-logs'],
-    queryFn: async () => { const res = await fetch(`/api/clinical/patients/${id}/time-logs`, { credentials: 'include' }); if (!res.ok) throw new Error('Failed'); return res.json(); },
+    queryFn: async () => { const res = await adminFetch(`/api/clinical/patients/${id}/time-logs`); return res.json(); },
   });
   const form = useForm({ defaultValues: { programType: "CCM", durationSeconds: 0, activityType: "care_coordination", logDate: new Date().toISOString().split('T')[0], description: "" } });
   const addMut = useMutation({
-    mutationFn: async (vals: any) => { await apiRequest('POST', `/api/clinical/time-logs`, { patientId: parseInt(id), userId: 1, programType: vals.programType, durationSeconds: parseInt(vals.durationSeconds), activityType: vals.activityType, logDate: vals.logDate, description: vals.description }); },
+    mutationFn: async (vals: any) => { const res = await adminFetch(`/api/clinical/time-logs`, { method: 'POST', body: JSON.stringify({ patientId: parseInt(id), userId: 1, programType: vals.programType, durationSeconds: parseInt(vals.durationSeconds), activityType: vals.activityType, logDate: vals.logDate, description: vals.description }) }); if (!res.ok) throw new Error(await res.text()); },
     onSuccess: () => { queryClient.invalidateQueries({ queryKey: ['/api/clinical/patients', id, 'time-logs'] }); toast({ title: "Time log added" }); setOpen(false); form.reset(); },
     onError: (e: Error) => { toast({ title: "Error", description: e.message, variant: "destructive" }); },
   });
@@ -548,8 +549,7 @@ export default function PatientChart() {
   const { data: patient, isLoading } = useQuery<Patient>({
     queryKey: ['/api/clinical/patients', id],
     queryFn: async () => {
-      const res = await fetch(`/api/clinical/patients/${id}`, { credentials: 'include' });
-      if (!res.ok) throw new Error('Failed');
+      const res = await adminFetch(`/api/clinical/patients/${id}`);
       return res.json();
     },
     enabled: !!id,

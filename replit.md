@@ -46,6 +46,17 @@ A hidden admin dashboard is accessible via the copyright symbol (©) in the foot
 - Historical revenue sync caches rates per year for multi-year spans
 - API routes: GET/POST/PUT/DELETE `/api/admin/billing-codes` (admin-auth protected)
 
+### Clinical Care Coordination Platform
+A clinical dashboard accessible at `/clinical/*` routes provides a full care coordination workflow for nurses and care managers:
+- **Patient Management** (`/clinical/patients`): Searchable, paginated patient list with create/edit. Links to individual patient charts.
+- **Patient Chart** (`/clinical/patients/:id`): 9-tabbed interface (Overview, Conditions, Medications, Allergies, Vitals, Insurance, Enrollments, Care Plans, Time Logs). Each tab supports CRUD operations.
+- **Program Worklists** (`/clinical/worklists`): Filter enrolled patients by program type (CCM, PCM, BHI, RPM, RTM, TCM, APCM, AWV), status, and search. Shows minutes tracked and risk levels.
+- **User Management** (`/clinical/users`): Create/edit users with roles (admin, supervisor, care_manager, provider). Role-based access control.
+- **Analytics & Trends** (admin dashboard "Analytics" tab): Revenue trend charts, enrollment trend lines, claims volume bars. 3/6/12 month period selectors. CSV export for revenue and enrollment data.
+- **Clinical Data Model**: 14 tables (patients, conditions, medications, allergies, vitals, insurance, program_enrollments, care_plans, care_plan_items, time_logs, clinical_tasks, assessments, calendar_events, claims)
+- **API Routes**: All under `/api/clinical/*` with admin auth middleware. Full CRUD for patients and sub-entities.
+- **Shared Auth**: Clinical users share the `admin_users` table with role field differentiation.
+
 ### System Design Choices
 The architecture emphasizes robust validation and error handling. SEO strategy focuses on national reach and service quality. A comprehensive cache management system ensures users always see the latest content after deployments while optimizing performance through aggressive caching of static assets, using a service worker and build-time timestamp injection. HTTP cache headers are carefully configured for various asset types to balance freshness and performance.
 
