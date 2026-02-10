@@ -1385,6 +1385,7 @@ export default function AdminDashboard() {
   const [selectedDepartment, setSelectedDepartment] = useState<string | "all">("all");
   const [departmentsByPractice, setDepartmentsByPractice] = useState<Record<number, string[]>>({});
   const [practiceDetailId, setPracticeDetailId] = useState<number | null>(null);
+  const [practiceStatusTab, setPracticeStatusTab] = useState<"active" | "inactive">("active");
   const [lynkPracticeId, setLynkPracticeId] = useState<number | null>(null);
   const [currentMonth, setCurrentMonth] = useState(() => {
     const now = new Date();
@@ -2184,7 +2185,6 @@ export default function AdminDashboard() {
               {activeTab === "practices" && (() => {
                 const otherPractices = practices.filter(p => p.id !== lynkPracticeId);
                 const lynkDepts = lynkPracticeId && departmentsByPractice[lynkPracticeId] ? departmentsByPractice[lynkPracticeId] : [];
-                const totalCount = otherPractices.length + lynkDepts.length;
 
                 if (practiceDetailId !== null) {
                   const detailPractice = practices.find(p => p.id === practiceDetailId);
@@ -2192,15 +2192,49 @@ export default function AdminDashboard() {
                   return <PracticeDetailView practice={detailPractice} onBack={() => setPracticeDetailId(null)} />;
                 }
 
+                const activePractices = otherPractices.filter(p => p.status === "active");
+                const inactivePractices = otherPractices.filter(p => p.status !== "active");
+                const showLynkDepts = practiceStatusTab === "active";
+                const filteredPractices = practiceStatusTab === "active" ? activePractices : inactivePractices;
+                const activeCount = activePractices.length + lynkDepts.length;
+                const inactiveCount = inactivePractices.length;
+
                 return (
                 <Card>
                   <CardHeader>
-                    <CardTitle className="text-base">Partner Practices ({totalCount})</CardTitle>
+                    <CardTitle className="text-base">Partner Practices</CardTitle>
                     <p className="text-xs text-slate-500">Click a practice to view details and manage billing rates.</p>
                   </CardHeader>
                   <CardContent>
-                    {totalCount === 0 ? (
-                      <p className="text-sm text-slate-500">No practices synced yet. Click "Sync ThoroughCare" on the Dashboard tab to pull practice data.</p>
+                    <div className="flex gap-1 mb-4 border-b">
+                      <button
+                        className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors ${
+                          practiceStatusTab === "active"
+                            ? "border-blue-600 text-blue-700"
+                            : "border-transparent text-slate-500 hover:text-slate-700"
+                        }`}
+                        onClick={() => setPracticeStatusTab("active")}
+                      >
+                        Active ({activeCount})
+                      </button>
+                      <button
+                        className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors ${
+                          practiceStatusTab === "inactive"
+                            ? "border-blue-600 text-blue-700"
+                            : "border-transparent text-slate-500 hover:text-slate-700"
+                        }`}
+                        onClick={() => setPracticeStatusTab("inactive")}
+                      >
+                        Inactive ({inactiveCount})
+                      </button>
+                    </div>
+
+                    {filteredPractices.length === 0 && (!showLynkDepts || lynkDepts.length === 0) ? (
+                      <p className="text-sm text-slate-500 text-center py-6">
+                        {practiceStatusTab === "active"
+                          ? "No active practices found. Click \"Sync ThoroughCare\" on the Dashboard tab to pull practice data."
+                          : "No inactive practices."}
+                      </p>
                     ) : (
                       <div className="overflow-x-auto">
                         <table className="w-full text-sm">
@@ -2213,7 +2247,7 @@ export default function AdminDashboard() {
                             </tr>
                           </thead>
                           <tbody>
-                            {otherPractices.map((p: any) => {
+                            {filteredPractices.map((p: any) => {
                               let depts: string[] = [];
                               try { depts = p.departments ? JSON.parse(p.departments) : []; } catch {}
                               return (
@@ -2238,7 +2272,7 @@ export default function AdminDashboard() {
                                 </tr>
                               );
                             })}
-                            {lynkDepts.map((dept) => (
+                            {showLynkDepts && lynkDepts.map((dept) => (
                               <tr key={`lynk-${dept}`} className="border-b hover:bg-slate-50 cursor-pointer" onClick={() => lynkPracticeId && setPracticeDetailId(lynkPracticeId)}>
                                 <td className="py-2 px-3 font-medium text-blue-700 hover:underline">{dept}</td>
                                 <td className="py-2 px-3 text-slate-500">lynk</td>
