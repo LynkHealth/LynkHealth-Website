@@ -747,3 +747,26 @@ export const insertInvoiceLineItemSchema = createInsertSchema(invoiceLineItems).
 
 export type InsertInvoiceLineItem = z.infer<typeof insertInvoiceLineItemSchema>;
 export type InvoiceLineItem = typeof invoiceLineItems.$inferSelect;
+
+// ============================================================
+// Invoice Rates (custom billing rates per CPT code for invoicing)
+// ============================================================
+
+export const invoiceRates = pgTable("invoice_rates", {
+  id: serial("id").primaryKey(),
+  cptCode: text("cpt_code").notNull(),
+  program: text("program").notNull(),
+  description: text("description"),
+  claimRateCents: integer("claim_rate_cents").notNull().default(0),
+  invoiceRateCents: integer("invoice_rate_cents").notNull().default(0),
+  effectiveYear: integer("effective_year").notNull().default(2026),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const insertInvoiceRateSchema = createInsertSchema(invoiceRates).omit({
+  id: true,
+  updatedAt: true,
+});
+
+export type InsertInvoiceRate = z.infer<typeof insertInvoiceRateSchema>;
+export type InvoiceRate = typeof invoiceRates.$inferSelect;

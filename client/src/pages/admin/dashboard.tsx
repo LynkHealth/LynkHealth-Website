@@ -260,6 +260,7 @@ function InvoicesTab() {
     MAY: "May", JUN: "June", JUL: "July", AUG: "August",
     SEP: "September", OCT: "October", NOV: "November", DEC: "December"
   };
+  const PROGRAMS = ["CCM", "RPM", "BHI", "PCM", "RTM", "APCM", "AWV", "TCM"];
   const now = new Date();
   const prevMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1);
   const [genMonth, setGenMonth] = useState(MONTHS[prevMonth.getMonth()]);
@@ -271,6 +272,57 @@ function InvoicesTab() {
   const [selectedInvoice, setSelectedInvoice] = useState<any>(null);
   const [lineItems, setLineItems] = useState<any[]>([]);
   const [detailLoading, setDetailLoading] = useState(false);
+
+  const [rateProgram, setRateProgram] = useState("CCM");
+  const [rateYear, setRateYear] = useState(now.getFullYear());
+  const [allRates, setAllRates] = useState<any[]>([]);
+  const [ratesLoading, setRatesLoading] = useState(true);
+  const [editingRateId, setEditingRateId] = useState<number | null>(null);
+  const [editRateValue, setEditRateValue] = useState("");
+  const [savingRate, setSavingRate] = useState(false);
+
+  const loadRates = async () => {
+    setRatesLoading(true);
+    try {
+      const res = await adminFetch(`/api/admin/invoice-rates/${rateYear}`);
+      const data = await res.json();
+      if (data.success) setAllRates(data.rates);
+    } catch (e) { console.error(e); }
+    setRatesLoading(false);
+  };
+
+  useEffect(() => { loadRates(); }, [rateYear]);
+
+  const filteredRates = allRates.filter((r: any) => r.program === rateProgram);
+
+  const saveRate = async (rate: any) => {
+    setSavingRate(true);
+    try {
+      const newCents = Math.round(parseFloat(editRateValue) * 100);
+      if (isNaN(newCents)) { setSavingRate(false); return; }
+      const res = await adminFetch("/api/admin/invoice-rates", {
+        method: "PUT",
+        body: JSON.stringify({
+          cptCode: rate.cptCode,
+          program: rate.program,
+          description: rate.description,
+          claimRateCents: rate.claimRateCents,
+          invoiceRateCents: newCents,
+          effectiveYear: rateYear,
+        }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        setAllRates(prev => prev.map((r: any) =>
+          r.cptCode === rate.cptCode && r.effectiveYear === rateYear
+            ? { ...r, invoiceRateCents: newCents }
+            : r
+        ));
+        setEditingRateId(null);
+      }
+    } catch (e) { console.error(e); }
+    setSavingRate(false);
+  };
 
   const loadInvoices = async () => {
     setLoading(true);
@@ -371,6 +423,8 @@ function InvoicesTab() {
       PCM: "bg-cyan-100 text-cyan-700",
       RTM: "bg-teal-100 text-teal-700",
       APCM: "bg-indigo-100 text-indigo-700",
+      AWV: "bg-orange-100 text-orange-700",
+      TCM: "bg-rose-100 text-rose-700",
     };
     return <span className={`px-1.5 py-0.5 rounded text-xs font-medium ${colors[program] || "bg-slate-100 text-slate-600"}`}>{program}</span>;
   };
@@ -492,6 +546,96 @@ function InvoicesTab() {
     <div className="space-y-4">
       <Card>
         <CardHeader className="pb-3">
+          <CardTitle className="text-base">Billing Rates</CardTitle>
+          <p className="text-xs text-slate-500">Set the invoice rate for each CPT code by program. The claim rate is the Medicare fee schedule rate. The invoice rate is what you charge the practice.</p>
+        </CardHeader>
+        <CardContent>
+          <div className="flex items-end gap-3 mb-4">
+            <div>
+              <label className="text-xs text-slate-500 mb-1 block">Program</label>
+              <select className="border rounded px-3 py-1.5 text-sm" value={rateProgram} onChange={(e) => setRateProgram(e.target.value)}>
+                {PROGRAMS.map(p => <option key={p} value={p}>{p}</option>)}
+              </select>
+            </div>
+            <div>
+              <label className="text-xs text-slate-500 mb-1 block">Year</label>
+              <select className="border rounded px-3 py-1.5 text-sm" value={rateYear} onChange={(e) => setRateYear(parseInt(e.target.value))}>
+                {[2024, 2025, 2026].map(y => <option key={y} value={y}>{y}</option>)}
+              </select>
+            </div>
+          </div>
+
+          {ratesLoading ? (
+            <div className="flex items-center justify-center py-6">
+              <Loader2 className="w-5 h-5 animate-spin text-slate-400" />
+            </div>
+          ) : filteredRates.length === 0 ? (
+            <p className="text-sm text-slate-500 text-center py-4">No billing codes found for {rateProgram} in {rateYear}.</p>
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="border-b bg-slate-50">
+                    <th className="text-left py-2 px-3 font-medium">CPT Code</th>
+                    <th className="text-left py-2 px-3 font-medium">Description</th>
+                    <th className="text-right py-2 px-3 font-medium">Claim Rate</th>
+                    <th className="text-right py-2 px-3 font-medium">Invoice Rate</th>
+                    <th className="text-center py-2 px-3 font-medium w-20">Edit</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {filteredRates.map((r: any) => (
+                    <tr key={r.id} className="border-b hover:bg-slate-50">
+                      <td className="py-2 px-3 font-mono text-xs">{r.cptCode}</td>
+                      <td className="py-2 px-3 text-slate-600 text-xs">{r.description || "—"}</td>
+                      <td className="py-2 px-3 text-right text-slate-500">{formatCurrency(r.claimRateCents)}</td>
+                      <td className="py-2 px-3 text-right">
+                        {editingRateId === r.id ? (
+                          <input
+                            type="number"
+                            step="0.01"
+                            className="border rounded px-2 py-1 text-sm text-right w-24"
+                            value={editRateValue}
+                            onChange={(e) => setEditRateValue(e.target.value)}
+                            onKeyDown={(e) => {
+                              if (e.key === "Enter") saveRate(r);
+                              if (e.key === "Escape") setEditingRateId(null);
+                            }}
+                            autoFocus
+                          />
+                        ) : (
+                          <span className={`font-medium ${r.invoiceRateCents !== r.claimRateCents ? "text-blue-700" : ""}`}>
+                            {formatCurrency(r.invoiceRateCents)}
+                          </span>
+                        )}
+                      </td>
+                      <td className="py-2 px-3 text-center">
+                        {editingRateId === r.id ? (
+                          <div className="flex items-center justify-center gap-1">
+                            <Button variant="ghost" size="sm" onClick={() => saveRate(r)} disabled={savingRate}>
+                              {savingRate ? <Loader2 className="w-3 h-3 animate-spin" /> : <CircleCheck className="w-4 h-4 text-green-600" />}
+                            </Button>
+                            <Button variant="ghost" size="sm" onClick={() => setEditingRateId(null)}>
+                              <CircleX className="w-4 h-4 text-slate-400" />
+                            </Button>
+                          </div>
+                        ) : (
+                          <Button variant="ghost" size="sm" onClick={() => { setEditingRateId(r.id); setEditRateValue((r.invoiceRateCents / 100).toFixed(2)); }}>
+                            <Pencil className="w-3.5 h-3.5 text-slate-400" />
+                          </Button>
+                        )}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader className="pb-3">
           <CardTitle className="text-base">Generate Invoices</CardTitle>
         </CardHeader>
         <CardContent>
@@ -513,7 +657,7 @@ function InvoicesTab() {
               {generating ? "Generating..." : "Generate Invoices"}
             </Button>
           </div>
-          <p className="text-xs text-slate-400 mt-2">Generates one invoice per practice from billing claims for the selected month. Invoices already generated for a practice/month will be skipped.</p>
+          <p className="text-xs text-slate-400 mt-2">Generates one invoice per practice using the invoice rates above. All practices will get an invoice. Existing invoices for a practice/month will be skipped.</p>
         </CardContent>
       </Card>
 

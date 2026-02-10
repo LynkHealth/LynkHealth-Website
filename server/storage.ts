@@ -1,4 +1,4 @@
-import { users, contactInquiries, nightCoverageInquiries, woundCareReferrals, adminUsers, adminSessions, practices, programSnapshots, revenueSnapshots, revenueByCode, cptBillingCodes, patients, patientConditions, patientMedications, patientAllergies, patientVitals, patientInsurance, programEnrollments, carePlans, carePlanItems, timeLogs, clinicalTasks, patientAssessments, calendarEvents, claims, carePlanTemplates, carePlanTemplateItems, poorEngagementForms, billingEvaluationForms, invoices, invoiceLineItems, type User, type InsertUser, type ContactInquiry, type InsertContactInquiry, type NightCoverageInquiry, type InsertNightCoverageInquiry, type WoundCareReferral, type InsertWoundCareReferral, type AdminUser, type InsertAdminUser, type AdminSession, type Practice, type InsertPractice, type ProgramSnapshot, type InsertProgramSnapshot, type RevenueSnapshot, type InsertRevenueSnapshot, type RevenueByCode, type CptBillingCode, type InsertCptBillingCode, type Patient, type InsertPatient, type PatientCondition, type InsertPatientCondition, type PatientMedication, type InsertPatientMedication, type PatientAllergy, type InsertPatientAllergy, type PatientVital, type InsertPatientVital, type PatientInsurance, type InsertPatientInsurance, type ProgramEnrollment, type InsertProgramEnrollment, type CarePlan, type InsertCarePlan, type CarePlanItem, type InsertCarePlanItem, type TimeLog, type InsertTimeLog, type ClinicalTask, type InsertClinicalTask, type PatientAssessment, type InsertPatientAssessment, type CalendarEvent, type InsertCalendarEvent, type Claim, type InsertClaim, type CarePlanTemplate, type InsertCarePlanTemplate, type CarePlanTemplateItem, type InsertCarePlanTemplateItem, type PoorEngagementForm, type InsertPoorEngagementForm, type BillingEvaluationForm, type InsertBillingEvaluationForm, type Invoice, type InsertInvoice, type InvoiceLineItem, type InsertInvoiceLineItem } from "@shared/schema";
+import { users, contactInquiries, nightCoverageInquiries, woundCareReferrals, adminUsers, adminSessions, practices, programSnapshots, revenueSnapshots, revenueByCode, cptBillingCodes, patients, patientConditions, patientMedications, patientAllergies, patientVitals, patientInsurance, programEnrollments, carePlans, carePlanItems, timeLogs, clinicalTasks, patientAssessments, calendarEvents, claims, carePlanTemplates, carePlanTemplateItems, poorEngagementForms, billingEvaluationForms, invoices, invoiceLineItems, type User, type InsertUser, type ContactInquiry, type InsertContactInquiry, type NightCoverageInquiry, type InsertNightCoverageInquiry, type WoundCareReferral, type InsertWoundCareReferral, type AdminUser, type InsertAdminUser, type AdminSession, type Practice, type InsertPractice, type ProgramSnapshot, type InsertProgramSnapshot, type RevenueSnapshot, type InsertRevenueSnapshot, type RevenueByCode, type CptBillingCode, type InsertCptBillingCode, type Patient, type InsertPatient, type PatientCondition, type InsertPatientCondition, type PatientMedication, type InsertPatientMedication, type PatientAllergy, type InsertPatientAllergy, type PatientVital, type InsertPatientVital, type PatientInsurance, type InsertPatientInsurance, type ProgramEnrollment, type InsertProgramEnrollment, type CarePlan, type InsertCarePlan, type CarePlanItem, type InsertCarePlanItem, type TimeLog, type InsertTimeLog, type ClinicalTask, type InsertClinicalTask, type PatientAssessment, type InsertPatientAssessment, type CalendarEvent, type InsertCalendarEvent, type Claim, type InsertClaim, type CarePlanTemplate, type InsertCarePlanTemplate, type CarePlanTemplateItem, type InsertCarePlanTemplateItem, type PoorEngagementForm, type InsertPoorEngagementForm, type BillingEvaluationForm, type InsertBillingEvaluationForm, type Invoice, type InsertInvoice, type InvoiceLineItem, type InsertInvoiceLineItem, invoiceRates, type InvoiceRate, type InsertInvoiceRate } from "@shared/schema";
 import { db } from "./db";
 import { eq, ne, and, desc, or, ilike, sql, gte, lte } from "drizzle-orm";
 
@@ -131,6 +131,11 @@ export interface IStorage {
   listBillingEvaluationForms(status?: string): Promise<BillingEvaluationForm[]>;
   getBillingEvaluationForm(id: number): Promise<BillingEvaluationForm | undefined>;
   updateBillingEvaluationFormStatus(id: number, status: string, reviewedBy: number, reviewNotes?: string): Promise<BillingEvaluationForm | undefined>;
+
+  // Invoice Rates
+  getInvoiceRates(year: number): Promise<InvoiceRate[]>;
+  upsertInvoiceRate(rate: InsertInvoiceRate): Promise<InvoiceRate>;
+  initInvoiceRatesFromBillingCodes(year: number): Promise<InvoiceRate[]>;
 
   // Invoices
   generateInvoices(month: string, year: number): Promise<Invoice[]>;
@@ -888,6 +893,55 @@ export class DatabaseStorage implements IStorage {
     return updated;
   }
 
+  async getInvoiceRates(year: number): Promise<InvoiceRate[]> {
+    return db.select().from(invoiceRates)
+      .where(eq(invoiceRates.effectiveYear, year))
+      .orderBy(invoiceRates.program, invoiceRates.cptCode);
+  }
+
+  async upsertInvoiceRate(rate: InsertInvoiceRate): Promise<InvoiceRate> {
+    const yearVal = rate.effectiveYear ?? 2026;
+    const existing = await db.select().from(invoiceRates)
+      .where(and(
+        eq(invoiceRates.cptCode, rate.cptCode),
+        eq(invoiceRates.effectiveYear, yearVal)
+      ));
+    if (existing.length > 0) {
+      const [updated] = await db.update(invoiceRates)
+        .set({ invoiceRateCents: rate.invoiceRateCents, updatedAt: new Date() })
+        .where(eq(invoiceRates.id, existing[0].id))
+        .returning();
+      return updated;
+    }
+    const [created] = await db.insert(invoiceRates).values(rate).returning();
+    return created;
+  }
+
+  async initInvoiceRatesFromBillingCodes(year: number): Promise<InvoiceRate[]> {
+    const existingRates = await this.getInvoiceRates(year);
+    const existingCodes = new Set(existingRates.map(r => r.cptCode));
+
+    const billingCodes = await db.select().from(cptBillingCodes)
+      .where(eq(cptBillingCodes.effectiveYear, year));
+
+    let added = 0;
+    for (const bc of billingCodes) {
+      if (existingCodes.has(bc.code)) continue;
+      await db.insert(invoiceRates).values({
+        cptCode: bc.code,
+        program: bc.program,
+        description: bc.description,
+        claimRateCents: bc.rateCents,
+        invoiceRateCents: bc.rateCents,
+        effectiveYear: year,
+      });
+      added++;
+    }
+
+    if (added > 0) return this.getInvoiceRates(year);
+    return existingRates;
+  }
+
   async generateInvoices(month: string, year: number): Promise<Invoice[]> {
     const allPractices = await db.select().from(practices)
       .where(ne(practices.name, "Lynk Demo"))
@@ -896,13 +950,21 @@ export class DatabaseStorage implements IStorage {
     const codeData = await db.select().from(revenueByCode)
       .where(and(eq(revenueByCode.month, month), eq(revenueByCode.year, year)));
 
-    const billingCodes = await db.select().from(cptBillingCodes)
-      .where(eq(cptBillingCodes.effectiveYear, year));
-    const codeDescMap: Record<string, string> = {};
-    const codeRateMap: Record<string, number> = {};
-    for (const bc of billingCodes) {
-      codeDescMap[bc.code] = bc.description;
-      codeRateMap[bc.code] = bc.rateCents;
+    const rates = await this.getInvoiceRates(year);
+    const invoiceRateMap: Record<string, number> = {};
+    const rateDescMap: Record<string, string> = {};
+    for (const r of rates) {
+      invoiceRateMap[r.cptCode] = r.invoiceRateCents;
+      if (r.description) rateDescMap[r.cptCode] = r.description;
+    }
+
+    if (rates.length === 0) {
+      const billingCodes = await db.select().from(cptBillingCodes)
+        .where(eq(cptBillingCodes.effectiveYear, year));
+      for (const bc of billingCodes) {
+        invoiceRateMap[bc.code] = bc.rateCents;
+        rateDescMap[bc.code] = bc.description;
+      }
     }
 
     const generatedInvoices: Invoice[] = [];
@@ -926,29 +988,25 @@ export class DatabaseStorage implements IStorage {
         return !c.department;
       });
 
-      if (practiceCodeData.length === 0) continue;
-
       const lineItemsData: { programType: string; cptCode: string; description: string | null; claimCount: number; rateCents: number; totalCents: number }[] = [];
       let totalAmountCents = 0;
       let totalClaims = 0;
 
       for (const row of practiceCodeData) {
         const claimCount = row.claimCount || 0;
-        const totalCents = row.totalRevenue || 0;
-        const rateCents = claimCount > 0 ? Math.round(totalCents / claimCount) : (codeRateMap[row.cptCode] || 0);
+        const rate = invoiceRateMap[row.cptCode] || 0;
+        const totalCents = claimCount * rate;
         lineItemsData.push({
           programType: row.programType,
           cptCode: row.cptCode,
-          description: codeDescMap[row.cptCode] || null,
+          description: rateDescMap[row.cptCode] || null,
           claimCount,
-          rateCents,
+          rateCents: rate,
           totalCents,
         });
         totalAmountCents += totalCents;
         totalClaims += claimCount;
       }
-
-      if (totalClaims === 0) continue;
 
       const invoiceNumber = `INV-${practice.id}-${year}-${month}`;
       const [invoice] = await db.insert(invoices).values({

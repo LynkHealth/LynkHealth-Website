@@ -343,6 +343,42 @@ export async function registerAdminRoutes(app: Express) {
   });
 
   // ============================================================
+  // Invoice Rate Routes
+  // ============================================================
+
+  app.get("/api/admin/invoice-rates/:year", adminAuth, async (req, res) => {
+    try {
+      const year = parseInt(req.params.year);
+      const rates = await storage.initInvoiceRatesFromBillingCodes(year);
+      res.json({ success: true, rates });
+    } catch (error) {
+      console.error("Error loading invoice rates:", error);
+      res.status(500).json({ success: false, message: "Failed to load invoice rates" });
+    }
+  });
+
+  app.put("/api/admin/invoice-rates", adminAuth, async (req, res) => {
+    try {
+      const { cptCode, program, description, claimRateCents, invoiceRateCents, effectiveYear } = req.body;
+      if (!cptCode || !effectiveYear) {
+        return res.status(400).json({ success: false, message: "CPT code and year are required" });
+      }
+      const updated = await storage.upsertInvoiceRate({
+        cptCode,
+        program,
+        description,
+        claimRateCents,
+        invoiceRateCents,
+        effectiveYear,
+      });
+      res.json({ success: true, rate: updated });
+    } catch (error) {
+      console.error("Error updating invoice rate:", error);
+      res.status(500).json({ success: false, message: "Failed to update invoice rate" });
+    }
+  });
+
+  // ============================================================
   // Invoice Routes
   // ============================================================
 
