@@ -616,9 +616,9 @@ function AnalyticsTab({ selectedMonth, currentYear, selectedPractice }: { select
     <div className="space-y-6">
       <div className="flex items-center justify-between flex-wrap gap-2">
         <div className="flex gap-2">
-          {[3, 6, 12].map((m) => (
+          {[1, 3, 6, 12].map((m) => (
             <Button key={m} variant={trendMonths === m ? "default" : "outline"} size="sm" onClick={() => setTrendMonths(m)}>
-              {m} Months
+              {m} Month{m > 1 ? "s" : ""}
             </Button>
           ))}
         </div>
