@@ -63,6 +63,17 @@ A clinical dashboard accessible at `/clinical/*` routes provides a full care coo
 - **Shared Auth**: Clinical users share the `admin_users` table with role field differentiation.
 - **Role-Based Access Control**: `requireRole()` middleware enforces permissions on API routes. Frontend navigation hides items based on user role. User management and template management restricted to admin/supervisor roles.
 
+### Invoice Management
+- Admin dashboard "Invoices" tab for generating and reviewing monthly practice invoices
+- Database tables: `invoices` (invoice header with practice, month, year, totals, status) and `invoice_line_items` (CPT code breakdown per invoice)
+- Invoice generation aggregates `revenue_by_code` data per practice for a given month, creating one invoice per practice with line items by CPT code
+- Generation is idempotent — won't create duplicate invoices for the same practice/month
+- Status workflow: `pending_review` → `approved` → `sent` → `paid` (or `rejected` from pending_review)
+- Lynk Demo practice is excluded from invoice generation
+- Invoice numbers follow format: `INV-{practiceId}-{year}-{month}`
+- API routes: POST `/api/admin/invoices/generate`, GET `/api/admin/invoices`, GET `/api/admin/invoices/:id`, PUT `/api/admin/invoices/:id/status`, DELETE `/api/admin/invoices/:id`
+- Admin/supervisor users can review, approve, reject, mark sent, mark paid
+
 ### System Design Choices
 The architecture emphasizes robust validation and error handling. SEO strategy focuses on national reach and service quality. A comprehensive cache management system ensures users always see the latest content after deployments while optimizing performance through aggressive caching of static assets, using a service worker and build-time timestamp injection. HTTP cache headers are carefully configured for various asset types to balance freshness and performance.
 
