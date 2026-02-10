@@ -1,6 +1,6 @@
 import { users, contactInquiries, nightCoverageInquiries, woundCareReferrals, adminUsers, adminSessions, practices, programSnapshots, revenueSnapshots, revenueByCode, cptBillingCodes, patients, patientConditions, patientMedications, patientAllergies, patientVitals, patientInsurance, programEnrollments, carePlans, carePlanItems, timeLogs, clinicalTasks, patientAssessments, calendarEvents, claims, carePlanTemplates, carePlanTemplateItems, poorEngagementForms, billingEvaluationForms, type User, type InsertUser, type ContactInquiry, type InsertContactInquiry, type NightCoverageInquiry, type InsertNightCoverageInquiry, type WoundCareReferral, type InsertWoundCareReferral, type AdminUser, type InsertAdminUser, type AdminSession, type Practice, type InsertPractice, type ProgramSnapshot, type InsertProgramSnapshot, type RevenueSnapshot, type InsertRevenueSnapshot, type RevenueByCode, type CptBillingCode, type InsertCptBillingCode, type Patient, type InsertPatient, type PatientCondition, type InsertPatientCondition, type PatientMedication, type InsertPatientMedication, type PatientAllergy, type InsertPatientAllergy, type PatientVital, type InsertPatientVital, type PatientInsurance, type InsertPatientInsurance, type ProgramEnrollment, type InsertProgramEnrollment, type CarePlan, type InsertCarePlan, type CarePlanItem, type InsertCarePlanItem, type TimeLog, type InsertTimeLog, type ClinicalTask, type InsertClinicalTask, type PatientAssessment, type InsertPatientAssessment, type CalendarEvent, type InsertCalendarEvent, type Claim, type InsertClaim, type CarePlanTemplate, type InsertCarePlanTemplate, type CarePlanTemplateItem, type InsertCarePlanTemplateItem, type PoorEngagementForm, type InsertPoorEngagementForm, type BillingEvaluationForm, type InsertBillingEvaluationForm } from "@shared/schema";
 import { db } from "./db";
-import { eq, and, desc, or, ilike, sql, gte, lte } from "drizzle-orm";
+import { eq, ne, and, desc, or, ilike, sql, gte, lte } from "drizzle-orm";
 
 export interface IStorage {
   getUser(id: number): Promise<User | undefined>;
@@ -215,7 +215,9 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getPractices(): Promise<Practice[]> {
-    return await db.select().from(practices).orderBy(practices.name);
+    return await db.select().from(practices)
+      .where(ne(practices.name, "Lynk Demo"))
+      .orderBy(practices.name);
   }
 
   async createPractice(insertPractice: InsertPractice): Promise<Practice> {
@@ -243,19 +245,31 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getAggregatedSnapshots(month: string, year: number): Promise<ProgramSnapshot[]> {
+    const demoPractice = await db.select({ id: practices.id }).from(practices).where(eq(practices.name, "Lynk Demo"));
+    const demoPracticeId = demoPractice[0]?.id;
+    const conditions = [eq(programSnapshots.month, month), eq(programSnapshots.year, year)];
+    if (demoPracticeId) conditions.push(ne(programSnapshots.practiceId, demoPracticeId));
     return await db.select().from(programSnapshots)
-      .where(and(eq(programSnapshots.month, month), eq(programSnapshots.year, year)))
+      .where(and(...conditions))
       .orderBy(programSnapshots.programType);
   }
 
   async getRevenueSnapshots(month: string, year: number): Promise<RevenueSnapshot[]> {
+    const demoPractice = await db.select({ id: practices.id }).from(practices).where(eq(practices.name, "Lynk Demo"));
+    const demoPracticeId = demoPractice[0]?.id;
+    const conditions = [eq(revenueSnapshots.month, month), eq(revenueSnapshots.year, year)];
+    if (demoPracticeId) conditions.push(ne(revenueSnapshots.practiceId, demoPracticeId));
     return await db.select().from(revenueSnapshots)
-      .where(and(eq(revenueSnapshots.month, month), eq(revenueSnapshots.year, year)))
+      .where(and(...conditions))
       .orderBy(revenueSnapshots.programType);
   }
   async getRevenueByCode(month: string, year: number): Promise<RevenueByCode[]> {
+    const demoPractice = await db.select({ id: practices.id }).from(practices).where(eq(practices.name, "Lynk Demo"));
+    const demoPracticeId = demoPractice[0]?.id;
+    const conditions = [eq(revenueByCode.month, month), eq(revenueByCode.year, year)];
+    if (demoPracticeId) conditions.push(ne(revenueByCode.practiceId, demoPracticeId));
     return await db.select().from(revenueByCode)
-      .where(and(eq(revenueByCode.month, month), eq(revenueByCode.year, year)))
+      .where(and(...conditions))
       .orderBy(revenueByCode.programType, revenueByCode.cptCode);
   }
 
