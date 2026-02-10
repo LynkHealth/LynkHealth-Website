@@ -2239,8 +2239,8 @@ export default function AdminDashboard() {
                               );
                             })}
                             {lynkDepts.map((dept) => (
-                              <tr key={`lynk-${dept}`} className="border-b hover:bg-slate-50">
-                                <td className="py-2 px-3 font-medium">{dept}</td>
+                              <tr key={`lynk-${dept}`} className="border-b hover:bg-slate-50 cursor-pointer" onClick={() => lynkPracticeId && setPracticeDetailId(lynkPracticeId)}>
+                                <td className="py-2 px-3 font-medium text-blue-700 hover:underline">{dept}</td>
                                 <td className="py-2 px-3 text-slate-500">lynk</td>
                                 <td className="py-2 px-3">—</td>
                                 <td className="py-2 px-3">
