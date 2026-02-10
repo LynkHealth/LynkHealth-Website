@@ -65,14 +65,15 @@ A clinical dashboard accessible at `/clinical/*` routes provides a full care coo
 
 ### Invoice Management
 - Admin dashboard "Invoices" tab for generating and reviewing monthly practice invoices
-- Database tables: `invoices` (invoice header with practice, month, year, totals, status) and `invoice_line_items` (CPT code breakdown per invoice)
-- Invoice generation aggregates `revenue_by_code` data per practice for a given month, creating one invoice per practice with line items by CPT code
-- Generation is idempotent — won't create duplicate invoices for the same practice/month
+- Database tables: `invoices` (invoice header with practice, month, year, totals, status), `invoice_line_items` (CPT code breakdown per invoice), and `invoice_rates` (per-practice custom billing rates)
+- **Per-practice billing rates**: Each practice has its own set of invoice rates (stored in `invoice_rates` with `practice_id` column). Rates are initialized from billing codes on first access and can be customized per practice. Managed in the Practices tab by clicking a practice to open its detail view.
+- Invoice generation uses practice-specific rates with fallback to billing codes when no custom rates exist
+- Generation is idempotent — won't create duplicate invoices for the same practice/month. All practices (excluding Lynk Demo) get invoices, even those with $0/0 claims.
 - Status workflow: `pending_review` → `approved` → `sent` → `paid` (or `rejected` from pending_review)
-- Lynk Demo practice is excluded from invoice generation
 - Invoice numbers follow format: `INV-{practiceId}-{year}-{month}`
-- API routes: POST `/api/admin/invoices/generate`, GET `/api/admin/invoices`, GET `/api/admin/invoices/:id`, PUT `/api/admin/invoices/:id/status`, DELETE `/api/admin/invoices/:id`
+- API routes: POST `/api/admin/invoices/generate`, GET `/api/admin/invoices`, GET `/api/admin/invoices/:id`, PUT `/api/admin/invoices/:id/status`, DELETE `/api/admin/invoices/:id`, GET `/api/admin/invoice-rates/:practiceId/:year`, PUT `/api/admin/invoice-rates`
 - Admin/supervisor users can review, approve, reject, mark sent, mark paid
+- **Practice Detail View**: Practices tab rows are clickable, opening a detail view showing practice info (name, alias, departments, status) and a billing rates table scoped to that practice with inline editing
 
 ### System Design Choices
 The architecture emphasizes robust validation and error handling. SEO strategy focuses on national reach and service quality. A comprehensive cache management system ensures users always see the latest content after deployments while optimizing performance through aggressive caching of static assets, using a service worker and build-time timestamp injection. HTTP cache headers are carefully configured for various asset types to balance freshness and performance.
