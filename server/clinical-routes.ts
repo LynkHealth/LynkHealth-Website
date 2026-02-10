@@ -1,6 +1,6 @@
 import type { Express, Request, Response, NextFunction } from "express";
 import { storage } from "./storage";
-import { adminAuth } from "./admin-routes";
+import { adminAuth, requireRole } from "./admin-routes";
 import bcrypt from "bcryptjs";
 import {
   insertPatientSchema, insertPatientConditionSchema, insertPatientMedicationSchema,
@@ -8,6 +8,7 @@ import {
   insertProgramEnrollmentSchema, insertCarePlanSchema, insertCarePlanItemSchema,
   insertTimeLogSchema, insertClinicalTaskSchema, insertPatientAssessmentSchema,
   insertCalendarEventSchema, insertClaimSchema,
+  insertCarePlanTemplateSchema, insertCarePlanTemplateItemSchema,
 } from "@shared/schema";
 import { z } from "zod";
 
@@ -463,42 +464,6 @@ export function registerClinicalRoutes(app: Express) {
   });
 
   // ============================================================
-  // Clinical Tasks
-  // ============================================================
-
-  app.get("/api/clinical/tasks", adminAuth, async (req, res) => {
-    try {
-      const assignedTo = req.query.assignedTo ? parseInt(req.query.assignedTo as string) : undefined;
-      const patientId = req.query.patientId ? parseInt(req.query.patientId as string) : undefined;
-      const tasks = await storage.getTasks(assignedTo, patientId);
-      res.json(tasks);
-    } catch (error) {
-      res.status(500).json({ error: "Failed to get tasks" });
-    }
-  });
-
-  app.post("/api/clinical/tasks", adminAuth, async (req, res) => {
-    try {
-      const data = insertClinicalTaskSchema.parse(req.body);
-      const task = await storage.createTask(data);
-      res.status(201).json(task);
-    } catch (error) {
-      if (error instanceof z.ZodError) return res.status(400).json({ error: error.errors });
-      res.status(500).json({ error: "Failed to create task" });
-    }
-  });
-
-  app.put("/api/clinical/tasks/:id", adminAuth, async (req, res) => {
-    try {
-      const task = await storage.updateTask(parseInt(req.params.id), req.body);
-      if (!task) return res.status(404).json({ error: "Task not found" });
-      res.json(task);
-    } catch (error) {
-      res.status(500).json({ error: "Failed to update task" });
-    }
-  });
-
-  // ============================================================
   // Patient Assessments
   // ============================================================
 
@@ -519,52 +484,6 @@ export function registerClinicalRoutes(app: Express) {
     } catch (error) {
       if (error instanceof z.ZodError) return res.status(400).json({ error: error.errors });
       res.status(500).json({ error: "Failed to create assessment" });
-    }
-  });
-
-  // ============================================================
-  // Calendar Events
-  // ============================================================
-
-  app.get("/api/clinical/events", adminAuth, async (req, res) => {
-    try {
-      const userId = req.query.userId ? parseInt(req.query.userId as string) : undefined;
-      const startDate = req.query.startDate ? new Date(req.query.startDate as string) : undefined;
-      const endDate = req.query.endDate ? new Date(req.query.endDate as string) : undefined;
-      const events = await storage.getEvents(userId, startDate, endDate);
-      res.json(events);
-    } catch (error) {
-      res.status(500).json({ error: "Failed to get events" });
-    }
-  });
-
-  app.post("/api/clinical/events", adminAuth, async (req, res) => {
-    try {
-      const data = insertCalendarEventSchema.parse(req.body);
-      const event = await storage.createEvent(data);
-      res.status(201).json(event);
-    } catch (error) {
-      if (error instanceof z.ZodError) return res.status(400).json({ error: error.errors });
-      res.status(500).json({ error: "Failed to create event" });
-    }
-  });
-
-  app.put("/api/clinical/events/:id", adminAuth, async (req, res) => {
-    try {
-      const event = await storage.updateEvent(parseInt(req.params.id), req.body);
-      if (!event) return res.status(404).json({ error: "Event not found" });
-      res.json(event);
-    } catch (error) {
-      res.status(500).json({ error: "Failed to update event" });
-    }
-  });
-
-  app.delete("/api/clinical/events/:id", adminAuth, async (req, res) => {
-    try {
-      await storage.deleteEvent(parseInt(req.params.id));
-      res.json({ success: true });
-    } catch (error) {
-      res.status(500).json({ error: "Failed to delete event" });
     }
   });
 
@@ -618,7 +537,7 @@ export function registerClinicalRoutes(app: Express) {
     }
   });
 
-  app.post("/api/admin/users", adminAuth, async (req, res) => {
+  app.post("/api/admin/users", adminAuth, requireRole("admin", "supervisor"), async (req, res) => {
     try {
       const { email, password, role, name } = req.body;
       if (!email || !password || !name) return res.status(400).json({ error: "Email, name, and password required" });
@@ -631,7 +550,7 @@ export function registerClinicalRoutes(app: Express) {
     }
   });
 
-  app.put("/api/admin/users/:id", adminAuth, async (req, res) => {
+  app.put("/api/admin/users/:id", adminAuth, requireRole("admin", "supervisor"), async (req, res) => {
     try {
       const updates: any = { ...req.body };
       if (updates.password) {
@@ -712,6 +631,253 @@ export function registerClinicalRoutes(app: Express) {
       res.json(series);
     } catch (error) {
       res.status(500).json({ error: "Failed to get revenue trends" });
+    }
+  });
+
+  // ============================================================
+  // Dashboard
+  // ============================================================
+
+  app.get("/api/clinical/dashboard/stats", adminAuth, async (req: any, res) => {
+    try {
+      const userId = req.adminUser?.id;
+      const stats = await storage.getDashboardStats(userId);
+      res.json(stats);
+    } catch (error) {
+      console.error("Dashboard stats error:", error);
+      res.status(500).json({ error: "Failed to get dashboard stats" });
+    }
+  });
+
+  app.get("/api/clinical/dashboard/recent-tasks", adminAuth, async (req: any, res) => {
+    try {
+      const userId = req.adminUser?.id;
+      const tasks = await storage.getTasks(userId);
+      res.json(tasks.slice(0, 20));
+    } catch (error) {
+      res.status(500).json({ error: "Failed to get recent tasks" });
+    }
+  });
+
+  app.get("/api/clinical/dashboard/upcoming-events", adminAuth, async (req: any, res) => {
+    try {
+      const userId = req.adminUser?.id;
+      const now = new Date();
+      const endOfWeek = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 7);
+      const events = await storage.getEvents(userId, now, endOfWeek);
+      res.json(events);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to get upcoming events" });
+    }
+  });
+
+  // ============================================================
+  // Tasks CRUD (full)
+  // ============================================================
+
+  app.get("/api/clinical/tasks", adminAuth, async (req: any, res) => {
+    try {
+      const assignedTo = req.query.assignedTo ? parseInt(req.query.assignedTo as string) : undefined;
+      const patientId = req.query.patientId ? parseInt(req.query.patientId as string) : undefined;
+      const tasks = await storage.getTasks(assignedTo, patientId);
+      res.json(tasks);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to get tasks" });
+    }
+  });
+
+  app.post("/api/clinical/tasks", adminAuth, async (req: any, res) => {
+    try {
+      const data = insertClinicalTaskSchema.parse({ ...req.body, createdBy: req.adminUser?.id || req.body.createdBy });
+      const task = await storage.createTask(data);
+      res.status(201).json(task);
+    } catch (error) {
+      if (error instanceof z.ZodError) return res.status(400).json({ error: error.errors });
+      res.status(500).json({ error: "Failed to create task" });
+    }
+  });
+
+  app.put("/api/clinical/tasks/:id", adminAuth, async (req, res) => {
+    try {
+      const task = await storage.updateTask(parseInt(req.params.id), req.body);
+      if (!task) return res.status(404).json({ error: "Task not found" });
+      res.json(task);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to update task" });
+    }
+  });
+
+  app.delete("/api/clinical/tasks/:id", adminAuth, async (req, res) => {
+    try {
+      await storage.deleteTask(parseInt(req.params.id));
+      res.json({ success: true });
+    } catch (error) {
+      res.status(500).json({ error: "Failed to delete task" });
+    }
+  });
+
+  // ============================================================
+  // Calendar Events CRUD (full)
+  // ============================================================
+
+  app.get("/api/clinical/events", adminAuth, async (req: any, res) => {
+    try {
+      const userId = req.query.userId ? parseInt(req.query.userId as string) : undefined;
+      const startDate = req.query.startDate ? new Date(req.query.startDate as string) : undefined;
+      const endDate = req.query.endDate ? new Date(req.query.endDate as string) : undefined;
+      const events = await storage.getEvents(userId, startDate, endDate);
+      res.json(events);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to get events" });
+    }
+  });
+
+  app.post("/api/clinical/events", adminAuth, async (req: any, res) => {
+    try {
+      const data = insertCalendarEventSchema.parse({ ...req.body, userId: req.adminUser?.id || req.body.userId });
+      const event = await storage.createEvent(data);
+      res.status(201).json(event);
+    } catch (error) {
+      if (error instanceof z.ZodError) return res.status(400).json({ error: error.errors });
+      console.error("Create event error:", error);
+      res.status(500).json({ error: "Failed to create event" });
+    }
+  });
+
+  app.put("/api/clinical/events/:id", adminAuth, async (req, res) => {
+    try {
+      const event = await storage.updateEvent(parseInt(req.params.id), req.body);
+      if (!event) return res.status(404).json({ error: "Event not found" });
+      res.json(event);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to update event" });
+    }
+  });
+
+  app.delete("/api/clinical/events/:id", adminAuth, async (req, res) => {
+    try {
+      await storage.deleteEvent(parseInt(req.params.id));
+      res.json({ success: true });
+    } catch (error) {
+      res.status(500).json({ error: "Failed to delete event" });
+    }
+  });
+
+  // ============================================================
+  // Care Plan Templates
+  // ============================================================
+
+  app.get("/api/clinical/templates", adminAuth, async (req, res) => {
+    try {
+      const programType = req.query.programType as string | undefined;
+      const templates = await storage.getCarePlanTemplates(programType);
+      res.json(templates);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to get templates" });
+    }
+  });
+
+  app.get("/api/clinical/templates/:id", adminAuth, async (req, res) => {
+    try {
+      const template = await storage.getCarePlanTemplate(parseInt(req.params.id));
+      if (!template) return res.status(404).json({ error: "Template not found" });
+      const items = await storage.getCarePlanTemplateItems(template.id);
+      res.json({ ...template, items });
+    } catch (error) {
+      res.status(500).json({ error: "Failed to get template" });
+    }
+  });
+
+  app.post("/api/clinical/templates", adminAuth, requireRole("admin", "supervisor"), async (req: any, res) => {
+    try {
+      const { items, ...templateData } = req.body;
+      const data = insertCarePlanTemplateSchema.parse({ ...templateData, createdBy: req.adminUser?.id || templateData.createdBy });
+      const template = await storage.createCarePlanTemplate(data);
+      if (items && Array.isArray(items)) {
+        for (const item of items) {
+          await storage.createCarePlanTemplateItem({ ...item, templateId: template.id });
+        }
+      }
+      const savedItems = await storage.getCarePlanTemplateItems(template.id);
+      res.status(201).json({ ...template, items: savedItems });
+    } catch (error) {
+      if (error instanceof z.ZodError) return res.status(400).json({ error: error.errors });
+      console.error("Create template error:", error);
+      res.status(500).json({ error: "Failed to create template" });
+    }
+  });
+
+  app.put("/api/clinical/templates/:id", adminAuth, requireRole("admin", "supervisor"), async (req, res) => {
+    try {
+      const { items, ...updates } = req.body;
+      const template = await storage.updateCarePlanTemplate(parseInt(req.params.id), updates);
+      if (!template) return res.status(404).json({ error: "Template not found" });
+      res.json(template);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to update template" });
+    }
+  });
+
+  app.delete("/api/clinical/templates/:id", adminAuth, requireRole("admin", "supervisor"), async (req, res) => {
+    try {
+      await storage.deleteCarePlanTemplate(parseInt(req.params.id));
+      res.json({ success: true });
+    } catch (error) {
+      res.status(500).json({ error: "Failed to delete template" });
+    }
+  });
+
+  app.post("/api/clinical/templates/:id/items", adminAuth, requireRole("admin", "supervisor"), async (req, res) => {
+    try {
+      const data = insertCarePlanTemplateItemSchema.parse({ ...req.body, templateId: parseInt(req.params.id) });
+      const item = await storage.createCarePlanTemplateItem(data);
+      res.status(201).json(item);
+    } catch (error) {
+      if (error instanceof z.ZodError) return res.status(400).json({ error: error.errors });
+      res.status(500).json({ error: "Failed to create template item" });
+    }
+  });
+
+  app.delete("/api/clinical/template-items/:id", adminAuth, requireRole("admin", "supervisor"), async (req, res) => {
+    try {
+      await storage.deleteCarePlanTemplateItem(parseInt(req.params.id));
+      res.json({ success: true });
+    } catch (error) {
+      res.status(500).json({ error: "Failed to delete template item" });
+    }
+  });
+
+  app.post("/api/clinical/templates/:id/apply", adminAuth, async (req, res) => {
+    try {
+      const templateId = parseInt(req.params.id);
+      const { patientId, enrollmentId } = req.body;
+      if (!patientId || !enrollmentId) return res.status(400).json({ error: "patientId and enrollmentId required" });
+
+      const template = await storage.getCarePlanTemplate(templateId);
+      if (!template) return res.status(404).json({ error: "Template not found" });
+
+      const items = await storage.getCarePlanTemplateItems(templateId);
+      const carePlan = await storage.createCarePlan({
+        patientId,
+        enrollmentId,
+        title: template.name,
+        status: "active",
+      });
+
+      for (const item of items) {
+        await storage.createCarePlanItem({
+          carePlanId: carePlan.id,
+          itemType: item.itemType,
+          description: item.description,
+          status: "active",
+        });
+      }
+
+      const planItems = await storage.getCarePlanItems(carePlan.id);
+      res.status(201).json({ ...carePlan, items: planItems });
+    } catch (error) {
+      console.error("Apply template error:", error);
+      res.status(500).json({ error: "Failed to apply template" });
     }
   });
 

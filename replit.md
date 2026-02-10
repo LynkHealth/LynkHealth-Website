@@ -48,14 +48,20 @@ A hidden admin dashboard is accessible via the copyright symbol (©) in the foot
 
 ### Clinical Care Coordination Platform
 A clinical dashboard accessible at `/clinical/*` routes provides a full care coordination workflow for nurses and care managers:
+- **Clinical Dashboard** (`/clinical/dashboard`): Landing page showing welcome header, stats cards (active patients, enrollments, pending tasks, minutes this month), task queue, and upcoming schedule for the next 7 days.
 - **Patient Management** (`/clinical/patients`): Searchable, paginated patient list with create/edit. Links to individual patient charts.
 - **Patient Chart** (`/clinical/patients/:id`): 9-tabbed interface (Overview, Conditions, Medications, Allergies, Vitals, Insurance, Enrollments, Care Plans, Time Logs). Each tab supports CRUD operations.
 - **Program Worklists** (`/clinical/worklists`): Filter enrolled patients by program type (CCM, PCM, BHI, RPM, RTM, TCM, APCM, AWV), status, and search. Shows minutes tracked and risk levels.
-- **User Management** (`/clinical/users`): Create/edit users with roles (admin, supervisor, care_manager, provider). Role-based access control.
+- **Task Management** (`/clinical/tasks`): Full CRUD for clinical tasks with priority/status filters, search, create/edit dialog. Tasks have priority (high/normal/low), status (pending/in_progress/completed), due dates, and optional patient linking.
+- **Schedule/Calendar** (`/clinical/schedule`): Week-view calendar showing patient calls and events. Events color-coded by type (call, follow_up, assessment, appointment). Create/edit events with date/time, type, patient linking, notes.
+- **Care Plan Templates** (`/clinical/templates`): Manage reusable care plan templates by program type (CCM, PCM, BHI, RPM, RTM, etc.). Templates contain items (goals, interventions, outcomes). Apply templates to create care plans for patients. Admin/supervisor only for management.
+- **Time Tracking Timer**: Persistent floating widget (bottom-right) for timing patient calls. Start/pause/stop with program type and activity type selection. Auto-logs to time_logs table on stop. Timer state persists in localStorage across page navigation.
+- **User Management** (`/clinical/users`): Create/edit users with roles (admin, supervisor, care_manager, provider). Role-based access control. Admin/supervisor only.
 - **Analytics & Trends** (admin dashboard "Analytics" tab): Revenue trend charts, enrollment trend lines, claims volume bars. 3/6/12 month period selectors. CSV export for revenue and enrollment data.
-- **Clinical Data Model**: 14 tables (patients, conditions, medications, allergies, vitals, insurance, program_enrollments, care_plans, care_plan_items, time_logs, clinical_tasks, assessments, calendar_events, claims)
-- **API Routes**: All under `/api/clinical/*` with admin auth middleware. Full CRUD for patients and sub-entities.
+- **Clinical Data Model**: 16 tables (patients, conditions, medications, allergies, vitals, insurance, program_enrollments, care_plans, care_plan_items, care_plan_templates, care_plan_template_items, time_logs, clinical_tasks, assessments, calendar_events, claims)
+- **API Routes**: All under `/api/clinical/*` with adminAuth middleware. Full CRUD for patients and sub-entities. Dashboard aggregation endpoints under `/api/clinical/dashboard/*`.
 - **Shared Auth**: Clinical users share the `admin_users` table with role field differentiation.
+- **Role-Based Access Control**: `requireRole()` middleware enforces permissions on API routes. Frontend navigation hides items based on user role. User management and template management restricted to admin/supervisor roles.
 
 ### System Design Choices
 The architecture emphasizes robust validation and error handling. SEO strategy focuses on national reach and service quality. A comprehensive cache management system ensures users always see the latest content after deployments while optimizing performance through aggressive caching of static assets, using a service worker and build-time timestamp injection. HTTP cache headers are carefully configured for various asset types to balance freshness and performance.

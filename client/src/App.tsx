@@ -32,9 +32,13 @@ import HomeHealthPage from "@/pages/who-we-work-with/home-health";
 import AdminLogin from "@/pages/admin/login";
 import AdminDashboard from "@/pages/admin/dashboard";
 import ClinicalLayout from "@/pages/clinical/layout";
+import ClinicalDashboard from "@/pages/clinical/dashboard";
 import PatientList from "@/pages/clinical/patients";
 import PatientChart from "@/pages/clinical/patient-chart";
 import Worklists from "@/pages/clinical/worklists";
+import TaskManagement from "@/pages/clinical/tasks";
+import Schedule from "@/pages/clinical/schedule";
+import CarePlanTemplates from "@/pages/clinical/templates";
 import UserManagement from "@/pages/clinical/users";
 
 function Router() {
@@ -47,12 +51,16 @@ function Router() {
     return (
       <ClinicalLayout>
         <Switch>
+          <Route path="/clinical/dashboard" component={ClinicalDashboard} />
           <Route path="/clinical/patients" component={PatientList} />
           <Route path="/clinical/patients/:id" component={PatientChart} />
           <Route path="/clinical/worklists" component={Worklists} />
           <Route path="/clinical/worklists/:programType" component={Worklists} />
+          <Route path="/clinical/tasks" component={TaskManagement} />
+          <Route path="/clinical/schedule" component={Schedule} />
+          <Route path="/clinical/templates" component={CarePlanTemplates} />
           <Route path="/clinical/users" component={UserManagement} />
-          <Route path="/clinical">{() => { window.location.href = "/clinical/patients"; return null; }}</Route>
+          <Route path="/clinical">{() => { window.location.href = "/clinical/dashboard"; return null; }}</Route>
         </Switch>
       </ClinicalLayout>
     );

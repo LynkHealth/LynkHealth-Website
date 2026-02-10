@@ -594,3 +594,44 @@ export const insertClaimSchema = createInsertSchema(claims).omit({
 
 export type InsertClaim = z.infer<typeof insertClaimSchema>;
 export type Claim = typeof claims.$inferSelect;
+
+// ============================================================
+// Care Plan Templates
+// ============================================================
+
+export const carePlanTemplates = pgTable("care_plan_templates", {
+  id: serial("id").primaryKey(),
+  name: text("name").notNull(),
+  programType: text("program_type").notNull(),
+  description: text("description"),
+  isActive: integer("is_active").notNull().default(1),
+  createdBy: integer("created_by"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+export const insertCarePlanTemplateSchema = createInsertSchema(carePlanTemplates).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export type InsertCarePlanTemplate = z.infer<typeof insertCarePlanTemplateSchema>;
+export type CarePlanTemplate = typeof carePlanTemplates.$inferSelect;
+
+export const carePlanTemplateItems = pgTable("care_plan_template_items", {
+  id: serial("id").primaryKey(),
+  templateId: integer("template_id").notNull(),
+  itemType: text("item_type").notNull().default("goal"),
+  description: text("description").notNull(),
+  sortOrder: integer("sort_order").default(0),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+export const insertCarePlanTemplateItemSchema = createInsertSchema(carePlanTemplateItems).omit({
+  id: true,
+  createdAt: true,
+});
+
+export type InsertCarePlanTemplateItem = z.infer<typeof insertCarePlanTemplateItemSchema>;
+export type CarePlanTemplateItem = typeof carePlanTemplateItems.$inferSelect;

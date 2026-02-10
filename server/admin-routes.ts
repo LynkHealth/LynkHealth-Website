@@ -41,6 +41,16 @@ export async function adminAuth(req: Request, res: Response, next: NextFunction)
   next();
 }
 
+export function requireRole(...roles: string[]) {
+  return (req: any, res: Response, next: NextFunction) => {
+    const userRole = req.adminUser?.role;
+    if (!userRole || !roles.includes(userRole)) {
+      return res.status(403).json({ success: false, message: "Insufficient permissions" });
+    }
+    next();
+  };
+}
+
 export async function registerAdminRoutes(app: Express) {
   app.post("/api/admin/login", async (req, res) => {
     try {

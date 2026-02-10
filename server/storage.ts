@@ -1,4 +1,4 @@
-import { users, contactInquiries, nightCoverageInquiries, woundCareReferrals, adminUsers, adminSessions, practices, programSnapshots, revenueSnapshots, revenueByCode, cptBillingCodes, patients, patientConditions, patientMedications, patientAllergies, patientVitals, patientInsurance, programEnrollments, carePlans, carePlanItems, timeLogs, clinicalTasks, patientAssessments, calendarEvents, claims, type User, type InsertUser, type ContactInquiry, type InsertContactInquiry, type NightCoverageInquiry, type InsertNightCoverageInquiry, type WoundCareReferral, type InsertWoundCareReferral, type AdminUser, type InsertAdminUser, type AdminSession, type Practice, type InsertPractice, type ProgramSnapshot, type InsertProgramSnapshot, type RevenueSnapshot, type InsertRevenueSnapshot, type RevenueByCode, type CptBillingCode, type InsertCptBillingCode, type Patient, type InsertPatient, type PatientCondition, type InsertPatientCondition, type PatientMedication, type InsertPatientMedication, type PatientAllergy, type InsertPatientAllergy, type PatientVital, type InsertPatientVital, type PatientInsurance, type InsertPatientInsurance, type ProgramEnrollment, type InsertProgramEnrollment, type CarePlan, type InsertCarePlan, type CarePlanItem, type InsertCarePlanItem, type TimeLog, type InsertTimeLog, type ClinicalTask, type InsertClinicalTask, type PatientAssessment, type InsertPatientAssessment, type CalendarEvent, type InsertCalendarEvent, type Claim, type InsertClaim } from "@shared/schema";
+import { users, contactInquiries, nightCoverageInquiries, woundCareReferrals, adminUsers, adminSessions, practices, programSnapshots, revenueSnapshots, revenueByCode, cptBillingCodes, patients, patientConditions, patientMedications, patientAllergies, patientVitals, patientInsurance, programEnrollments, carePlans, carePlanItems, timeLogs, clinicalTasks, patientAssessments, calendarEvents, claims, carePlanTemplates, carePlanTemplateItems, type User, type InsertUser, type ContactInquiry, type InsertContactInquiry, type NightCoverageInquiry, type InsertNightCoverageInquiry, type WoundCareReferral, type InsertWoundCareReferral, type AdminUser, type InsertAdminUser, type AdminSession, type Practice, type InsertPractice, type ProgramSnapshot, type InsertProgramSnapshot, type RevenueSnapshot, type InsertRevenueSnapshot, type RevenueByCode, type CptBillingCode, type InsertCptBillingCode, type Patient, type InsertPatient, type PatientCondition, type InsertPatientCondition, type PatientMedication, type InsertPatientMedication, type PatientAllergy, type InsertPatientAllergy, type PatientVital, type InsertPatientVital, type PatientInsurance, type InsertPatientInsurance, type ProgramEnrollment, type InsertProgramEnrollment, type CarePlan, type InsertCarePlan, type CarePlanItem, type InsertCarePlanItem, type TimeLog, type InsertTimeLog, type ClinicalTask, type InsertClinicalTask, type PatientAssessment, type InsertPatientAssessment, type CalendarEvent, type InsertCalendarEvent, type Claim, type InsertClaim, type CarePlanTemplate, type InsertCarePlanTemplate, type CarePlanTemplateItem, type InsertCarePlanTemplateItem } from "@shared/schema";
 import { db } from "./db";
 import { eq, and, desc, or, ilike, sql, gte, lte } from "drizzle-orm";
 
@@ -109,6 +109,26 @@ export interface IStorage {
   // Admin Users
   getAdminUsers(): Promise<AdminUser[]>;
   updateAdminUser(id: number, updates: Partial<InsertAdminUser>): Promise<AdminUser | undefined>;
+
+  // Care Plan Templates
+  getCarePlanTemplates(programType?: string): Promise<CarePlanTemplate[]>;
+  getCarePlanTemplate(id: number): Promise<CarePlanTemplate | undefined>;
+  createCarePlanTemplate(template: InsertCarePlanTemplate): Promise<CarePlanTemplate>;
+  updateCarePlanTemplate(id: number, updates: Partial<InsertCarePlanTemplate>): Promise<CarePlanTemplate | undefined>;
+  deleteCarePlanTemplate(id: number): Promise<void>;
+  getCarePlanTemplateItems(templateId: number): Promise<CarePlanTemplateItem[]>;
+  createCarePlanTemplateItem(item: InsertCarePlanTemplateItem): Promise<CarePlanTemplateItem>;
+  deleteCarePlanTemplateItem(id: number): Promise<void>;
+
+  // Dashboard Aggregates
+  getDashboardStats(userId?: number): Promise<{
+    totalPatients: number;
+    activeEnrollments: number;
+    pendingTasks: number;
+    todayEvents: number;
+    minutesThisMonth: number;
+  }>;
+  deleteTask(id: number): Promise<void>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -679,6 +699,107 @@ export class DatabaseStorage implements IStorage {
       .where(eq(adminUsers.id, id))
       .returning();
     return updated || undefined;
+  }
+
+  // ============================================================
+  // Care Plan Templates
+  // ============================================================
+
+  async getCarePlanTemplates(programType?: string): Promise<CarePlanTemplate[]> {
+    if (programType) {
+      return await db.select().from(carePlanTemplates)
+        .where(and(eq(carePlanTemplates.programType, programType), eq(carePlanTemplates.isActive, 1)))
+        .orderBy(carePlanTemplates.name);
+    }
+    return await db.select().from(carePlanTemplates)
+      .where(eq(carePlanTemplates.isActive, 1))
+      .orderBy(carePlanTemplates.name);
+  }
+
+  async getCarePlanTemplate(id: number): Promise<CarePlanTemplate | undefined> {
+    const [template] = await db.select().from(carePlanTemplates).where(eq(carePlanTemplates.id, id));
+    return template || undefined;
+  }
+
+  async createCarePlanTemplate(template: InsertCarePlanTemplate): Promise<CarePlanTemplate> {
+    const [result] = await db.insert(carePlanTemplates).values(template).returning();
+    return result;
+  }
+
+  async updateCarePlanTemplate(id: number, updates: Partial<InsertCarePlanTemplate>): Promise<CarePlanTemplate | undefined> {
+    const [updated] = await db.update(carePlanTemplates)
+      .set({ ...updates, updatedAt: new Date() })
+      .where(eq(carePlanTemplates.id, id))
+      .returning();
+    return updated || undefined;
+  }
+
+  async deleteCarePlanTemplate(id: number): Promise<void> {
+    await db.update(carePlanTemplates).set({ isActive: 0 }).where(eq(carePlanTemplates.id, id));
+  }
+
+  async getCarePlanTemplateItems(templateId: number): Promise<CarePlanTemplateItem[]> {
+    return await db.select().from(carePlanTemplateItems)
+      .where(eq(carePlanTemplateItems.templateId, templateId))
+      .orderBy(carePlanTemplateItems.sortOrder);
+  }
+
+  async createCarePlanTemplateItem(item: InsertCarePlanTemplateItem): Promise<CarePlanTemplateItem> {
+    const [result] = await db.insert(carePlanTemplateItems).values(item).returning();
+    return result;
+  }
+
+  async deleteCarePlanTemplateItem(id: number): Promise<void> {
+    await db.delete(carePlanTemplateItems).where(eq(carePlanTemplateItems.id, id));
+  }
+
+  // ============================================================
+  // Dashboard Aggregates
+  // ============================================================
+
+  async getDashboardStats(userId?: number): Promise<{
+    totalPatients: number;
+    activeEnrollments: number;
+    pendingTasks: number;
+    todayEvents: number;
+    minutesThisMonth: number;
+  }> {
+    const now = new Date();
+    const startOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    const endOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1);
+    const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+
+    const [patientCount] = await db.select({ count: sql<number>`count(*)` }).from(patients).where(eq(patients.status, "active"));
+    const [enrollmentCount] = await db.select({ count: sql<number>`count(*)` }).from(programEnrollments).where(eq(programEnrollments.status, "enrolled"));
+
+    const taskConditions = [
+      or(eq(clinicalTasks.status, "pending"), eq(clinicalTasks.status, "in_progress"))
+    ];
+    if (userId) taskConditions.push(eq(clinicalTasks.assignedTo, userId));
+    const [taskCount] = await db.select({ count: sql<number>`count(*)` }).from(clinicalTasks).where(and(...taskConditions));
+
+    const eventConditions = [
+      gte(calendarEvents.startTime, startOfDay),
+      lte(calendarEvents.startTime, endOfDay),
+    ];
+    if (userId) eventConditions.push(eq(calendarEvents.userId, userId));
+    const [eventCount] = await db.select({ count: sql<number>`count(*)` }).from(calendarEvents).where(and(...eventConditions));
+
+    const minuteConditions = [gte(timeLogs.createdAt, startOfMonth)];
+    if (userId) minuteConditions.push(eq(timeLogs.userId, userId));
+    const [minuteSum] = await db.select({ total: sql<number>`coalesce(sum(${timeLogs.durationSeconds}), 0)` }).from(timeLogs).where(and(...minuteConditions));
+
+    return {
+      totalPatients: Number(patientCount.count),
+      activeEnrollments: Number(enrollmentCount.count),
+      pendingTasks: Number(taskCount.count),
+      todayEvents: Number(eventCount.count),
+      minutesThisMonth: Math.round(Number(minuteSum.total) / 60),
+    };
+  }
+
+  async deleteTask(id: number): Promise<void> {
+    await db.delete(clinicalTasks).where(eq(clinicalTasks.id, id));
   }
 }
 
