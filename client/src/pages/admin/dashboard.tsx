@@ -1472,7 +1472,7 @@ export default function AdminDashboard() {
                 <BillingCodesTab />
               )}
 
-              {activeTab === "analytics" && <AnalyticsTab selectedMonth={selectedMonth} currentYear={currentYear} selectedPractice={selectedPracticeId === "all" ? "all" : String(selectedPracticeId)} />}
+              {activeTab === "analytics" && <AnalyticsTab selectedMonth={currentMonth} currentYear={currentYear} selectedPractice={selectedPracticeId === "all" ? "all" : String(selectedPracticeId)} />}
 
               {activeTab === "practices" && (
                 <Card>
