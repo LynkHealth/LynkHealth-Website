@@ -676,18 +676,37 @@ export function registerClinicalRoutes(app: Express) {
       const allPractices = await storage.getPractices();
       const practiceMap = new Map(allPractices.map(p => [p.id, p.name]));
 
-      const practiceData: Record<number, { name: string; revenue: number; claims: number; enrolled: number }> = {};
-      allRevenue.filter(s => !s.department).forEach(s => {
-        if (!practiceData[s.practiceId]) practiceData[s.practiceId] = { name: practiceMap.get(s.practiceId) || `Practice ${s.practiceId}`, revenue: 0, claims: 0, enrolled: 0 };
-        practiceData[s.practiceId].revenue += s.totalRevenue || 0;
-        practiceData[s.practiceId].claims += s.claimCount || 0;
+      const lynkPractice = allPractices.find(p => p.name.toLowerCase() === "your clinic");
+      const lynkId = lynkPractice?.id;
+
+      const practiceData: Record<string, { practiceId: number; department?: string; name: string; revenue: number; claims: number; enrolled: number }> = {};
+
+      allRevenue.forEach(s => {
+        if (s.practiceId === lynkId && s.department) {
+          const key = `${s.practiceId}:${s.department}`;
+          if (!practiceData[key]) practiceData[key] = { practiceId: s.practiceId, department: s.department, name: s.department, revenue: 0, claims: 0, enrolled: 0 };
+          practiceData[key].revenue += s.totalRevenue || 0;
+          practiceData[key].claims += s.claimCount || 0;
+        } else if (s.practiceId !== lynkId && !s.department) {
+          const key = `${s.practiceId}`;
+          if (!practiceData[key]) practiceData[key] = { practiceId: s.practiceId, name: practiceMap.get(s.practiceId) || `Practice ${s.practiceId}`, revenue: 0, claims: 0, enrolled: 0 };
+          practiceData[key].revenue += s.totalRevenue || 0;
+          practiceData[key].claims += s.claimCount || 0;
+        }
       });
-      allSnapshots.filter(s => !s.department).forEach(s => {
-        if (!practiceData[s.practiceId]) practiceData[s.practiceId] = { name: practiceMap.get(s.practiceId) || `Practice ${s.practiceId}`, revenue: 0, claims: 0, enrolled: 0 };
-        practiceData[s.practiceId].enrolled += s.patientsEnrolled || 0;
+      allSnapshots.forEach(s => {
+        if (s.practiceId === lynkId && s.department) {
+          const key = `${s.practiceId}:${s.department}`;
+          if (!practiceData[key]) practiceData[key] = { practiceId: s.practiceId, department: s.department, name: s.department, revenue: 0, claims: 0, enrolled: 0 };
+          practiceData[key].enrolled += s.patientsEnrolled || 0;
+        } else if (s.practiceId !== lynkId && !s.department) {
+          const key = `${s.practiceId}`;
+          if (!practiceData[key]) practiceData[key] = { practiceId: s.practiceId, name: practiceMap.get(s.practiceId) || `Practice ${s.practiceId}`, revenue: 0, claims: 0, enrolled: 0 };
+          practiceData[key].enrolled += s.patientsEnrolled || 0;
+        }
       });
 
-      res.json(Object.entries(practiceData).map(([id, data]) => ({ practiceId: parseInt(id), ...data })).sort((a, b) => b.revenue - a.revenue));
+      res.json(Object.values(practiceData).sort((a, b) => b.revenue - a.revenue));
     } catch (error) {
       res.status(500).json({ error: "Failed to get practice comparison" });
     }
