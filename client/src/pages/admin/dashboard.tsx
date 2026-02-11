@@ -254,8 +254,15 @@ const PROGRAM_COLORS: Record<string, string> = {
   TCM: "bg-orange-50 text-orange-700 border-orange-200",
 };
 
-function PracticeDetailView({ practice, onBack }: { practice: any; onBack: () => void }) {
+function PracticeDetailView({ practice, onBack, currentMonth, currentYear, lynkPracticeId }: { practice: any; onBack: () => void; currentMonth: string; currentYear: number; lynkPracticeId: number | null }) {
   const PROGRAMS = ["CCM", "RPM", "BHI", "PCM", "RTM", "APCM", "AWV", "TCM"];
+  const MONTHS_LIST = ["JAN", "FEB", "MAR", "APR", "MAY", "JUN", "JUL", "AUG", "SEP", "OCT", "NOV", "DEC"];
+  const MONTH_DISPLAY: Record<string, string> = {
+    JAN: "January", FEB: "February", MAR: "March", APR: "April",
+    MAY: "May", JUN: "June", JUL: "July", AUG: "August",
+    SEP: "September", OCT: "October", NOV: "November", DEC: "December"
+  };
+  const FTE_HOURS = 160;
   const now = new Date();
   const [rateProgram, setRateProgram] = useState("CCM");
   const [rateYear, setRateYear] = useState(now.getFullYear());
@@ -264,6 +271,9 @@ function PracticeDetailView({ practice, onBack }: { practice: any; onBack: () =>
   const [editingRateId, setEditingRateId] = useState<number | null>(null);
   const [editRateValue, setEditRateValue] = useState("");
   const [savingRate, setSavingRate] = useState(false);
+  const [staffMonth, setStaffMonth] = useState(currentMonth);
+  const [staffYear, setStaffYear] = useState(currentYear);
+  const [expandedStaffId, setExpandedStaffId] = useState<string | null>(null);
 
   const formatCurrency = (cents: number) => {
     return `$${(cents / 100).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
@@ -315,6 +325,58 @@ function PracticeDetailView({ practice, onBack }: { practice: any; onBack: () =>
 
   let depts: string[] = [];
   try { depts = practice.departments ? JSON.parse(practice.departments) : []; } catch {}
+
+  const isLynkPractice = practice.id === lynkPracticeId;
+  const staffingQuery = useQuery({
+    queryKey: ["/api/admin/staffing", "practice-detail", practice.id, staffMonth, staffYear],
+    queryFn: async () => {
+      const res = await adminFetch(`/api/admin/staffing?month=${staffMonth}&year=${staffYear}&practiceId=${practice.id}`);
+      if (!res.ok) throw new Error("Failed to fetch staffing data");
+      return res.json();
+    },
+  });
+
+  const staffRows = staffingQuery.data?.data || [];
+  type DeptBreakdown = { name: string; minutes: number; encounters: number; programs: Record<string, number> };
+  const staffMap = new Map<string, { id: string; name: string; role: string; totalMinutes: number; logCount: number; programs: Record<string, number>; deptBreakdown: Map<string, DeptBreakdown> }>();
+  for (const r of staffRows) {
+    const key = r.staffTcId || r.staffName || "Unknown";
+    if (!staffMap.has(key)) {
+      staffMap.set(key, { id: key, name: r.staffName || "Unknown", role: r.staffRole || "Unknown", totalMinutes: 0, logCount: 0, programs: {}, deptBreakdown: new Map() });
+    }
+    const entry = staffMap.get(key)!;
+    const mins = Number(r.totalMinutes) || 0;
+    const logs = Number(r.logCount) || 0;
+    entry.totalMinutes += mins;
+    entry.logCount += logs;
+    entry.programs[r.programType] = (entry.programs[r.programType] || 0) + mins;
+    if (isLynkPractice && r.department) {
+      const dk = r.department;
+      if (!entry.deptBreakdown.has(dk)) entry.deptBreakdown.set(dk, { name: dk, minutes: 0, encounters: 0, programs: {} });
+      const db = entry.deptBreakdown.get(dk)!;
+      db.minutes += mins;
+      db.encounters += logs;
+      db.programs[r.programType] = (db.programs[r.programType] || 0) + mins;
+    }
+  }
+  const practiceStaffList = Array.from(staffMap.values()).sort((a, b) => b.totalMinutes - a.totalMinutes);
+  const practiceTotalMinutes = practiceStaffList.reduce((sum, s) => sum + s.totalMinutes, 0);
+  const practiceTotalHours = Math.round(practiceTotalMinutes / 60 * 10) / 10;
+  const practiceTotalFTE = Math.round(practiceTotalHours / FTE_HOURS * 100) / 100;
+  const practiceTotalLogs = practiceStaffList.reduce((sum, s) => sum + s.logCount, 0);
+  const practiceProgramTotals: Record<string, number> = {};
+  for (const s of practiceStaffList) {
+    for (const [prog, mins] of Object.entries(s.programs)) {
+      practiceProgramTotals[prog] = (practiceProgramTotals[prog] || 0) + mins;
+    }
+  }
+
+  const programColors: Record<string, string> = {
+    CCM: "bg-blue-50 text-blue-700", BHI: "bg-purple-50 text-purple-700",
+    RPM: "bg-emerald-50 text-emerald-700", RTM: "bg-teal-50 text-teal-700",
+    PCM: "bg-orange-50 text-orange-700", APCM: "bg-rose-50 text-rose-700",
+    AWV: "bg-cyan-50 text-cyan-700", TCM: "bg-amber-50 text-amber-700",
+  };
 
   return (
     <div className="space-y-4">
@@ -438,6 +500,145 @@ function PracticeDetailView({ practice, onBack }: { practice: any; onBack: () =>
                 </tbody>
               </table>
             </div>
+          )}
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader className="pb-3">
+          <div className="flex items-center justify-between">
+            <CardTitle className="text-base">Staffing Overview</CardTitle>
+            <div className="flex gap-2">
+              <select className="border rounded px-2 py-1 text-xs" value={staffMonth} onChange={(e) => setStaffMonth(e.target.value)}>
+                {MONTHS_LIST.map(m => <option key={m} value={m}>{MONTH_DISPLAY[m]}</option>)}
+              </select>
+              <select className="border rounded px-2 py-1 text-xs" value={staffYear} onChange={(e) => setStaffYear(parseInt(e.target.value))}>
+                {[2024, 2025, 2026].map(y => <option key={y} value={y}>{y}</option>)}
+              </select>
+            </div>
+          </div>
+        </CardHeader>
+        <CardContent>
+          {staffingQuery.isLoading ? (
+            <div className="flex items-center justify-center py-8">
+              <Loader2 className="w-5 h-5 animate-spin text-slate-400" />
+            </div>
+          ) : practiceStaffList.length === 0 ? (
+            <p className="text-sm text-slate-500 text-center py-6">No staffing data for {MONTH_DISPLAY[staffMonth]} {staffYear}.</p>
+          ) : (
+            <>
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-4">
+                <div className="bg-slate-50 rounded-lg p-3 text-center">
+                  <p className="text-xs text-slate-500">Staff</p>
+                  <p className="text-xl font-bold">{practiceStaffList.length}</p>
+                </div>
+                <div className="bg-blue-50 rounded-lg p-3 text-center">
+                  <p className="text-xs text-slate-500">Total Hours</p>
+                  <p className="text-xl font-bold text-blue-700">{practiceTotalHours.toLocaleString()}</p>
+                </div>
+                <div className="bg-emerald-50 rounded-lg p-3 text-center">
+                  <p className="text-xs text-slate-500">FTE</p>
+                  <p className="text-xl font-bold text-emerald-700">{practiceTotalFTE.toFixed(2)}</p>
+                </div>
+                <div className="bg-amber-50 rounded-lg p-3 text-center">
+                  <p className="text-xs text-slate-500">Encounters</p>
+                  <p className="text-xl font-bold text-amber-700">{practiceTotalLogs.toLocaleString()}</p>
+                </div>
+              </div>
+
+              <div className="flex flex-wrap gap-1.5 mb-4">
+                {Object.entries(practiceProgramTotals).sort((a, b) => b[1] - a[1]).map(([prog, mins]) => (
+                  <span key={prog} className={`px-2 py-1 rounded text-xs font-medium ${programColors[prog] || "bg-slate-50 text-slate-700"}`}>
+                    {prog}: {Math.round(mins / 60 * 10) / 10}h
+                  </span>
+                ))}
+              </div>
+
+              <div className="overflow-x-auto">
+                <table className="w-full text-sm">
+                  <thead>
+                    <tr className="border-b bg-slate-50">
+                      <th className="text-left py-2 px-3 font-medium">Staff Member</th>
+                      <th className="text-right py-2 px-3 font-medium">Hours</th>
+                      <th className="text-center py-2 px-3 font-medium">FTE</th>
+                      <th className="text-right py-2 px-3 font-medium">Encounters</th>
+                      <th className="text-left py-2 px-3 font-medium">Program Breakdown</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {practiceStaffList.map((s) => {
+                      const hrs = Math.round(s.totalMinutes / 60 * 10) / 10;
+                      const fte = Math.round(hrs / FTE_HOURS * 100) / 100;
+                      const deptBreakdowns = Array.from(s.deptBreakdown.values()).sort((a, b) => b.minutes - a.minutes);
+                      const hasDepts = isLynkPractice && deptBreakdowns.length > 1;
+                      const isOpen = expandedStaffId === s.id;
+                      return (
+                        <Fragment key={s.id}>
+                          <tr className={`border-b hover:bg-slate-50 ${hasDepts ? "cursor-pointer" : ""} ${isOpen ? "bg-blue-50/50" : ""}`} onClick={() => hasDepts && setExpandedStaffId(isOpen ? null : s.id)}>
+                            <td className="py-2 px-3">
+                              <div className="flex items-center gap-1.5">
+                                {hasDepts ? (
+                                  isOpen ? <ChevronUp className="h-3.5 w-3.5 text-slate-400 flex-shrink-0" /> : <ChevronDown className="h-3.5 w-3.5 text-slate-400 flex-shrink-0" />
+                                ) : <span className="w-3.5" />}
+                                <span className="font-medium">{s.name}</span>
+                                <span className="text-xs text-slate-400">{s.role}</span>
+                              </div>
+                            </td>
+                            <td className="py-2 px-3 text-right tabular-nums">{hrs.toLocaleString()}</td>
+                            <td className="py-2 px-3 text-center">
+                              <span className={`px-2 py-0.5 rounded text-xs font-medium ${
+                                fte >= 1 ? "bg-green-100 text-green-700" : fte >= 0.5 ? "bg-amber-100 text-amber-700" : "bg-slate-100 text-slate-600"
+                              }`}>{fte.toFixed(2)}</span>
+                            </td>
+                            <td className="py-2 px-3 text-right tabular-nums">{s.logCount.toLocaleString()}</td>
+                            <td className="py-2 px-3">
+                              <div className="flex flex-wrap gap-1">
+                                {Object.entries(s.programs).sort((a, b) => b[1] - a[1]).map(([prog, mins]) => (
+                                  <span key={prog} className={`px-1.5 py-0.5 rounded text-xs font-medium ${programColors[prog] || "bg-slate-50 text-slate-700"}`}>
+                                    {prog}: {Math.round(mins / 60 * 10) / 10}h
+                                  </span>
+                                ))}
+                              </div>
+                            </td>
+                          </tr>
+                          {isOpen && deptBreakdowns.map((db, j) => {
+                            const dbHrs = Math.round(db.minutes / 60 * 10) / 10;
+                            return (
+                              <tr key={`dept-${j}`} className="border-b bg-slate-50/80">
+                                <td className="py-1.5 px-3 pl-10">
+                                  <span className="text-xs text-slate-500 font-medium">{db.name}</span>
+                                </td>
+                                <td className="py-1.5 px-3 text-right tabular-nums text-xs text-slate-600">{dbHrs.toLocaleString()}</td>
+                                <td className="py-1.5 px-3 text-center text-xs text-slate-400">—</td>
+                                <td className="py-1.5 px-3 text-right tabular-nums text-xs text-slate-600">{db.encounters.toLocaleString()}</td>
+                                <td className="py-1.5 px-3">
+                                  <div className="flex flex-wrap gap-1">
+                                    {Object.entries(db.programs).sort((a, b) => b[1] - a[1]).map(([prog, mins]) => (
+                                      <span key={prog} className={`px-1.5 py-0.5 rounded text-[10px] font-medium ${programColors[prog] || "bg-slate-50 text-slate-700"}`}>
+                                        {prog}: {Math.round(mins / 60 * 10) / 10}h
+                                      </span>
+                                    ))}
+                                  </div>
+                                </td>
+                              </tr>
+                            );
+                          })}
+                        </Fragment>
+                      );
+                    })}
+                  </tbody>
+                  <tfoot>
+                    <tr className="bg-slate-100 font-bold">
+                      <td className="py-2 px-3">Total ({practiceStaffList.length} staff)</td>
+                      <td className="py-2 px-3 text-right">{practiceTotalHours.toLocaleString()}</td>
+                      <td className="py-2 px-3 text-center">{practiceTotalFTE.toFixed(2)}</td>
+                      <td className="py-2 px-3 text-right">{practiceTotalLogs.toLocaleString()}</td>
+                      <td className="py-2 px-3"></td>
+                    </tr>
+                  </tfoot>
+                </table>
+              </div>
+            </>
           )}
         </CardContent>
       </Card>
@@ -2492,7 +2693,7 @@ export default function AdminDashboard() {
                 if (practiceDetailId !== null) {
                   const detailPractice = practices.find(p => p.id === practiceDetailId);
                   if (!detailPractice) return null;
-                  return <PracticeDetailView practice={detailPractice} onBack={() => setPracticeDetailId(null)} />;
+                  return <PracticeDetailView practice={detailPractice} onBack={() => setPracticeDetailId(null)} currentMonth={currentMonth} currentYear={currentYear} lynkPracticeId={lynkPracticeId} />;
                 }
 
                 const activePractices = otherPractices.filter(p => p.status === "active");
