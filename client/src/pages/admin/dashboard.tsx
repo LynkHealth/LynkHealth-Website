@@ -939,6 +939,7 @@ function StaffingTab({ practices, currentMonth, currentYear, lynkPracticeId, dep
                       <th className="text-right py-2 px-3 font-medium">Hours</th>
                       <th className="text-center py-2 px-3 font-medium">FTE</th>
                       <th className="text-right py-2 px-3 font-medium">Encounters</th>
+                      <th className="text-right py-2 px-3 font-medium">New Enrollments</th>
                       <th className="text-left py-2 px-3 font-medium">Practices</th>
                       <th className="text-left py-2 px-3 font-medium">Programs</th>
                     </tr>
@@ -996,6 +997,15 @@ function StaffingTab({ practices, currentMonth, currentYear, lynkPracticeId, dep
                             }`}>{fte.toFixed(2)}</span>
                           </td>
                           <td className="py-2 px-3 text-right tabular-nums">{s.logCount.toLocaleString()}</td>
+                          <td className="py-2 px-3 text-right tabular-nums">
+                            {s.role === "Enrollment Specialist" && enrollmentData?.totalNewEnrollments != null ? (
+                              <span className="px-2 py-0.5 rounded text-xs font-bold bg-amber-100 text-amber-700">
+                                +{enrollmentData.totalNewEnrollments}
+                              </span>
+                            ) : (
+                              <span className="text-slate-300">—</span>
+                            )}
+                          </td>
                           <td className="py-2 px-3 text-xs text-slate-600 max-w-[200px]" title={practiceNames}>
                             <div className="truncate">{practiceNames || "—"}</div>
                           </td>
@@ -1023,6 +1033,7 @@ function StaffingTab({ practices, currentMonth, currentYear, lynkPracticeId, dep
                               <td className="py-1.5 px-3 text-center text-xs text-slate-400">—</td>
                               <td className="py-1.5 px-3 text-right tabular-nums text-xs text-slate-600">{pb.encounters.toLocaleString()}</td>
                               <td className="py-1.5 px-3"></td>
+                              <td className="py-1.5 px-3"></td>
                               <td className="py-1.5 px-3">
                                 <div className="flex flex-wrap gap-1">
                                   {Object.entries(pb.programs).sort((a, b) => b[1] - a[1]).map(([prog, mins]) => (
@@ -1047,6 +1058,11 @@ function StaffingTab({ practices, currentMonth, currentYear, lynkPracticeId, dep
                       <td className="py-2 px-3 text-right">{totalHours.toLocaleString()}</td>
                       <td className="py-2 px-3 text-center">{totalFTE.toFixed(2)}</td>
                       <td className="py-2 px-3 text-right">{totalLogs.toLocaleString()}</td>
+                      <td className="py-2 px-3 text-right">
+                        {enrollmentData?.totalNewEnrollments != null && enrollmentData.totalNewEnrollments > 0 ? (
+                          <span className="font-bold text-amber-700">+{enrollmentData.totalNewEnrollments}</span>
+                        ) : ""}
+                      </td>
                       <td className="py-2 px-3"></td>
                       <td className="py-2 px-3"></td>
                     </tr>
