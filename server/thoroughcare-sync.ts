@@ -6,6 +6,7 @@ import {
   fetchCarePlansForPatientsBatch,
   fetchClaimsForPeriod,
   fetchAllClaims,
+  fetchPractitioners,
 } from "./thoroughcare-client";
 import { db } from "./db";
 import { practices, programSnapshots, revenueSnapshots, revenueByCode, tcSyncLog, tcStaffTimeLogs } from "@shared/schema";
@@ -523,12 +524,58 @@ interface TimeData {
   patientMinutes: Map<string, Map<string, number>>;
 }
 
+let practitionerCache: Map<string, { name: string; role: string }> | null = null;
+
+async function getPractitionerMap(): Promise<Map<string, { name: string; role: string }>> {
+  if (practitionerCache) return practitionerCache;
+
+  updateProgress("Practitioners", 50, "Fetching practitioner directory...");
+  const practitioners = await fetchPractitioners();
+  const map = new Map<string, { name: string; role: string }>();
+
+  for (const p of practitioners) {
+    const id = String(p.id);
+    const name = p.name?.text || `${p.name?.given?.[0] || ""} ${p.name?.family || ""}`.trim() || "Unknown";
+
+    const roleExt = p.extension?.find((e: any) =>
+      e.url === "http://hl7.org/fhir/StructureDefinition/Coding" &&
+      e.value?.system?.includes("user_roles")
+    );
+    const roleCode = roleExt?.value?.code || "";
+
+    const roleMap: Record<string, string> = {
+      care_manager: "Care Manager",
+      practice_admin: "Practice Admin",
+      customer_admin: "Admin",
+      nurse: "Nurse",
+      provider: "Provider",
+      developer: "Developer",
+      basic_reporting: "Reporting",
+      inactive: "Inactive",
+      enrollment_specialist: "Enrollment Specialist",
+    };
+    const role = roleMap[roleCode] || roleCode || "Staff";
+
+    map.set(id, { name, role });
+  }
+
+  practitionerCache = map;
+  console.log(`[TC Sync] Built practitioner lookup with ${map.size} entries`);
+  return map;
+}
+
+export function clearPractitionerCache() {
+  practitionerCache = null;
+}
+
 async function syncTimeLogs(month: string, year: number, patientData?: PatientData): Promise<TimeData> {
   const monthIdx = MONTHS.indexOf(month);
   const startDate = new Date(year, monthIdx, 1);
   const endDate = new Date(year, monthIdx + 1, 1);
   const startStr = startDate.toISOString().split("T")[0];
   const endStr = endDate.toISOString().split("T")[0];
+
+  const practMap = await getPractitionerMap();
 
   let tasks: any[];
   try {
@@ -582,20 +629,23 @@ async function syncTimeLogs(month: string, year: number, patientData?: PatientDa
     const programMins = patientMinutes.get(patientId)!;
     programMins.set(programCode, (programMins.get(programCode) || 0) + minutes);
 
-    const ownerRef = task.owner?.reference || "";
-    const ownerDisplay = task.owner?.display || "";
-    const staffTcId = ownerRef.replace("Practitioner/", "").replace("PractitionerRole/", "") || null;
-    const staffName = ownerDisplay || null;
+    let staffTcId: string | null = null;
+    let staffName: string | null = null;
+    let staffRole: string | null = null;
 
-    const qualifications = task.owner?.extension?.find((e: any) => e.url === "qualification")?.value;
-    let staffRole = qualifications || null;
-    if (!staffRole && ownerDisplay) {
-      const lowerName = ownerDisplay.toLowerCase();
-      if (lowerName.includes("rn") || lowerName.includes("nurse")) staffRole = "Nurse";
-      else if (lowerName.includes("lpn")) staffRole = "LPN";
-      else if (lowerName.includes("ma") || lowerName.includes("assistant")) staffRole = "Medical Assistant";
-      else if (lowerName.includes("enrollment")) staffRole = "Enrollment Specialist";
-      else staffRole = "Care Coordinator";
+    const performedBy = task.performer?.find((p: any) =>
+      p.function?.coding?.[0]?.code === "performed-by"
+    );
+    const performerRef = performedBy?.actor?.reference || task.performer?.[0]?.actor?.reference || "";
+    if (performerRef) {
+      staffTcId = performerRef.replace("Practitioner/", "").replace("PractitionerRole/", "") || null;
+      if (staffTcId) {
+        const practInfo = practMap.get(staffTcId);
+        if (practInfo) {
+          staffName = practInfo.name;
+          staffRole = practInfo.role;
+        }
+      }
     }
 
     let dbPracticeId: number | null = null;

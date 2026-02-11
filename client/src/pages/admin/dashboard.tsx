@@ -503,12 +503,13 @@ function StaffingTab({ practices, currentMonth, currentYear, lynkPracticeId }: {
   }
 
   const exportCSV = () => {
-    const header = "Staff Name,Role,Total Hours,FTE,Encounters,Programs\n";
+    const header = "Staff Name,Role,Total Hours,FTE,Encounters,Practices,Programs\n";
     const csvRows = staffList.map(s => {
       const hours = Math.round(s.totalMinutes / 60 * 10) / 10;
       const fte = Math.round(hours / FTE_HOURS * 100) / 100;
       const programs = Object.entries(s.programs).map(([k, v]) => `${k}: ${Math.round(v / 60 * 10) / 10}h`).join("; ");
-      return `"${s.name}","${s.role}",${hours},${fte},${s.logCount},"${programs}"`;
+      const practiceNames = Array.from(s.practiceIds).map(id => practiceNameMap.get(id) || "").filter(Boolean).join("; ");
+      return `"${s.name}","${s.role}",${hours},${fte},${s.logCount},"${practiceNames}","${programs}"`;
     });
     const blob = new Blob([header + csvRows.join("\n")], { type: "text/csv" });
     const url = URL.createObjectURL(blob);
@@ -518,6 +519,19 @@ function StaffingTab({ practices, currentMonth, currentYear, lynkPracticeId }: {
     a.click();
     URL.revokeObjectURL(url);
   };
+
+  const programColors: Record<string, string> = {
+    CCM: "bg-blue-50 text-blue-700",
+    BHI: "bg-purple-50 text-purple-700",
+    RPM: "bg-emerald-50 text-emerald-700",
+    RTM: "bg-teal-50 text-teal-700",
+    PCM: "bg-orange-50 text-orange-700",
+    APCM: "bg-rose-50 text-rose-700",
+    AWV: "bg-cyan-50 text-cyan-700",
+    TCM: "bg-amber-50 text-amber-700",
+  };
+
+  const avgHoursPerStaff = staffList.length > 0 ? Math.round(totalHours / staffList.length * 10) / 10 : 0;
 
   return (
     <div className="space-y-4">
@@ -537,171 +551,121 @@ function StaffingTab({ practices, currentMonth, currentYear, lynkPracticeId }: {
         </button>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+      {isLoading ? (
+        <div className="flex items-center justify-center py-12">
+          <div className="animate-spin h-6 w-6 border-2 border-blue-500 rounded-full border-t-transparent" />
+          <span className="ml-2 text-sm text-slate-500">Loading staffing data...</span>
+        </div>
+      ) : staffList.length === 0 ? (
         <Card>
-          <CardContent className="pt-4 pb-3">
-            <p className="text-xs text-slate-500 uppercase tracking-wide">Total Staff</p>
-            <p className="text-2xl font-bold mt-1">{staffList.length}</p>
+          <CardContent className="py-12 text-center">
+            <p className="text-slate-500">No staffing data for {MONTH_DISPLAY[selectedMonth]} {selectedYear}.</p>
+            <p className="text-sm text-slate-400 mt-1">Run a ThoroughCare sync to populate this report.</p>
           </CardContent>
         </Card>
-        <Card>
-          <CardContent className="pt-4 pb-3">
-            <p className="text-xs text-slate-500 uppercase tracking-wide">Total Hours</p>
-            <p className="text-2xl font-bold mt-1">{totalHours.toLocaleString()}</p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="pt-4 pb-3">
-            <p className="text-xs text-slate-500 uppercase tracking-wide">Total FTEs</p>
-            <p className="text-2xl font-bold mt-1">{totalFTE}</p>
-            <p className="text-xs text-slate-400">Based on {FTE_HOURS}h/month</p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="pt-4 pb-3">
-            <p className="text-xs text-slate-500 uppercase tracking-wide">Total Encounters</p>
-            <p className="text-2xl font-bold mt-1">{totalLogs.toLocaleString()}</p>
-          </CardContent>
-        </Card>
-      </div>
+      ) : (
+        <>
+          <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
+            <Card>
+              <CardContent className="pt-4 pb-3">
+                <p className="text-xs text-slate-500 uppercase tracking-wide">Active Staff</p>
+                <p className="text-2xl font-bold mt-1">{staffList.length}</p>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardContent className="pt-4 pb-3">
+                <p className="text-xs text-slate-500 uppercase tracking-wide">Total Hours</p>
+                <p className="text-2xl font-bold mt-1">{totalHours.toLocaleString()}</p>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardContent className="pt-4 pb-3">
+                <p className="text-xs text-slate-500 uppercase tracking-wide">FTEs</p>
+                <p className="text-2xl font-bold mt-1">{totalFTE}</p>
+                <p className="text-xs text-slate-400">{FTE_HOURS}h/month</p>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardContent className="pt-4 pb-3">
+                <p className="text-xs text-slate-500 uppercase tracking-wide">Avg Hours/Staff</p>
+                <p className="text-2xl font-bold mt-1">{avgHoursPerStaff}</p>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardContent className="pt-4 pb-3">
+                <p className="text-xs text-slate-500 uppercase tracking-wide">Total Encounters</p>
+                <p className="text-2xl font-bold mt-1">{totalLogs.toLocaleString()}</p>
+              </CardContent>
+            </Card>
+          </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-        <Card className="lg:col-span-2">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-base">Hours by Role</CardTitle>
-          </CardHeader>
-          <CardContent>
-            {roleSummary.length === 0 ? (
-              <p className="text-sm text-slate-500">No data available. Run a ThoroughCare sync to populate staffing data.</p>
-            ) : (
-              <div className="space-y-2">
-                {roleSummary.map(([role, mins]) => {
-                  const hours = Math.round(mins / 60 * 10) / 10;
-                  const fte = Math.round(hours / FTE_HOURS * 100) / 100;
-                  const pct = totalMinutes > 0 ? Math.round(mins / totalMinutes * 100) : 0;
-                  return (
-                    <div key={role} className="flex items-center gap-3">
-                      <span className="text-sm w-40 truncate font-medium">{role}</span>
-                      <div className="flex-1 bg-slate-100 rounded-full h-5 relative">
-                        <div className="bg-blue-500 h-5 rounded-full transition-all" style={{ width: `${pct}%` }} />
-                        <span className="absolute inset-0 flex items-center justify-center text-xs font-medium">
-                          {hours}h ({fte} FTE)
-                        </span>
-                      </div>
-                      <span className="text-xs text-slate-500 w-10 text-right">{pct}%</span>
-                    </div>
-                  );
-                })}
-              </div>
-            )}
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-base">FTE Summary</CardTitle>
-          </CardHeader>
-          <CardContent>
-            {roleSummary.length === 0 ? (
-              <p className="text-sm text-slate-500">No data yet.</p>
-            ) : (
+          <Card>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-base">Staff Detail — {MONTH_DISPLAY[selectedMonth]} {selectedYear}</CardTitle>
+            </CardHeader>
+            <CardContent>
               <div className="overflow-x-auto">
                 <table className="w-full text-sm">
                   <thead>
-                    <tr className="border-b">
-                      <th className="text-left py-1.5 font-medium">Role</th>
-                      <th className="text-right py-1.5 font-medium">FTEs</th>
+                    <tr className="border-b bg-slate-50">
+                      <th className="text-left py-2 px-3 font-medium">Staff Member</th>
+                      <th className="text-right py-2 px-3 font-medium">Hours</th>
+                      <th className="text-center py-2 px-3 font-medium">FTE</th>
+                      <th className="text-right py-2 px-3 font-medium">Encounters</th>
+                      <th className="text-left py-2 px-3 font-medium">Practices</th>
+                      <th className="text-left py-2 px-3 font-medium">Program Breakdown</th>
                     </tr>
                   </thead>
                   <tbody>
-                    {roleSummary.map(([role, mins]) => (
-                      <tr key={role} className="border-b">
-                        <td className="py-1.5">{role}</td>
-                        <td className="py-1.5 text-right font-medium">{(Math.round(mins / 60 / FTE_HOURS * 100) / 100).toFixed(2)}</td>
-                      </tr>
-                    ))}
-                    <tr className="font-bold bg-slate-50">
-                      <td className="py-1.5">Total</td>
-                      <td className="py-1.5 text-right">{totalFTE.toFixed(2)}</td>
-                    </tr>
+                    {staffList.map((s, i) => {
+                      const hours = Math.round(s.totalMinutes / 60 * 10) / 10;
+                      const fte = Math.round(hours / FTE_HOURS * 100) / 100;
+                      const practiceNames = Array.from(s.practiceIds).map(id => practiceNameMap.get(id) || "—").join(", ");
+                      return (
+                        <tr key={i} className="border-b hover:bg-slate-50">
+                          <td className="py-2 px-3">
+                            <span className="font-medium">{s.name}</span>
+                            <span className="text-xs text-slate-400 ml-2">{s.role}</span>
+                          </td>
+                          <td className="py-2 px-3 text-right tabular-nums">{hours.toLocaleString()}</td>
+                          <td className="py-2 px-3 text-center">
+                            <span className={`px-2 py-0.5 rounded text-xs font-medium ${
+                              fte >= 1 ? "bg-green-100 text-green-700" : fte >= 0.5 ? "bg-amber-100 text-amber-700" : "bg-slate-100 text-slate-600"
+                            }`}>{fte.toFixed(2)}</span>
+                          </td>
+                          <td className="py-2 px-3 text-right tabular-nums">{s.logCount.toLocaleString()}</td>
+                          <td className="py-2 px-3 text-xs text-slate-600 max-w-[160px] truncate" title={practiceNames}>
+                            {practiceNames || "—"}
+                          </td>
+                          <td className="py-2 px-3">
+                            <div className="flex flex-wrap gap-1">
+                              {Object.entries(s.programs).sort((a, b) => b[1] - a[1]).map(([prog, mins]) => (
+                                <span key={prog} className={`px-1.5 py-0.5 rounded text-xs font-medium ${programColors[prog] || "bg-slate-50 text-slate-700"}`}>
+                                  {prog}: {Math.round(mins / 60 * 10) / 10}h
+                                </span>
+                              ))}
+                            </div>
+                          </td>
+                        </tr>
+                      );
+                    })}
                   </tbody>
+                  <tfoot>
+                    <tr className="bg-slate-100 font-bold">
+                      <td className="py-2 px-3">Total ({staffList.length} staff)</td>
+                      <td className="py-2 px-3 text-right">{totalHours.toLocaleString()}</td>
+                      <td className="py-2 px-3 text-center">{totalFTE.toFixed(2)}</td>
+                      <td className="py-2 px-3 text-right">{totalLogs.toLocaleString()}</td>
+                      <td className="py-2 px-3"></td>
+                      <td className="py-2 px-3"></td>
+                    </tr>
+                  </tfoot>
                 </table>
               </div>
-            )}
-          </CardContent>
-        </Card>
-      </div>
-
-      <Card>
-        <CardHeader className="pb-2">
-          <CardTitle className="text-base">Staff Detail — {MONTH_DISPLAY[selectedMonth]} {selectedYear}</CardTitle>
-        </CardHeader>
-        <CardContent>
-          {isLoading ? (
-            <div className="flex items-center justify-center py-8">
-              <div className="animate-spin h-6 w-6 border-2 border-blue-500 rounded-full border-t-transparent" />
-              <span className="ml-2 text-sm text-slate-500">Loading staffing data...</span>
-            </div>
-          ) : staffList.length === 0 ? (
-            <p className="text-sm text-slate-500 text-center py-6">
-              No staffing data for this period. Run a ThoroughCare sync (with the current month selected) to populate this report.
-            </p>
-          ) : (
-            <div className="overflow-x-auto">
-              <table className="w-full text-sm">
-                <thead>
-                  <tr className="border-b bg-slate-50">
-                    <th className="text-left py-2 px-3 font-medium">Staff Name</th>
-                    <th className="text-left py-2 px-3 font-medium">Role</th>
-                    <th className="text-right py-2 px-3 font-medium">Hours</th>
-                    <th className="text-right py-2 px-3 font-medium">FTE</th>
-                    <th className="text-right py-2 px-3 font-medium">Encounters</th>
-                    <th className="text-left py-2 px-3 font-medium">Programs</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {staffList.map((s, i) => {
-                    const hours = Math.round(s.totalMinutes / 60 * 10) / 10;
-                    const fte = Math.round(hours / FTE_HOURS * 100) / 100;
-                    return (
-                      <tr key={i} className="border-b hover:bg-slate-50">
-                        <td className="py-2 px-3 font-medium">{s.name}</td>
-                        <td className="py-2 px-3 text-slate-600">{s.role}</td>
-                        <td className="py-2 px-3 text-right">{hours.toLocaleString()}</td>
-                        <td className="py-2 px-3 text-right">
-                          <span className={`px-2 py-0.5 rounded text-xs font-medium ${
-                            fte >= 1 ? "bg-green-100 text-green-700" : fte >= 0.5 ? "bg-amber-100 text-amber-700" : "bg-slate-100 text-slate-600"
-                          }`}>{fte.toFixed(2)}</span>
-                        </td>
-                        <td className="py-2 px-3 text-right">{s.logCount.toLocaleString()}</td>
-                        <td className="py-2 px-3">
-                          <div className="flex flex-wrap gap-1">
-                            {Object.entries(s.programs).sort((a, b) => b[1] - a[1]).map(([prog, mins]) => (
-                              <span key={prog} className="bg-blue-50 text-blue-700 px-1.5 py-0.5 rounded text-xs">
-                                {prog}: {Math.round(mins / 60 * 10) / 10}h
-                              </span>
-                            ))}
-                          </div>
-                        </td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-                <tfoot>
-                  <tr className="bg-slate-100 font-bold">
-                    <td className="py-2 px-3">Total ({staffList.length} staff)</td>
-                    <td className="py-2 px-3"></td>
-                    <td className="py-2 px-3 text-right">{totalHours.toLocaleString()}</td>
-                    <td className="py-2 px-3 text-right">{totalFTE.toFixed(2)}</td>
-                    <td className="py-2 px-3 text-right">{totalLogs.toLocaleString()}</td>
-                    <td className="py-2 px-3"></td>
-                  </tr>
-                </tfoot>
-              </table>
-            </div>
-          )}
-        </CardContent>
-      </Card>
+            </CardContent>
+          </Card>
+        </>
+      )}
     </div>
   );
 }
