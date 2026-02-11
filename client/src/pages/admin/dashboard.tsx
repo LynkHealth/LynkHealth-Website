@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, Fragment } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useLocation, Link } from "wouter";
 import { Button } from "@/components/ui/button";
@@ -456,6 +456,7 @@ function StaffingTab({ practices, currentMonth, currentYear, lynkPracticeId, dep
   const [selectedMonth, setSelectedMonth] = useState(currentMonth);
   const [selectedYear, setSelectedYear] = useState(currentYear);
   const [selectedPractice, setSelectedPractice] = useState<string>("all");
+  const [expandedStaff, setExpandedStaff] = useState<Set<string>>(new Set());
 
   const lynkDepts = lynkPracticeId && departmentsByPractice[lynkPracticeId] ? departmentsByPractice[lynkPracticeId] : [];
 
@@ -479,23 +480,49 @@ function StaffingTab({ practices, currentMonth, currentYear, lynkPracticeId, dep
 
   const rows = data?.data || [];
 
-  const staffMap = new Map<string, { name: string; role: string; totalMinutes: number; logCount: number; programs: Record<string, number>; practiceIds: Set<number>; departments: Set<string> }>();
+  const otherPractices = practices.filter(p => p.id !== lynkPracticeId && p.status === "active");
+  const practiceNameMap = new Map<number, string>();
+  for (const p of practices) {
+    if (p.id === lynkPracticeId) continue;
+    practiceNameMap.set(p.id, p.name);
+  }
+
+  type PracticeBreakdown = { name: string; minutes: number; encounters: number; programs: Record<string, number> };
+  const staffMap = new Map<string, { id: string; name: string; role: string; totalMinutes: number; logCount: number; programs: Record<string, number>; practiceIds: Set<number>; departments: Set<string>; practiceBreakdown: Map<string, PracticeBreakdown> }>();
   for (const r of rows) {
     const key = r.staffTcId || r.staffName || "Unknown";
     if (!staffMap.has(key)) {
-      staffMap.set(key, { name: r.staffName || "Unknown", role: r.staffRole || "Unknown", totalMinutes: 0, logCount: 0, programs: {}, practiceIds: new Set(), departments: new Set() });
+      staffMap.set(key, { id: key, name: r.staffName || "Unknown", role: r.staffRole || "Unknown", totalMinutes: 0, logCount: 0, programs: {}, practiceIds: new Set(), departments: new Set(), practiceBreakdown: new Map() });
     }
     const entry = staffMap.get(key)!;
-    entry.totalMinutes += Number(r.totalMinutes) || 0;
-    entry.logCount += Number(r.logCount) || 0;
-    entry.programs[r.programType] = (entry.programs[r.programType] || 0) + (Number(r.totalMinutes) || 0);
+    const mins = Number(r.totalMinutes) || 0;
+    const logs = Number(r.logCount) || 0;
+    entry.totalMinutes += mins;
+    entry.logCount += logs;
+    entry.programs[r.programType] = (entry.programs[r.programType] || 0) + mins;
     if (r.practiceId) entry.practiceIds.add(r.practiceId);
     if (r.department && r.practiceId === lynkPracticeId) {
       entry.departments.add(r.department);
     }
+    const practiceName = (r.department && r.practiceId === lynkPracticeId) ? r.department : (r.practiceId ? (practiceNameMap.get(r.practiceId) || "Unknown") : "Unknown");
+    const pbKey = practiceName;
+    if (!entry.practiceBreakdown.has(pbKey)) {
+      entry.practiceBreakdown.set(pbKey, { name: practiceName, minutes: 0, encounters: 0, programs: {} });
+    }
+    const pb = entry.practiceBreakdown.get(pbKey)!;
+    pb.minutes += mins;
+    pb.encounters += logs;
+    pb.programs[r.programType] = (pb.programs[r.programType] || 0) + mins;
   }
 
   const staffList = Array.from(staffMap.values()).sort((a, b) => b.totalMinutes - a.totalMinutes);
+  const toggleExpand = (id: string) => {
+    setExpandedStaff(prev => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id); else next.add(id);
+      return next;
+    });
+  };
 
   const totalMinutes = staffList.reduce((sum, s) => sum + s.totalMinutes, 0);
   const totalHours = Math.round(totalMinutes / 60 * 10) / 10;
@@ -507,14 +534,6 @@ function StaffingTab({ practices, currentMonth, currentYear, lynkPracticeId, dep
     roleMap.set(s.role, (roleMap.get(s.role) || 0) + s.totalMinutes);
   }
   const roleSummary = Array.from(roleMap.entries()).sort((a, b) => b[1] - a[1]);
-
-  const otherPractices = practices.filter(p => p.id !== lynkPracticeId && p.status === "active");
-
-  const practiceNameMap = new Map<number, string>();
-  for (const p of practices) {
-    if (p.id === lynkPracticeId) continue;
-    practiceNameMap.set(p.id, p.name);
-  }
 
   const exportCSV = () => {
     const header = "Staff Name,Role,Total Hours,FTE,Encounters,Practices,Programs\n";
@@ -642,11 +661,20 @@ function StaffingTab({ practices, currentMonth, currentYear, lynkPracticeId, dep
                       const nonLynkPractices = Array.from(s.practiceIds).filter(id => id !== lynkPracticeId).map(id => practiceNameMap.get(id) || "").filter(Boolean);
                       const deptNames = Array.from(s.departments);
                       const practiceNames = [...nonLynkPractices, ...deptNames].join(", ");
+                      const isExpanded = expandedStaff.has(s.id);
+                      const breakdowns = Array.from(s.practiceBreakdown.values()).sort((a, b) => b.minutes - a.minutes);
+                      const hasMultiple = breakdowns.length > 1;
                       return (
-                        <tr key={i} className="border-b hover:bg-slate-50">
+                        <Fragment key={s.id}>
+                        <tr className={`border-b hover:bg-slate-50 ${hasMultiple ? "cursor-pointer" : ""} ${isExpanded ? "bg-blue-50/50" : ""}`} onClick={() => hasMultiple && toggleExpand(s.id)}>
                           <td className="py-2 px-3">
-                            <span className="font-medium">{s.name}</span>
-                            <span className="text-xs text-slate-400 ml-2">{s.role}</span>
+                            <div className="flex items-center gap-1.5">
+                              {hasMultiple ? (
+                                isExpanded ? <ChevronUp className="h-3.5 w-3.5 text-slate-400 flex-shrink-0" /> : <ChevronDown className="h-3.5 w-3.5 text-slate-400 flex-shrink-0" />
+                              ) : <span className="w-3.5" />}
+                              <span className="font-medium">{s.name}</span>
+                              <span className="text-xs text-slate-400">{s.role}</span>
+                            </div>
                           </td>
                           <td className="py-2 px-3 text-right tabular-nums">{hours.toLocaleString()}</td>
                           <td className="py-2 px-3 text-center">
@@ -668,6 +696,30 @@ function StaffingTab({ practices, currentMonth, currentYear, lynkPracticeId, dep
                             </div>
                           </td>
                         </tr>
+                        {isExpanded && breakdowns.map((pb, j) => {
+                          const pbHours = Math.round(pb.minutes / 60 * 10) / 10;
+                          return (
+                            <tr key={`${i}-${j}`} className="border-b bg-slate-50/80">
+                              <td className="py-1.5 px-3 pl-10">
+                                <span className="text-xs text-slate-500 font-medium">{pb.name}</span>
+                              </td>
+                              <td className="py-1.5 px-3 text-right tabular-nums text-xs text-slate-600">{pbHours.toLocaleString()}</td>
+                              <td className="py-1.5 px-3 text-center text-xs text-slate-400">—</td>
+                              <td className="py-1.5 px-3 text-right tabular-nums text-xs text-slate-600">{pb.encounters.toLocaleString()}</td>
+                              <td className="py-1.5 px-3"></td>
+                              <td className="py-1.5 px-3">
+                                <div className="flex flex-wrap gap-1">
+                                  {Object.entries(pb.programs).sort((a, b) => b[1] - a[1]).map(([prog, mins]) => (
+                                    <span key={prog} className={`px-1.5 py-0.5 rounded text-[10px] font-medium ${programColors[prog] || "bg-slate-50 text-slate-700"}`}>
+                                      {prog}: {Math.round(mins / 60 * 10) / 10}h
+                                    </span>
+                                  ))}
+                                </div>
+                              </td>
+                            </tr>
+                          );
+                        })}
+                        </Fragment>
                       );
                     })}
                   </tbody>
