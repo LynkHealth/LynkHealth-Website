@@ -776,6 +776,22 @@ export type InvoiceRate = typeof invoiceRates.$inferSelect;
 // Staff Time Logs (ThoroughCare synced practitioner time data)
 // ============================================================
 
+export const staffRoleOverrides = pgTable("staff_role_overrides", {
+  id: serial("id").primaryKey(),
+  staffTcId: text("staff_tc_id").notNull(),
+  staffName: text("staff_name").notNull(),
+  overrideRole: text("override_role").notNull(),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const insertStaffRoleOverrideSchema = createInsertSchema(staffRoleOverrides).omit({
+  id: true,
+  createdAt: true,
+});
+
+export type InsertStaffRoleOverride = z.infer<typeof insertStaffRoleOverrideSchema>;
+export type StaffRoleOverride = typeof staffRoleOverrides.$inferSelect;
+
 export const tcStaffTimeLogs = pgTable("tc_staff_time_logs", {
   id: serial("id").primaryKey(),
   tcTaskId: text("tc_task_id").notNull(),
