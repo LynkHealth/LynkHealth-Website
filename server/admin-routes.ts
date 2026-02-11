@@ -1,13 +1,13 @@
 import type { Express, Request, Response, NextFunction } from "express";
 import { storage } from "./storage";
-import { adminLoginSchema, cptBillingCodes } from "@shared/schema";
+import { adminLoginSchema, cptBillingCodes, staffRoleOverrides, tcStaffTimeLogs } from "@shared/schema";
 import bcrypt from "bcryptjs";
 import crypto from "crypto";
 import { z } from "zod";
 import { runFullSync, runHistoricalSync, runRevenueSync, runHistoricalRevenueSync, getSyncStatus } from "./thoroughcare-sync";
 import { testConnection } from "./thoroughcare-client";
 import { db } from "./db";
-import { eq } from "drizzle-orm";
+import { eq, and } from "drizzle-orm";
 
 declare global {
   namespace Express {
@@ -482,6 +482,45 @@ export async function registerAdminRoutes(app: Express) {
     } catch (error) {
       console.error("Staff revenue report error:", error);
       res.status(500).json({ success: false, message: "Failed to fetch staff revenue report" });
+    }
+  });
+
+  app.get("/api/admin/staff-role-overrides", adminAuth, async (req: Request, res: Response) => {
+    try {
+      const overrides = await db.select().from(staffRoleOverrides);
+      res.json({ success: true, overrides });
+    } catch (error) {
+      res.status(500).json({ success: false, message: "Failed to fetch role overrides" });
+    }
+  });
+
+  app.post("/api/admin/staff-role-overrides", adminAuth, async (req: Request, res: Response) => {
+    try {
+      const { staffTcId, staffName, overrideRole } = req.body;
+      if (!staffTcId || !staffName || !overrideRole) {
+        return res.status(400).json({ success: false, message: "staffTcId, staffName, and overrideRole are required" });
+      }
+      const existing = await db.select().from(staffRoleOverrides).where(eq(staffRoleOverrides.staffTcId, staffTcId));
+      if (existing.length > 0) {
+        await db.update(staffRoleOverrides).set({ overrideRole, staffName }).where(eq(staffRoleOverrides.staffTcId, staffTcId));
+      } else {
+        await db.insert(staffRoleOverrides).values({ staffTcId, staffName, overrideRole });
+      }
+      await db.update(tcStaffTimeLogs).set({ staffRole: overrideRole }).where(eq(tcStaffTimeLogs.staffTcId, staffTcId));
+      res.json({ success: true });
+    } catch (error) {
+      console.error("Staff role override error:", error);
+      res.status(500).json({ success: false, message: "Failed to save role override" });
+    }
+  });
+
+  app.delete("/api/admin/staff-role-overrides/:staffTcId", adminAuth, async (req: Request, res: Response) => {
+    try {
+      const { staffTcId } = req.params;
+      await db.delete(staffRoleOverrides).where(eq(staffRoleOverrides.staffTcId, staffTcId));
+      res.json({ success: true });
+    } catch (error) {
+      res.status(500).json({ success: false, message: "Failed to delete role override" });
     }
   });
 

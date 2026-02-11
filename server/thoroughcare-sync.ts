@@ -9,7 +9,7 @@ import {
   fetchPractitioners,
 } from "./thoroughcare-client";
 import { db } from "./db";
-import { practices, programSnapshots, revenueSnapshots, revenueByCode, tcSyncLog, tcStaffTimeLogs } from "@shared/schema";
+import { practices, programSnapshots, revenueSnapshots, revenueByCode, tcSyncLog, tcStaffTimeLogs, staffRoleOverrides } from "@shared/schema";
 import { eq, and } from "drizzle-orm";
 
 const MONTHS = ["JAN", "FEB", "MAR", "APR", "MAY", "JUN", "JUL", "AUG", "SEP", "OCT", "NOV", "DEC"];
@@ -601,6 +601,12 @@ async function syncTimeLogs(month: string, year: number, patientData?: PatientDa
   await db.delete(tcStaffTimeLogs)
     .where(and(eq(tcStaffTimeLogs.month, month), eq(tcStaffTimeLogs.year, year)));
 
+  const roleOverrides = await db.select().from(staffRoleOverrides);
+  const roleOverrideMap = new Map<string, string>();
+  for (const o of roleOverrides) {
+    roleOverrideMap.set(o.staffTcId, o.overrideRole);
+  }
+
   const staffLogBatch: any[] = [];
 
   for (const task of tasks) {
@@ -643,7 +649,7 @@ async function syncTimeLogs(month: string, year: number, patientData?: PatientDa
         const practInfo = practMap.get(staffTcId);
         if (practInfo) {
           staffName = practInfo.name;
-          staffRole = practInfo.role;
+          staffRole = roleOverrideMap.get(staffTcId) || practInfo.role;
         }
       }
     }
