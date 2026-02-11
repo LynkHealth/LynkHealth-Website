@@ -1,5 +1,5 @@
 import { useState, useEffect, Fragment } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useLocation, Link } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -684,6 +684,25 @@ function StaffingTab({ practices, currentMonth, currentYear, lynkPracticeId, dep
   const [selectedYear, setSelectedYear] = useState(currentYear);
   const [selectedPractice, setSelectedPractice] = useState<string>("all");
   const [expandedStaff, setExpandedStaff] = useState<Set<string>>(new Set());
+  const [editingRoleId, setEditingRoleId] = useState<string | null>(null);
+  const [editRoleValue, setEditRoleValue] = useState("");
+  const [savingRole, setSavingRole] = useState(false);
+
+  const queryClient = useQueryClient();
+
+  const saveRoleOverride = async (staffTcId: string, staffName: string) => {
+    if (!editRoleValue.trim()) return;
+    setSavingRole(true);
+    try {
+      await adminFetch("/api/admin/staff-role-overrides", {
+        method: "POST",
+        body: JSON.stringify({ staffTcId, staffName, overrideRole: editRoleValue.trim() }),
+      });
+      setEditingRoleId(null);
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/staff-revenue"] });
+    } catch (e) { console.error(e); }
+    setSavingRole(false);
+  };
 
   const lynkDepts = lynkPracticeId && departmentsByPractice[lynkPracticeId] ? departmentsByPractice[lynkPracticeId] : [];
 
@@ -924,7 +943,28 @@ function StaffingTab({ practices, currentMonth, currentYear, lynkPracticeId, dep
                                 isExpanded ? <ChevronUp className="h-3.5 w-3.5 text-slate-400 flex-shrink-0" /> : <ChevronDown className="h-3.5 w-3.5 text-slate-400 flex-shrink-0" />
                               ) : <span className="w-3.5" />}
                               <span className="font-medium">{s.name}</span>
-                              <span className="text-xs text-slate-400">{s.role}</span>
+                              {editingRoleId === s.id ? (
+                                <span className="flex items-center gap-1" onClick={(e) => e.stopPropagation()}>
+                                  <input
+                                    className="border rounded px-1.5 py-0.5 text-xs w-32"
+                                    value={editRoleValue}
+                                    onChange={(e) => setEditRoleValue(e.target.value)}
+                                    onKeyDown={(e) => e.key === "Enter" && saveRoleOverride(s.id, s.name)}
+                                    autoFocus
+                                  />
+                                  <button onClick={() => saveRoleOverride(s.id, s.name)} disabled={savingRole} className="text-green-600 hover:text-green-800">
+                                    <Check className="h-3.5 w-3.5" />
+                                  </button>
+                                  <button onClick={() => setEditingRoleId(null)} className="text-slate-400 hover:text-slate-600 text-xs">✕</button>
+                                </span>
+                              ) : (
+                                <span className="text-xs text-slate-400 group/role flex items-center gap-0.5">
+                                  {s.role}
+                                  <button onClick={(e) => { e.stopPropagation(); setEditingRoleId(s.id); setEditRoleValue(s.role); }} className="opacity-0 group-hover/role:opacity-100 text-slate-300 hover:text-blue-500 transition-opacity">
+                                    <Pencil className="h-2.5 w-2.5" />
+                                  </button>
+                                </span>
+                              )}
                             </div>
                           </td>
                           <td className="py-2 px-3 text-right tabular-nums font-medium text-green-700">${rev.toLocaleString("en-US", { minimumFractionDigits: 0, maximumFractionDigits: 0 })}</td>
