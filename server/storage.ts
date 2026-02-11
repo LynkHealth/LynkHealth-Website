@@ -21,7 +21,7 @@ export interface IStorage {
   createAdminUser(user: InsertAdminUser): Promise<AdminUser>;
   updateAdminUser(id: number, updates: Partial<AdminUser>): Promise<AdminUser | undefined>;
   getAdminUsers(): Promise<AdminUser[]>;
-  createAdminSession(userId: number, token: string, expiresAt: Date): Promise<AdminSession>;
+  createAdminSession(userId: number, token: string, expiresAt: Date, ipAddress?: string): Promise<AdminSession>;
   getAdminSession(token: string): Promise<AdminSession | undefined>;
   deleteAdminSession(token: string): Promise<void>;
   deleteUserSessions(userId: number): Promise<void>;
@@ -191,30 +191,88 @@ export class DatabaseStorage implements IStorage {
   }
 
   async createContactInquiry(insertInquiry: InsertContactInquiry): Promise<ContactInquiry> {
-    const [inquiry] = await db.insert(contactInquiries).values(insertInquiry).returning();
+    const encryptedValues = {
+      ...insertInquiry,
+      firstName: encryptField(insertInquiry.firstName),
+      lastName: encryptField(insertInquiry.lastName),
+      email: encryptField(insertInquiry.email),
+      phone: insertInquiry.phone ? encryptField(insertInquiry.phone) : null,
+      message: insertInquiry.message ? encryptField(insertInquiry.message) : null,
+      emailHash: hashForSearch(insertInquiry.email),
+      encryptionKeyId: isEncryptionConfigured() ? getCurrentKeyId() : null,
+    };
+    const [inquiry] = await db.insert(contactInquiries).values(encryptedValues).returning();
     return inquiry;
   }
 
   async getContactInquiries(): Promise<ContactInquiry[]> {
-    return await db.select().from(contactInquiries).orderBy(desc(contactInquiries.createdAt));
+    const results = await db.select().from(contactInquiries).orderBy(desc(contactInquiries.createdAt));
+    return results.map(r => ({
+      ...r,
+      firstName: decryptField(r.firstName),
+      lastName: decryptField(r.lastName),
+      email: decryptField(r.email),
+      phone: r.phone ? decryptField(r.phone) : r.phone,
+      message: r.message ? decryptField(r.message) : r.message,
+    }));
   }
 
   async createNightCoverageInquiry(insertInquiry: InsertNightCoverageInquiry): Promise<NightCoverageInquiry> {
-    const [inquiry] = await db.insert(nightCoverageInquiries).values(insertInquiry).returning();
+    const encryptedValues = {
+      ...insertInquiry,
+      contactName: encryptField(insertInquiry.contactName),
+      email: encryptField(insertInquiry.email),
+      phone: insertInquiry.phone ? encryptField(insertInquiry.phone) : null,
+      message: insertInquiry.message ? encryptField(insertInquiry.message) : null,
+      emailHash: hashForSearch(insertInquiry.email),
+      encryptionKeyId: isEncryptionConfigured() ? getCurrentKeyId() : null,
+    };
+    const [inquiry] = await db.insert(nightCoverageInquiries).values(encryptedValues).returning();
     return inquiry;
   }
 
   async getNightCoverageInquiries(): Promise<NightCoverageInquiry[]> {
-    return await db.select().from(nightCoverageInquiries).orderBy(desc(nightCoverageInquiries.createdAt));
+    const results = await db.select().from(nightCoverageInquiries).orderBy(desc(nightCoverageInquiries.createdAt));
+    return results.map(r => ({
+      ...r,
+      contactName: decryptField(r.contactName),
+      email: decryptField(r.email),
+      phone: r.phone ? decryptField(r.phone) : r.phone,
+      message: r.message ? decryptField(r.message) : r.message,
+    }));
   }
 
   async createWoundCareReferral(insertReferral: InsertWoundCareReferral): Promise<WoundCareReferral> {
-    const [referral] = await db.insert(woundCareReferrals).values(insertReferral).returning();
+    const encryptedValues = {
+      ...insertReferral,
+      providerName: encryptField(insertReferral.providerName),
+      email: encryptField(insertReferral.email),
+      phone: insertReferral.phone ? encryptField(insertReferral.phone) : null,
+      patientName: encryptField(insertReferral.patientName),
+      patientDob: encryptField(insertReferral.patientDob),
+      diagnosisWoundType: encryptField(insertReferral.diagnosisWoundType),
+      notes: insertReferral.notes ? encryptField(insertReferral.notes) : null,
+      patientNameHash: hashForSearch(insertReferral.patientName),
+      patientDobHash: hashForSearch(insertReferral.patientDob),
+      emailHash: hashForSearch(insertReferral.email),
+      encryptionKeyId: isEncryptionConfigured() ? getCurrentKeyId() : null,
+    };
+    const [referral] = await db.insert(woundCareReferrals).values(encryptedValues).returning();
     return referral;
   }
 
   async getWoundCareReferrals(): Promise<WoundCareReferral[]> {
-    return await db.select().from(woundCareReferrals).orderBy(desc(woundCareReferrals.createdAt));
+    const results = await db.select().from(woundCareReferrals).orderBy(desc(woundCareReferrals.createdAt));
+    return results.map(r => ({
+      ...r,
+      providerName: decryptField(r.providerName),
+      email: decryptField(r.email),
+      phone: r.phone ? decryptField(r.phone) : r.phone,
+      patientName: decryptField(r.patientName),
+      patientDob: decryptField(r.patientDob),
+      diagnosisWoundType: decryptField(r.diagnosisWoundType),
+      notes: r.notes ? decryptField(r.notes) : r.notes,
+    }));
   }
 
   async getAdminUserByEmail(email: string): Promise<AdminUser | undefined> {
@@ -227,8 +285,8 @@ export class DatabaseStorage implements IStorage {
     return user;
   }
 
-  async createAdminSession(userId: number, token: string, expiresAt: Date): Promise<AdminSession> {
-    const [session] = await db.insert(adminSessions).values({ userId, token, expiresAt }).returning();
+  async createAdminSession(userId: number, token: string, expiresAt: Date, ipAddress?: string): Promise<AdminSession> {
+    const [session] = await db.insert(adminSessions).values({ userId, token, expiresAt, ipAddress: ipAddress || null }).returning();
     return session;
   }
 

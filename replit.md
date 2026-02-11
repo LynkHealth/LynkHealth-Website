@@ -96,6 +96,16 @@ A clinical dashboard accessible at `/clinical/*` routes provides a full care coo
 - Upload history with practice/month/year filtering, detail drill-down showing all line items
 - API routes: POST `/api/admin/era/upload` (multipart), GET `/api/admin/era/uploads`, GET `/api/admin/era/uploads/:id`, GET `/api/admin/era/reconciliation`, DELETE `/api/admin/era/uploads/:id`
 
+### HIPAA Compliance Controls
+The platform implements application-level HIPAA Technical Safeguards (see `HIPAA-COMPLIANCE.md` for full documentation):
+- **Audit Controls** (`server/audit.ts`): Append-only audit logging for 30+ event types (login, PHI/PII access, permission denials). Public form submissions emit PII_CREATE/PHI_CREATE events.
+- **RBAC** (`server/rbac.ts`): Three-tier permission system (viewer/admin/superadmin) with `requirePermission()` middleware on all admin routes. PHI (wound care referrals) gated separately from PII (contact inquiries).
+- **Encryption at Rest** (`server/encryption.ts`): AES-256-GCM field-level encryption for all PHI/PII fields in contact inquiries, night coverage inquiries, and wound care referrals. HMAC-SHA256 search hashes for encrypted fields. Key rotation support via versioned key IDs.
+- **Authentication**: Password complexity (12+ chars, mixed case/numbers/special), 90-day expiry, password history (last 5), account lockout (5 failures/15 min), forced first-login password change.
+- **Session Management**: httpOnly/Secure/SameSite cookies, 15-min inactivity timeout (server + client), 4-hour absolute max, IP binding, single-session enforcement, background session cleanup every 5 min.
+- **Transmission Security** (`server/index.ts`): HTTPS enforcement, HSTS, helmet CSP, CORS, global rate limiting (100 req/15 min/IP), login rate limiting (5 req/15 min/IP).
+- **PHI-Safe Logging**: Response bodies redacted for all PHI/PII endpoints.
+
 ### System Design Choices
 The architecture emphasizes robust validation and error handling. SEO strategy focuses on national reach and service quality. A comprehensive cache management system ensures users always see the latest content after deployments while optimizing performance through aggressive caching of static assets, using a service worker and build-time timestamp injection. HTTP cache headers are carefully configured for various asset types to balance freshness and performance.
 

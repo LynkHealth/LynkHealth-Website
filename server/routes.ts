@@ -65,6 +65,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Store in database
       const inquiry = await storage.createContactInquiry(validatedData);
+
+      writeAuditLog({
+        action: AuditAction.PII_CREATE,
+        resourceType: "contact_inquiry",
+        resourceId: String(inquiry.id),
+        ipAddress: getClientIp(req),
+        userAgent: (req.headers["user-agent"] || "").substring(0, 500),
+        outcome: "success",
+        phiAccessed: false,
+      }).catch(() => {});
       
       // Add to Mailchimp (don't let this fail the whole request)
       try {
@@ -107,6 +117,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Store in database
       const inquiry = await storage.createNightCoverageInquiry(validatedData);
+
+      writeAuditLog({
+        action: AuditAction.PII_CREATE,
+        resourceType: "night_coverage_inquiry",
+        resourceId: String(inquiry.id),
+        ipAddress: getClientIp(req),
+        userAgent: (req.headers["user-agent"] || "").substring(0, 500),
+        outcome: "success",
+        phiAccessed: false,
+      }).catch(() => {});
       
       res.json({ 
         success: true, 
@@ -137,6 +157,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Store in database
       const referral = await storage.createWoundCareReferral(validatedData);
+
+      writeAuditLog({
+        action: AuditAction.PHI_CREATE,
+        resourceType: "wound_care_referral",
+        resourceId: String(referral.id),
+        ipAddress: getClientIp(req),
+        userAgent: (req.headers["user-agent"] || "").substring(0, 500),
+        outcome: "success",
+        phiAccessed: true,
+      }).catch(() => {});
       
       res.json({ 
         success: true, 

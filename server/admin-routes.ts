@@ -13,12 +13,14 @@ import { eq, and, desc, sql } from "drizzle-orm";
 import multer from "multer";
 import { parse835, mapCptToProgram } from "./era-parser";
 import { writeAuditLog, getAuditLogs, AuditAction, getClientIp } from "./audit";
+import { requirePermission, Permission, hasPermission } from "./rbac";
 
 const INACTIVITY_TIMEOUT_MS = 15 * 60 * 1000;
 const MAX_SESSION_LIFETIME_MS = 4 * 60 * 60 * 1000;
 const MAX_FAILED_ATTEMPTS = 5;
 const LOCKOUT_WINDOW_MINUTES = 30;
 const PASSWORD_HISTORY_COUNT = 5;
+const PASSWORD_MAX_AGE_MS = 90 * 24 * 60 * 60 * 1000;
 
 const loginRateLimit = rateLimit({
   windowMs: 15 * 60 * 1000,
@@ -90,6 +92,21 @@ export async function adminAuth(req: Request, res: Response, next: NextFunction)
       clearSessionCookie(res);
       return res.status(401).json({ success: false, message: "Session timed out due to inactivity" });
     }
+  }
+
+  if (session.ipAddress && session.ipAddress !== getClientIp(req)) {
+    await storage.deleteAdminSession(token);
+    await writeAuditLog({
+      action: AuditAction.INVALID_SESSION,
+      userId: session.userId,
+      resourceType: "session",
+      ipAddress: getClientIp(req),
+      userAgent: (req.headers["user-agent"] || "").substring(0, 500),
+      outcome: "failure",
+      details: { reason: "ip_mismatch" },
+    });
+    clearSessionCookie(res);
+    return res.status(401).json({ success: false, message: "Session invalid - IP address changed" });
   }
 
   const adminUser = await storage.getAdminUserById(session.userId);
@@ -166,9 +183,28 @@ export async function registerAdminRoutes(app: Express) {
 
       await storage.recordLoginAttempt(email, ipAddress, true);
 
+      const needsPasswordChange = user.mustChangePassword === 1 ||
+        (user.lastPasswordChange && (Date.now() - new Date(user.lastPasswordChange).getTime() > PASSWORD_MAX_AGE_MS)) ||
+        !user.lastPasswordChange;
+
+      if (needsPasswordChange) {
+        await storage.deleteUserSessions(user.id);
+        const token = crypto.randomBytes(48).toString("hex");
+        const expiresAt = new Date(Date.now() + MAX_SESSION_LIFETIME_MS);
+        await storage.createAdminSession(user.id, token, expiresAt, ipAddress);
+        setSessionCookie(res, token);
+        return res.json({
+          success: true,
+          token,
+          user: { id: user.id, email: user.email, name: user.name, role: user.role },
+          mustChangePassword: true,
+        });
+      }
+
+      await storage.deleteUserSessions(user.id);
       const token = crypto.randomBytes(48).toString("hex");
       const expiresAt = new Date(Date.now() + MAX_SESSION_LIFETIME_MS);
-      await storage.createAdminSession(user.id, token, expiresAt);
+      await storage.createAdminSession(user.id, token, expiresAt, ipAddress);
 
       await writeAuditLog({
         action: AuditAction.LOGIN_SUCCESS,
@@ -242,7 +278,7 @@ export async function registerAdminRoutes(app: Express) {
       await storage.deleteUserSessions(user.id);
       const newToken = crypto.randomBytes(48).toString("hex");
       const expiresAt = new Date(Date.now() + MAX_SESSION_LIFETIME_MS);
-      await storage.createAdminSession(user.id, newToken, expiresAt);
+      await storage.createAdminSession(user.id, newToken, expiresAt, getClientIp(req));
       setSessionCookie(res, newToken);
       await writeAuditLog({
         action: AuditAction.PASSWORD_CHANGE,
@@ -262,7 +298,7 @@ export async function registerAdminRoutes(app: Express) {
     }
   });
 
-  app.get("/api/admin/audit-logs", adminAuth, requireRole("admin"), async (req, res) => {
+  app.get("/api/admin/audit-logs", adminAuth, requirePermission(Permission.VIEW_AUDIT_LOGS), async (req, res) => {
     try {
       const { action, userId, startDate, endDate, limit, offset } = req.query;
       const logs = await getAuditLogs({
@@ -280,7 +316,7 @@ export async function registerAdminRoutes(app: Express) {
     }
   });
 
-  app.get("/api/admin/dashboard", adminAuth, async (req, res) => {
+  app.get("/api/admin/dashboard", adminAuth, requirePermission(Permission.VIEW_DASHBOARD), async (req, res) => {
     try {
       const now = new Date();
       const monthNames = ["JAN", "FEB", "MAR", "APR", "MAY", "JUN", "JUL", "AUG", "SEP", "OCT", "NOV", "DEC"];
@@ -320,7 +356,7 @@ export async function registerAdminRoutes(app: Express) {
     }
   });
 
-  app.get("/api/admin/practices", adminAuth, async (req, res) => {
+  app.get("/api/admin/practices", adminAuth, requirePermission(Permission.VIEW_PRACTICES), async (req, res) => {
     try {
       const practices = await storage.getPractices();
       res.json({ success: true, practices });
@@ -329,7 +365,7 @@ export async function registerAdminRoutes(app: Express) {
     }
   });
 
-  app.post("/api/admin/practices", adminAuth, async (req, res) => {
+  app.post("/api/admin/practices", adminAuth, requirePermission(Permission.MANAGE_PRACTICES), async (req, res) => {
     try {
       const practiceSchema = z.object({
         name: z.string().min(1),
@@ -349,7 +385,7 @@ export async function registerAdminRoutes(app: Express) {
     }
   });
 
-  app.get("/api/admin/snapshots", adminAuth, async (req, res) => {
+  app.get("/api/admin/snapshots", adminAuth, requirePermission(Permission.VIEW_SNAPSHOTS), async (req, res) => {
     try {
       const { practiceId, programType, month, year } = req.query;
       const snapshots = await storage.getProgramSnapshots(
@@ -364,18 +400,19 @@ export async function registerAdminRoutes(app: Express) {
     }
   });
 
-  app.get("/api/admin/inquiries", adminAuth, async (req, res) => {
+  app.get("/api/admin/inquiries", adminAuth, requirePermission(Permission.VIEW_INQUIRIES), async (req, res) => {
     try {
       const contactInquiries = await storage.getContactInquiries();
       const nightInquiries = await storage.getNightCoverageInquiries();
-      const woundReferrals = await storage.getWoundCareReferrals();
+      const canViewReferrals = hasPermission(req.adminUser!.role, Permission.VIEW_REFERRALS);
+      const woundReferrals = canViewReferrals ? await storage.getWoundCareReferrals() : [];
       res.json({ success: true, contactInquiries, nightInquiries, woundReferrals });
     } catch (error) {
       res.status(500).json({ success: false, message: "Failed to load inquiries" });
     }
   });
 
-  app.get("/api/admin/tc/status", adminAuth, async (_req, res) => {
+  app.get("/api/admin/tc/status", adminAuth, requirePermission(Permission.TRIGGER_SYNC), async (_req, res) => {
     try {
       const syncStatus = getSyncStatus();
       res.json({ success: true, ...syncStatus });
@@ -384,7 +421,7 @@ export async function registerAdminRoutes(app: Express) {
     }
   });
 
-  app.post("/api/admin/tc/sync", adminAuth, async (req, res) => {
+  app.post("/api/admin/tc/sync", adminAuth, requirePermission(Permission.TRIGGER_SYNC), async (req, res) => {
     try {
       const { month, year } = req.body || {};
       res.json({ success: true, message: "Sync started" });
@@ -396,7 +433,7 @@ export async function registerAdminRoutes(app: Express) {
     }
   });
 
-  app.post("/api/admin/tc/sync-historical", adminAuth, async (req, res) => {
+  app.post("/api/admin/tc/sync-historical", adminAuth, requirePermission(Permission.TRIGGER_SYNC), async (req, res) => {
     try {
       const { months } = req.body || {};
       const totalMonths = Math.min(Math.max(months || 24, 1), 36);
@@ -409,7 +446,7 @@ export async function registerAdminRoutes(app: Express) {
     }
   });
 
-  app.post("/api/admin/tc/sync-revenue", adminAuth, async (req, res) => {
+  app.post("/api/admin/tc/sync-revenue", adminAuth, requirePermission(Permission.TRIGGER_SYNC), async (req, res) => {
     try {
       const { month, year } = req.body || {};
       res.json({ success: true, message: "Revenue sync started" });
@@ -421,7 +458,7 @@ export async function registerAdminRoutes(app: Express) {
     }
   });
 
-  app.post("/api/admin/tc/sync-revenue-historical", adminAuth, async (req, res) => {
+  app.post("/api/admin/tc/sync-revenue-historical", adminAuth, requirePermission(Permission.TRIGGER_SYNC), async (req, res) => {
     try {
       const { months } = req.body || {};
       const totalMonths = Math.min(Math.max(months || 24, 1), 36);
@@ -434,7 +471,7 @@ export async function registerAdminRoutes(app: Express) {
     }
   });
 
-  app.get("/api/admin/tc/test", adminAuth, async (_req, res) => {
+  app.get("/api/admin/tc/test", adminAuth, requirePermission(Permission.TRIGGER_SYNC), async (_req, res) => {
     try {
       const result = await testConnection();
       res.json(result);
@@ -443,7 +480,7 @@ export async function registerAdminRoutes(app: Express) {
     }
   });
 
-  app.get("/api/admin/tc/sample-enrollments", adminAuth, async (_req, res) => {
+  app.get("/api/admin/tc/sample-enrollments", adminAuth, requirePermission(Permission.VIEW_TC_SAMPLES), async (_req, res) => {
     try {
       const { fetchEnrollments } = await import("./thoroughcare-client");
       const enrollments = await fetchEnrollments(undefined, { _count: "10" });
