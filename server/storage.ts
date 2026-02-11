@@ -146,7 +146,7 @@ export interface IStorage {
   deleteInvoice(id: number): Promise<void>;
 
   // Staff Time Logs
-  getStaffingReport(month: string, year: number, practiceId?: number): Promise<any[]>;
+  getStaffingReport(month: string, year: number, practiceId?: number, department?: string): Promise<any[]>;
   clearStaffTimeLogs(month: string, year: number): Promise<void>;
 
   // Dashboard Aggregates
@@ -1091,7 +1091,7 @@ export class DatabaseStorage implements IStorage {
     await db.delete(invoices).where(eq(invoices.id, id));
   }
 
-  async getStaffingReport(month: string, year: number, practiceId?: number): Promise<any[]> {
+  async getStaffingReport(month: string, year: number, practiceId?: number, department?: string): Promise<any[]> {
     const conditions = [
       eq(tcStaffTimeLogs.month, month),
       eq(tcStaffTimeLogs.year, year),
@@ -1099,12 +1099,16 @@ export class DatabaseStorage implements IStorage {
     if (practiceId) {
       conditions.push(eq(tcStaffTimeLogs.practiceId, practiceId));
     }
+    if (department) {
+      conditions.push(eq(tcStaffTimeLogs.department, department));
+    }
 
     const rows = await db.select({
       staffTcId: tcStaffTimeLogs.staffTcId,
       staffName: tcStaffTimeLogs.staffName,
       staffRole: tcStaffTimeLogs.staffRole,
       practiceId: tcStaffTimeLogs.practiceId,
+      department: tcStaffTimeLogs.department,
       programType: tcStaffTimeLogs.programType,
       totalMinutes: sql<number>`COALESCE(SUM(${tcStaffTimeLogs.minutes}), 0)`.as("total_minutes"),
       logCount: sql<number>`COUNT(*)`.as("log_count"),
@@ -1116,6 +1120,7 @@ export class DatabaseStorage implements IStorage {
         tcStaffTimeLogs.staffName,
         tcStaffTimeLogs.staffRole,
         tcStaffTimeLogs.practiceId,
+        tcStaffTimeLogs.department,
         tcStaffTimeLogs.programType
       )
       .orderBy(desc(sql`SUM(${tcStaffTimeLogs.minutes})`));

@@ -445,7 +445,7 @@ function PracticeDetailView({ practice, onBack }: { practice: any; onBack: () =>
   );
 }
 
-function StaffingTab({ practices, currentMonth, currentYear, lynkPracticeId }: { practices: any[]; currentMonth: string; currentYear: number; lynkPracticeId: number | null }) {
+function StaffingTab({ practices, currentMonth, currentYear, lynkPracticeId, departmentsByPractice }: { practices: any[]; currentMonth: string; currentYear: number; lynkPracticeId: number | null; departmentsByPractice: Record<number, string[]> }) {
   const FTE_HOURS = 160;
   const MONTHS_LIST = ["JAN", "FEB", "MAR", "APR", "MAY", "JUN", "JUL", "AUG", "SEP", "OCT", "NOV", "DEC"];
   const MONTH_DISPLAY: Record<string, string> = {
@@ -457,11 +457,21 @@ function StaffingTab({ practices, currentMonth, currentYear, lynkPracticeId }: {
   const [selectedYear, setSelectedYear] = useState(currentYear);
   const [selectedPractice, setSelectedPractice] = useState<string>("all");
 
-  const practiceParam = selectedPractice !== "all" ? `&practiceId=${selectedPractice}` : "";
+  const lynkDepts = lynkPracticeId && departmentsByPractice[lynkPracticeId] ? departmentsByPractice[lynkPracticeId] : [];
+
+  let queryParams = `month=${selectedMonth}&year=${selectedYear}`;
+  if (selectedPractice !== "all") {
+    if (selectedPractice.startsWith("dept:")) {
+      queryParams += `&practiceId=${lynkPracticeId}&department=${encodeURIComponent(selectedPractice.slice(5))}`;
+    } else {
+      queryParams += `&practiceId=${selectedPractice}`;
+    }
+  }
+
   const { data, isLoading } = useQuery({
     queryKey: ["/api/admin/staffing", selectedMonth, selectedYear, selectedPractice],
     queryFn: async () => {
-      const res = await adminFetch(`/api/admin/staffing?month=${selectedMonth}&year=${selectedYear}${practiceParam}`);
+      const res = await adminFetch(`/api/admin/staffing?${queryParams}`);
       if (!res.ok) throw new Error("Failed to fetch staffing data");
       return res.json();
     },
@@ -469,17 +479,20 @@ function StaffingTab({ practices, currentMonth, currentYear, lynkPracticeId }: {
 
   const rows = data?.data || [];
 
-  const staffMap = new Map<string, { name: string; role: string; totalMinutes: number; logCount: number; programs: Record<string, number>; practiceIds: Set<number> }>();
+  const staffMap = new Map<string, { name: string; role: string; totalMinutes: number; logCount: number; programs: Record<string, number>; practiceIds: Set<number>; departments: Set<string> }>();
   for (const r of rows) {
     const key = r.staffTcId || r.staffName || "Unknown";
     if (!staffMap.has(key)) {
-      staffMap.set(key, { name: r.staffName || "Unknown", role: r.staffRole || "Unknown", totalMinutes: 0, logCount: 0, programs: {}, practiceIds: new Set() });
+      staffMap.set(key, { name: r.staffName || "Unknown", role: r.staffRole || "Unknown", totalMinutes: 0, logCount: 0, programs: {}, practiceIds: new Set(), departments: new Set() });
     }
     const entry = staffMap.get(key)!;
     entry.totalMinutes += Number(r.totalMinutes) || 0;
     entry.logCount += Number(r.logCount) || 0;
     entry.programs[r.programType] = (entry.programs[r.programType] || 0) + (Number(r.totalMinutes) || 0);
     if (r.practiceId) entry.practiceIds.add(r.practiceId);
+    if (r.department && r.practiceId === lynkPracticeId) {
+      entry.departments.add(r.department);
+    }
   }
 
   const staffList = Array.from(staffMap.values()).sort((a, b) => b.totalMinutes - a.totalMinutes);
@@ -495,10 +508,11 @@ function StaffingTab({ practices, currentMonth, currentYear, lynkPracticeId }: {
   }
   const roleSummary = Array.from(roleMap.entries()).sort((a, b) => b[1] - a[1]);
 
-  const activePractices = practices.filter(p => p.id !== lynkPracticeId && p.status === "active");
+  const otherPractices = practices.filter(p => p.id !== lynkPracticeId && p.status === "active");
 
   const practiceNameMap = new Map<number, string>();
   for (const p of practices) {
+    if (p.id === lynkPracticeId) continue;
     practiceNameMap.set(p.id, p.name);
   }
 
@@ -508,8 +522,10 @@ function StaffingTab({ practices, currentMonth, currentYear, lynkPracticeId }: {
       const hours = Math.round(s.totalMinutes / 60 * 10) / 10;
       const fte = Math.round(hours / FTE_HOURS * 100) / 100;
       const programs = Object.entries(s.programs).map(([k, v]) => `${k}: ${Math.round(v / 60 * 10) / 10}h`).join("; ");
-      const practiceNames = Array.from(s.practiceIds).map(id => practiceNameMap.get(id) || "").filter(Boolean).join("; ");
-      return `"${s.name}","${s.role}",${hours},${fte},${s.logCount},"${practiceNames}","${programs}"`;
+      const nonLynk = Array.from(s.practiceIds).filter(id => id !== lynkPracticeId).map(id => practiceNameMap.get(id) || "").filter(Boolean);
+      const depts = Array.from(s.departments);
+      const allPracticeNames = [...nonLynk, ...depts].join("; ");
+      return `"${s.name}","${s.role}",${hours},${fte},${s.logCount},"${allPracticeNames}","${programs}"`;
     });
     const blob = new Blob([header + csvRows.join("\n")], { type: "text/csv" });
     const url = URL.createObjectURL(blob);
@@ -544,7 +560,10 @@ function StaffingTab({ practices, currentMonth, currentYear, lynkPracticeId }: {
         </select>
         <select className="border rounded px-3 py-1.5 text-sm" value={selectedPractice} onChange={(e) => setSelectedPractice(e.target.value)}>
           <option value="all">All Practices</option>
-          {activePractices.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
+          {otherPractices.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
+          {lynkDepts.map(dept => (
+            <option key={`dept:${dept}`} value={`dept:${dept}`}>{dept}</option>
+          ))}
         </select>
         <button onClick={exportCSV} className="ml-auto flex items-center gap-1.5 px-3 py-1.5 text-sm border rounded hover:bg-slate-50">
           <Download className="h-4 w-4" /> Export CSV
@@ -620,7 +639,9 @@ function StaffingTab({ practices, currentMonth, currentYear, lynkPracticeId }: {
                     {staffList.map((s, i) => {
                       const hours = Math.round(s.totalMinutes / 60 * 10) / 10;
                       const fte = Math.round(hours / FTE_HOURS * 100) / 100;
-                      const practiceNames = Array.from(s.practiceIds).map(id => practiceNameMap.get(id) || "—").join(", ");
+                      const nonLynkPractices = Array.from(s.practiceIds).filter(id => id !== lynkPracticeId).map(id => practiceNameMap.get(id) || "").filter(Boolean);
+                      const deptNames = Array.from(s.departments);
+                      const practiceNames = [...nonLynkPractices, ...deptNames].join(", ");
                       return (
                         <tr key={i} className="border-b hover:bg-slate-50">
                           <td className="py-2 px-3">
@@ -634,8 +655,8 @@ function StaffingTab({ practices, currentMonth, currentYear, lynkPracticeId }: {
                             }`}>{fte.toFixed(2)}</span>
                           </td>
                           <td className="py-2 px-3 text-right tabular-nums">{s.logCount.toLocaleString()}</td>
-                          <td className="py-2 px-3 text-xs text-slate-600 max-w-[160px] truncate" title={practiceNames}>
-                            {practiceNames || "—"}
+                          <td className="py-2 px-3 text-xs text-slate-600 max-w-[200px]" title={practiceNames}>
+                            <div className="truncate">{practiceNames || "—"}</div>
                           </td>
                           <td className="py-2 px-3">
                             <div className="flex flex-wrap gap-1">
@@ -2410,7 +2431,7 @@ export default function AdminDashboard() {
 
               {activeTab === "analytics" && <AnalyticsTab selectedMonth={currentMonth} currentYear={currentYear} selectedPractice={selectedPracticeId === "all" ? "all" : String(selectedPracticeId)} selectedDepartment={selectedDepartment} />}
 
-              {activeTab === "staffing" && <StaffingTab practices={practices} currentMonth={currentMonth} currentYear={currentYear} lynkPracticeId={lynkPracticeId} />}
+              {activeTab === "staffing" && <StaffingTab practices={practices} currentMonth={currentMonth} currentYear={currentYear} lynkPracticeId={lynkPracticeId} departmentsByPractice={departmentsByPractice} />}
 
               {activeTab === "practices" && (() => {
                 const otherPractices = practices.filter(p => p.id !== lynkPracticeId);
