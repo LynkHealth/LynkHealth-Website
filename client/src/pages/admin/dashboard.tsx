@@ -1112,6 +1112,9 @@ function StaffingTab({ practices, currentMonth, currentYear, lynkPracticeId, dep
                         {isExpanded && breakdowns.map((pb, j) => {
                           const pbHours = Math.round(pb.minutes / 60 * 10) / 10;
                           const pbRev = pb.revenueCents / 100;
+                          const pbEnrollments = s.role === "Enrollment Specialist" && enrollmentData?.deltas
+                            ? enrollmentData.deltas.filter((d: any) => d.practiceName === pb.name && d.newEnrollments > 0).reduce((sum: number, d: any) => sum + d.newEnrollments, 0)
+                            : 0;
                           return (
                             <tr key={`${i}-${j}`} className="border-b bg-slate-50/80">
                               <td className="py-1.5 px-3 pl-10">
@@ -1122,7 +1125,11 @@ function StaffingTab({ practices, currentMonth, currentYear, lynkPracticeId, dep
                               <td className="py-1.5 px-3 text-right tabular-nums text-xs text-slate-600">{pbHours.toLocaleString()}</td>
                               <td className="py-1.5 px-3 text-center text-xs text-slate-400">—</td>
                               <td className="py-1.5 px-3 text-right tabular-nums text-xs text-slate-600">{pb.encounters.toLocaleString()}</td>
-                              <td className="py-1.5 px-3"></td>
+                              <td className="py-1.5 px-3 text-right">
+                                {pbEnrollments > 0 ? (
+                                  <span className="px-1.5 py-0.5 rounded text-[10px] font-bold bg-amber-100 text-amber-700">+{pbEnrollments}</span>
+                                ) : <span className="text-slate-300 text-xs">—</span>}
+                              </td>
                               <td className="py-1.5 px-3"></td>
                               <td className="py-1.5 px-3">
                                 <div className="flex flex-wrap gap-1">
