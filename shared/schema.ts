@@ -2,6 +2,10 @@ import { pgTable, text, serial, timestamp, integer, varchar } from "drizzle-orm/
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
+// ============================================================
+// PUBLIC FORM TABLES
+// ============================================================
+
 export const contactInquiries = pgTable("contact_inquiries", {
   id: serial("id").primaryKey(),
   firstName: text("first_name").notNull(),
@@ -10,12 +14,16 @@ export const contactInquiries = pgTable("contact_inquiries", {
   phone: text("phone"),
   organizationType: text("organization_type").notNull(),
   message: text("message"),
+  emailHash: text("email_hash"),
+  encryptionKeyId: text("encryption_key_id"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
 export const insertContactInquirySchema = createInsertSchema(contactInquiries).omit({
   id: true,
   createdAt: true,
+  emailHash: true,
+  encryptionKeyId: true,
 });
 
 export type InsertContactInquiry = z.infer<typeof insertContactInquirySchema>;
@@ -31,12 +39,16 @@ export const nightCoverageInquiries = pgTable("night_coverage_inquiries", {
   careSetting: text("care_setting").notNull(),
   expectedVolume: text("expected_volume").notNull(),
   message: text("message"),
+  emailHash: text("email_hash"),
+  encryptionKeyId: text("encryption_key_id"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
 export const insertNightCoverageInquirySchema = createInsertSchema(nightCoverageInquiries).omit({
   id: true,
   createdAt: true,
+  emailHash: true,
+  encryptionKeyId: true,
 });
 
 export type InsertNightCoverageInquiry = z.infer<typeof insertNightCoverageInquirySchema>;
@@ -55,16 +67,28 @@ export const woundCareReferrals = pgTable("wound_care_referrals", {
   careSetting: text("care_setting").notNull(),
   urgency: text("urgency").notNull(),
   notes: text("notes"),
+  patientNameHash: text("patient_name_hash"),
+  patientDobHash: text("patient_dob_hash"),
+  emailHash: text("email_hash"),
+  encryptionKeyId: text("encryption_key_id"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
 export const insertWoundCareReferralSchema = createInsertSchema(woundCareReferrals).omit({
   id: true,
   createdAt: true,
+  patientNameHash: true,
+  patientDobHash: true,
+  emailHash: true,
+  encryptionKeyId: true,
 });
 
 export type InsertWoundCareReferral = z.infer<typeof insertWoundCareReferralSchema>;
 export type WoundCareReferral = typeof woundCareReferrals.$inferSelect;
+
+// ============================================================
+// USERS & AUTH
+// ============================================================
 
 export const users = pgTable("users", {
   id: serial("id").primaryKey(),
@@ -85,13 +109,21 @@ export const adminUsers = pgTable("admin_users", {
   email: text("email").notNull().unique(),
   name: text("name").notNull(),
   passwordHash: text("password_hash").notNull(),
-  role: text("role").notNull().default("admin"),
+  role: text("role").notNull().default("viewer"),
+  isActive: integer("is_active").notNull().default(1),
+  passwordChangedAt: timestamp("password_changed_at"),
+  lastLoginAt: timestamp("last_login_at"),
+  createdBy: integer("created_by"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
 export const insertAdminUserSchema = createInsertSchema(adminUsers).omit({
   id: true,
   createdAt: true,
+  isActive: true,
+  passwordChangedAt: true,
+  lastLoginAt: true,
+  createdBy: true,
 });
 
 export type InsertAdminUser = z.infer<typeof insertAdminUserSchema>;
@@ -102,10 +134,73 @@ export const adminSessions = pgTable("admin_sessions", {
   userId: integer("user_id").notNull(),
   token: text("token").notNull().unique(),
   expiresAt: timestamp("expires_at").notNull(),
+  lastActivityAt: timestamp("last_activity_at").notNull(),
+  ipAddress: text("ip_address"),
+  userAgent: text("user_agent"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
 export type AdminSession = typeof adminSessions.$inferSelect;
+
+// ============================================================
+// PASSWORD HISTORY (HIPAA 164.312(d) -- prevent reuse)
+// ============================================================
+
+export const passwordHistory = pgTable("password_history", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull(),
+  passwordHash: text("password_hash").notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+export type PasswordHistoryEntry = typeof passwordHistory.$inferSelect;
+
+// ============================================================
+// LOGIN ATTEMPTS (HIPAA 164.312(a)(1) -- persistent lockout)
+// ============================================================
+
+export const loginAttempts = pgTable("login_attempts", {
+  id: serial("id").primaryKey(),
+  email: text("email").notNull(),
+  ipAddress: text("ip_address"),
+  success: integer("success").notNull().default(0),
+  attemptedAt: timestamp("attempted_at").defaultNow().notNull(),
+});
+
+export type LoginAttempt = typeof loginAttempts.$inferSelect;
+
+// ============================================================
+// AUDIT LOGS (HIPAA 164.312(b) -- Audit Controls)
+// ============================================================
+
+export const auditLogs = pgTable("audit_logs", {
+  id: serial("id").primaryKey(),
+  // WHO
+  userId: integer("user_id"),
+  userEmail: text("user_email"),
+  userRole: text("user_role"),
+  // WHAT
+  action: text("action").notNull(),
+  resourceType: text("resource_type").notNull(),
+  resourceId: text("resource_id"),
+  // WHERE
+  ipAddress: text("ip_address"),
+  userAgent: text("user_agent"),
+  // WHEN
+  timestamp: timestamp("timestamp").defaultNow().notNull(),
+  // DETAILS
+  details: text("details"),
+  // OUTCOME
+  outcome: text("outcome").notNull().default("success"),
+  // PHI indicator
+  phiAccessed: integer("phi_accessed").notNull().default(0),
+});
+
+export type AuditLog = typeof auditLogs.$inferSelect;
+
+// ============================================================
+// PRACTICES & PROGRAM DATA
+// ============================================================
 
 export const practices = pgTable("practices", {
   id: serial("id").primaryKey(),
@@ -186,9 +281,27 @@ export const insertProgramSnapshotSchema = createInsertSchema(programSnapshots).
 export type InsertProgramSnapshot = z.infer<typeof insertProgramSnapshotSchema>;
 export type ProgramSnapshot = typeof programSnapshots.$inferSelect;
 
+// ============================================================
+// VALIDATION SCHEMAS
+// ============================================================
+
 export const adminLoginSchema = z.object({
   email: z.string().email(),
-  password: z.string().min(6),
+  password: z.string().min(8, "Password must be at least 8 characters"),
 });
 
 export type AdminLoginInput = z.infer<typeof adminLoginSchema>;
+
+export const adminPasswordSchema = z.string()
+  .min(12, "Password must be at least 12 characters")
+  .regex(/[A-Z]/, "Must contain an uppercase letter")
+  .regex(/[a-z]/, "Must contain a lowercase letter")
+  .regex(/[0-9]/, "Must contain a number")
+  .regex(/[^A-Za-z0-9]/, "Must contain a special character");
+
+export const changePasswordSchema = z.object({
+  currentPassword: z.string().min(1, "Current password is required"),
+  newPassword: adminPasswordSchema,
+});
+
+export type ChangePasswordInput = z.infer<typeof changePasswordSchema>;

@@ -1,11 +1,22 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
+import rateLimit from "express-rate-limit";
 import { storage } from "./storage";
 import { insertContactInquirySchema, insertNightCoverageInquirySchema, insertWoundCareReferralSchema } from "@shared/schema";
 import { z } from "zod";
 // @ts-ignore - No type definitions available for this package
 import mailchimp from "@mailchimp/mailchimp_marketing";
-import { registerAdminRoutes, seedAdminUsers } from "./admin-routes";
+import { registerAdminRoutes, seedAdminUsers, adminAuth } from "./admin-routes";
+import { writeAuditLog, AuditAction, getClientIp } from "./audit";
+
+// Stricter rate limit for form submissions - 5 per 15 minutes per IP
+const formRateLimit = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 5,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { success: false, message: "Too many form submissions. Please try again later." },
+});
 
 // Initialize Mailchimp
 mailchimp.setConfig({
@@ -25,7 +36,7 @@ async function addToMailchimp(email: string, firstName: string, lastName: string
       },
       tags: ["Website Contact Form"]
     });
-    console.log("Successfully added to Mailchimp:", email);
+    console.log("[Mailchimp] Subscriber added successfully");
     return response;
   } catch (error: any) {
     // If user already exists, try to update their info
@@ -43,7 +54,7 @@ async function addToMailchimp(email: string, firstName: string, lastName: string
             tags: ["Website Contact Form"]
           }
         );
-        console.log("Updated existing Mailchimp subscriber:", email);
+        console.log("[Mailchimp] Existing subscriber updated");
         return updateResponse;
       } catch (updateError) {
         console.error("Error updating Mailchimp subscriber:", updateError);
@@ -57,7 +68,7 @@ async function addToMailchimp(email: string, firstName: string, lastName: string
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Contact form submission endpoint
-  app.post("/api/contact", async (req, res) => {
+  app.post("/api/contact", formRateLimit, async (req, res) => {
     try {
       const validatedData = insertContactInquirySchema.parse(req.body);
       
@@ -76,40 +87,59 @@ export async function registerRoutes(app: Express): Promise<Server> {
         console.error("Mailchimp integration failed, but contact form succeeded:", mailchimpError);
       }
       
-      res.json({ 
-        success: true, 
+      // Audit log: PII creation
+      await writeAuditLog({
+        action: AuditAction.PII_CREATE,
+        resourceType: "contact_inquiry",
+        resourceId: String(inquiry.id),
+        ipAddress: getClientIp(req),
+        userAgent: (req.headers["user-agent"] || "").substring(0, 500),
+        outcome: "success",
+      });
+
+      res.json({
+        success: true,
         message: "Thank you for your inquiry! We will contact you within 24 hours.",
-        id: inquiry.id 
+        id: inquiry.id
       });
     } catch (error) {
       if (error instanceof z.ZodError) {
-        res.status(400).json({ 
-          success: false, 
+        res.status(400).json({
+          success: false,
           message: "Please check your form data and try again.",
-          errors: error.errors 
+          errors: error.errors
         });
       } else {
         console.error("Contact form error:", error);
-        res.status(500).json({ 
-          success: false, 
-          message: "We're experiencing technical difficulties. Please try again later or call us directly." 
+        res.status(500).json({
+          success: false,
+          message: "We're experiencing technical difficulties. Please try again later or call us directly."
         });
       }
     }
   });
 
   // Night coverage inquiry submission endpoint
-  app.post("/api/contact-night-coverage", async (req, res) => {
+  app.post("/api/contact-night-coverage", formRateLimit, async (req, res) => {
     try {
       const validatedData = insertNightCoverageInquirySchema.parse(req.body);
       
       // Store in database
       const inquiry = await storage.createNightCoverageInquiry(validatedData);
       
-      res.json({ 
-        success: true, 
+      await writeAuditLog({
+        action: AuditAction.PII_CREATE,
+        resourceType: "night_coverage_inquiry",
+        resourceId: String(inquiry.id),
+        ipAddress: getClientIp(req),
+        userAgent: (req.headers["user-agent"] || "").substring(0, 500),
+        outcome: "success",
+      });
+
+      res.json({
+        success: true,
         message: "Thank you for your night coverage inquiry! We will contact you within 1 business day.",
-        id: inquiry.id 
+        id: inquiry.id
       });
     } catch (error) {
       if (error instanceof z.ZodError) {
@@ -129,17 +159,28 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Wound care referral submission endpoint
-  app.post("/api/referrals/wound-care", async (req, res) => {
+  app.post("/api/referrals/wound-care", formRateLimit, async (req, res) => {
     try {
       const validatedData = insertWoundCareReferralSchema.parse(req.body);
       
       // Store in database
       const referral = await storage.createWoundCareReferral(validatedData);
       
-      res.json({ 
-        success: true, 
+      // Audit log: PHI creation (patient name, DOB, diagnosis)
+      await writeAuditLog({
+        action: AuditAction.PHI_CREATE,
+        resourceType: "wound_care_referral",
+        resourceId: String(referral.id),
+        ipAddress: getClientIp(req),
+        userAgent: (req.headers["user-agent"] || "").substring(0, 500),
+        outcome: "success",
+        phiAccessed: true,
+      });
+
+      res.json({
+        success: true,
         message: "Thank you for your referral! We will contact you within 1 business day to coordinate the patient's wound care pathway.",
-        id: referral.id 
+        id: referral.id
       });
     } catch (error) {
       if (error instanceof z.ZodError) {
@@ -158,8 +199,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Get contact inquiries (for admin purposes)
-  app.get("/api/contact-inquiries", async (req, res) => {
+  // Get contact inquiries (admin only - requires authentication)
+  app.get("/api/contact-inquiries", adminAuth, async (req, res) => {
     try {
       const inquiries = await storage.getContactInquiries();
       res.json(inquiries);
