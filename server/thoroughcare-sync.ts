@@ -8,7 +8,7 @@ import {
   fetchAllClaims,
 } from "./thoroughcare-client";
 import { db } from "./db";
-import { practices, programSnapshots, revenueSnapshots, revenueByCode, tcSyncLog } from "@shared/schema";
+import { practices, programSnapshots, revenueSnapshots, revenueByCode, tcSyncLog, tcStaffTimeLogs } from "@shared/schema";
 import { eq, and } from "drizzle-orm";
 
 const MONTHS = ["JAN", "FEB", "MAR", "APR", "MAY", "JUN", "JUL", "AUG", "SEP", "OCT", "NOV", "DEC"];
@@ -90,7 +90,7 @@ export async function runFullSync(month?: string, year?: number): Promise<SyncPr
     await resolveOverlapWithCarePlans(enrollmentData);
 
     updateProgress("Time Logs", 55, `Fetching time logs for ${targetMonth} ${targetYear}...`);
-    const timeData = await syncTimeLogs(targetMonth, targetYear);
+    const timeData = await syncTimeLogs(targetMonth, targetYear, patientData);
 
     updateProgress("Snapshots", 80, "Building program snapshots...");
     await buildSnapshots(enrollmentData, timeData, targetMonth, targetYear);
@@ -178,7 +178,7 @@ export async function runHistoricalSync(totalMonths: number = 24): Promise<SyncP
       const monthPct = monthProgressBase + Math.round((i / monthRange.length) * monthProgressRange);
 
       updateProgress("Historical Sync", monthPct, `Month ${i + 1}/${monthRange.length}: Fetching time logs for ${monthLabel}...`);
-      const timeData = await syncTimeLogs(month, year);
+      const timeData = await syncTimeLogs(month, year, patientData);
       totalTimeLogs += timeData.totalLogs;
 
       updateProgress("Historical Sync", monthPct + Math.round(monthProgressRange / monthRange.length / 2), `Month ${i + 1}/${monthRange.length}: Building snapshots for ${monthLabel}...`);
@@ -523,7 +523,7 @@ interface TimeData {
   patientMinutes: Map<string, Map<string, number>>;
 }
 
-async function syncTimeLogs(month: string, year: number): Promise<TimeData> {
+async function syncTimeLogs(month: string, year: number, patientData?: PatientData): Promise<TimeData> {
   const monthIdx = MONTHS.indexOf(month);
   const startDate = new Date(year, monthIdx, 1);
   const endDate = new Date(year, monthIdx + 1, 1);
@@ -542,6 +542,19 @@ async function syncTimeLogs(month: string, year: number): Promise<TimeData> {
   }
 
   const patientMinutes = new Map<string, Map<string, number>>();
+
+  const allPractices = await db.select().from(practices);
+  const tcIdToDbId = new Map<number, number>();
+  for (const p of allPractices) {
+    if (p.thoroughcareId) {
+      tcIdToDbId.set(p.thoroughcareId, p.id);
+    }
+  }
+
+  await db.delete(tcStaffTimeLogs)
+    .where(and(eq(tcStaffTimeLogs.month, month), eq(tcStaffTimeLogs.year, year)));
+
+  const staffLogBatch: any[] = [];
 
   for (const task of tasks) {
     const patientRef = task.for?.reference;
@@ -568,6 +581,62 @@ async function syncTimeLogs(month: string, year: number): Promise<TimeData> {
     }
     const programMins = patientMinutes.get(patientId)!;
     programMins.set(programCode, (programMins.get(programCode) || 0) + minutes);
+
+    const ownerRef = task.owner?.reference || "";
+    const ownerDisplay = task.owner?.display || "";
+    const staffTcId = ownerRef.replace("Practitioner/", "").replace("PractitionerRole/", "") || null;
+    const staffName = ownerDisplay || null;
+
+    const qualifications = task.owner?.extension?.find((e: any) => e.url === "qualification")?.value;
+    let staffRole = qualifications || null;
+    if (!staffRole && ownerDisplay) {
+      const lowerName = ownerDisplay.toLowerCase();
+      if (lowerName.includes("rn") || lowerName.includes("nurse")) staffRole = "Nurse";
+      else if (lowerName.includes("lpn")) staffRole = "LPN";
+      else if (lowerName.includes("ma") || lowerName.includes("assistant")) staffRole = "Medical Assistant";
+      else if (lowerName.includes("enrollment")) staffRole = "Enrollment Specialist";
+      else staffRole = "Care Coordinator";
+    }
+
+    let dbPracticeId: number | null = null;
+    let department: string | null = null;
+    if (patientData) {
+      const tcOrgId = patientData.orgMap.get(patientId);
+      if (tcOrgId !== undefined) {
+        dbPracticeId = tcIdToDbId.get(tcOrgId) || null;
+      }
+      department = patientData.deptMap.get(patientId) || null;
+    }
+
+    const logDate = task.executionPeriod?.start
+      ? new Date(task.executionPeriod.start).toISOString().split("T")[0]
+      : startStr;
+
+    const taskId = String(task.id || `${patientId}-${programCode}-${logDate}-${staffTcId || "unknown"}-${minutes}`);
+
+    staffLogBatch.push({
+      tcTaskId: taskId,
+      practiceId: dbPracticeId,
+      department,
+      patientTcId: patientId,
+      programType: programCode,
+      staffTcId,
+      staffName,
+      staffRole,
+      minutes,
+      logDate,
+      month,
+      year,
+    });
+
+    if (staffLogBatch.length >= 500) {
+      await db.insert(tcStaffTimeLogs).values(staffLogBatch);
+      staffLogBatch.length = 0;
+    }
+  }
+
+  if (staffLogBatch.length > 0) {
+    await db.insert(tcStaffTimeLogs).values(staffLogBatch);
   }
 
   updateProgress("Time Logs", 75, `Processed ${tasks.length} time logs for ${patientMinutes.size} patients`);

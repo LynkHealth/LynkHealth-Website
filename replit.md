@@ -75,6 +75,17 @@ A clinical dashboard accessible at `/clinical/*` routes provides a full care coo
 - Admin/supervisor users can review, approve, reject, mark sent, mark paid
 - **Practice Detail View**: Practices tab rows are clickable, opening a detail view showing practice info (name, alias, departments, status) and a billing rates table scoped to that practice with inline editing
 
+### Staffing & FTE Reports
+- Admin dashboard "Staffing" tab for viewing staff hours and FTE calculations from ThoroughCare time log data
+- Database table `tc_staff_time_logs` stores per-task time entries with: tcTaskId, practiceId, department, patientTcId, programType, staffTcId, staffName, staffRole, minutes, logDate, month, year
+- Data populated during ThoroughCare sync by extracting `owner` field from FHIR Task resources (practitioner/staff identity)
+- Staff role inferred from owner qualifications or name patterns (Nurse, LPN, Medical Assistant, Enrollment Specialist, Care Coordinator)
+- Report shows: summary cards (total staff, hours, FTEs, encounters), hours-by-role bar chart with FTE breakdown, detailed staff table with per-program hour breakdown
+- FTE calculation: hours / 160 (standard monthly FTE)
+- Filterable by month/year and practice; CSV export available
+- API route: GET `/api/admin/staffing?month=&year=&practiceId=` (admin-auth protected)
+- Data refreshes each sync — old month data is cleared and replaced with fresh data
+
 ### System Design Choices
 The architecture emphasizes robust validation and error handling. SEO strategy focuses on national reach and service quality. A comprehensive cache management system ensures users always see the latest content after deployments while optimizing performance through aggressive caching of static assets, using a service worker and build-time timestamp injection. HTTP cache headers are carefully configured for various asset types to balance freshness and performance.
 

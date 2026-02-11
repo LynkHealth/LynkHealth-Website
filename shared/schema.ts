@@ -771,3 +771,32 @@ export const insertInvoiceRateSchema = createInsertSchema(invoiceRates).omit({
 
 export type InsertInvoiceRate = z.infer<typeof insertInvoiceRateSchema>;
 export type InvoiceRate = typeof invoiceRates.$inferSelect;
+
+// ============================================================
+// Staff Time Logs (ThoroughCare synced practitioner time data)
+// ============================================================
+
+export const tcStaffTimeLogs = pgTable("tc_staff_time_logs", {
+  id: serial("id").primaryKey(),
+  tcTaskId: text("tc_task_id").notNull(),
+  practiceId: integer("practice_id"),
+  department: text("department"),
+  patientTcId: text("patient_tc_id"),
+  programType: text("program_type").notNull(),
+  staffTcId: text("staff_tc_id"),
+  staffName: text("staff_name"),
+  staffRole: text("staff_role"),
+  minutes: integer("minutes").notNull().default(0),
+  logDate: text("log_date"),
+  month: text("month").notNull(),
+  year: integer("year").notNull(),
+  syncedAt: timestamp("synced_at").defaultNow(),
+});
+
+export const insertTcStaffTimeLogSchema = createInsertSchema(tcStaffTimeLogs).omit({
+  id: true,
+  syncedAt: true,
+});
+
+export type InsertTcStaffTimeLog = z.infer<typeof insertTcStaffTimeLogSchema>;
+export type TcStaffTimeLog = typeof tcStaffTimeLogs.$inferSelect;

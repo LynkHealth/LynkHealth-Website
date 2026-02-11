@@ -1,4 +1,4 @@
-import { users, contactInquiries, nightCoverageInquiries, woundCareReferrals, adminUsers, adminSessions, practices, programSnapshots, revenueSnapshots, revenueByCode, cptBillingCodes, patients, patientConditions, patientMedications, patientAllergies, patientVitals, patientInsurance, programEnrollments, carePlans, carePlanItems, timeLogs, clinicalTasks, patientAssessments, calendarEvents, claims, carePlanTemplates, carePlanTemplateItems, poorEngagementForms, billingEvaluationForms, invoices, invoiceLineItems, type User, type InsertUser, type ContactInquiry, type InsertContactInquiry, type NightCoverageInquiry, type InsertNightCoverageInquiry, type WoundCareReferral, type InsertWoundCareReferral, type AdminUser, type InsertAdminUser, type AdminSession, type Practice, type InsertPractice, type ProgramSnapshot, type InsertProgramSnapshot, type RevenueSnapshot, type InsertRevenueSnapshot, type RevenueByCode, type CptBillingCode, type InsertCptBillingCode, type Patient, type InsertPatient, type PatientCondition, type InsertPatientCondition, type PatientMedication, type InsertPatientMedication, type PatientAllergy, type InsertPatientAllergy, type PatientVital, type InsertPatientVital, type PatientInsurance, type InsertPatientInsurance, type ProgramEnrollment, type InsertProgramEnrollment, type CarePlan, type InsertCarePlan, type CarePlanItem, type InsertCarePlanItem, type TimeLog, type InsertTimeLog, type ClinicalTask, type InsertClinicalTask, type PatientAssessment, type InsertPatientAssessment, type CalendarEvent, type InsertCalendarEvent, type Claim, type InsertClaim, type CarePlanTemplate, type InsertCarePlanTemplate, type CarePlanTemplateItem, type InsertCarePlanTemplateItem, type PoorEngagementForm, type InsertPoorEngagementForm, type BillingEvaluationForm, type InsertBillingEvaluationForm, type Invoice, type InsertInvoice, type InvoiceLineItem, type InsertInvoiceLineItem, invoiceRates, type InvoiceRate, type InsertInvoiceRate } from "@shared/schema";
+import { users, contactInquiries, nightCoverageInquiries, woundCareReferrals, adminUsers, adminSessions, practices, programSnapshots, revenueSnapshots, revenueByCode, cptBillingCodes, patients, patientConditions, patientMedications, patientAllergies, patientVitals, patientInsurance, programEnrollments, carePlans, carePlanItems, timeLogs, clinicalTasks, patientAssessments, calendarEvents, claims, carePlanTemplates, carePlanTemplateItems, poorEngagementForms, billingEvaluationForms, invoices, invoiceLineItems, type User, type InsertUser, type ContactInquiry, type InsertContactInquiry, type NightCoverageInquiry, type InsertNightCoverageInquiry, type WoundCareReferral, type InsertWoundCareReferral, type AdminUser, type InsertAdminUser, type AdminSession, type Practice, type InsertPractice, type ProgramSnapshot, type InsertProgramSnapshot, type RevenueSnapshot, type InsertRevenueSnapshot, type RevenueByCode, type CptBillingCode, type InsertCptBillingCode, type Patient, type InsertPatient, type PatientCondition, type InsertPatientCondition, type PatientMedication, type InsertPatientMedication, type PatientAllergy, type InsertPatientAllergy, type PatientVital, type InsertPatientVital, type PatientInsurance, type InsertPatientInsurance, type ProgramEnrollment, type InsertProgramEnrollment, type CarePlan, type InsertCarePlan, type CarePlanItem, type InsertCarePlanItem, type TimeLog, type InsertTimeLog, type ClinicalTask, type InsertClinicalTask, type PatientAssessment, type InsertPatientAssessment, type CalendarEvent, type InsertCalendarEvent, type Claim, type InsertClaim, type CarePlanTemplate, type InsertCarePlanTemplate, type CarePlanTemplateItem, type InsertCarePlanTemplateItem, type PoorEngagementForm, type InsertPoorEngagementForm, type BillingEvaluationForm, type InsertBillingEvaluationForm, type Invoice, type InsertInvoice, type InvoiceLineItem, type InsertInvoiceLineItem, invoiceRates, type InvoiceRate, type InsertInvoiceRate, tcStaffTimeLogs, type TcStaffTimeLog, type InsertTcStaffTimeLog } from "@shared/schema";
 import { db } from "./db";
 import { eq, ne, and, desc, or, ilike, sql, gte, lte, isNull } from "drizzle-orm";
 
@@ -144,6 +144,10 @@ export interface IStorage {
   getInvoiceLineItems(invoiceId: number): Promise<InvoiceLineItem[]>;
   updateInvoiceStatus(id: number, status: string, userId: number, notes?: string): Promise<Invoice | undefined>;
   deleteInvoice(id: number): Promise<void>;
+
+  // Staff Time Logs
+  getStaffingReport(month: string, year: number, practiceId?: number): Promise<any[]>;
+  clearStaffTimeLogs(month: string, year: number): Promise<void>;
 
   // Dashboard Aggregates
   getDashboardStats(userId?: number): Promise<{
@@ -1085,6 +1089,43 @@ export class DatabaseStorage implements IStorage {
   async deleteInvoice(id: number): Promise<void> {
     await db.delete(invoiceLineItems).where(eq(invoiceLineItems.invoiceId, id));
     await db.delete(invoices).where(eq(invoices.id, id));
+  }
+
+  async getStaffingReport(month: string, year: number, practiceId?: number): Promise<any[]> {
+    const conditions = [
+      eq(tcStaffTimeLogs.month, month),
+      eq(tcStaffTimeLogs.year, year),
+    ];
+    if (practiceId) {
+      conditions.push(eq(tcStaffTimeLogs.practiceId, practiceId));
+    }
+
+    const rows = await db.select({
+      staffTcId: tcStaffTimeLogs.staffTcId,
+      staffName: tcStaffTimeLogs.staffName,
+      staffRole: tcStaffTimeLogs.staffRole,
+      practiceId: tcStaffTimeLogs.practiceId,
+      programType: tcStaffTimeLogs.programType,
+      totalMinutes: sql<number>`COALESCE(SUM(${tcStaffTimeLogs.minutes}), 0)`.as("total_minutes"),
+      logCount: sql<number>`COUNT(*)`.as("log_count"),
+    })
+      .from(tcStaffTimeLogs)
+      .where(and(...conditions))
+      .groupBy(
+        tcStaffTimeLogs.staffTcId,
+        tcStaffTimeLogs.staffName,
+        tcStaffTimeLogs.staffRole,
+        tcStaffTimeLogs.practiceId,
+        tcStaffTimeLogs.programType
+      )
+      .orderBy(desc(sql`SUM(${tcStaffTimeLogs.minutes})`));
+
+    return rows;
+  }
+
+  async clearStaffTimeLogs(month: string, year: number): Promise<void> {
+    await db.delete(tcStaffTimeLogs)
+      .where(and(eq(tcStaffTimeLogs.month, month), eq(tcStaffTimeLogs.year, year)));
   }
 }
 
