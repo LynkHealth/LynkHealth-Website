@@ -416,96 +416,6 @@ function PracticeDetailView({ practice, onBack, currentMonth, currentYear, lynkP
 
       <Card>
         <CardHeader className="pb-3">
-          <CardTitle className="text-base">Billing Rates</CardTitle>
-          <p className="text-xs text-slate-500">Set custom invoice rates for this practice. The claim rate is the Medicare fee schedule rate. The invoice rate is what you charge this practice.</p>
-        </CardHeader>
-        <CardContent>
-          <div className="flex items-end gap-3 mb-4">
-            <div>
-              <label className="text-xs text-slate-500 mb-1 block">Program</label>
-              <select className="border rounded px-3 py-1.5 text-sm" value={rateProgram} onChange={(e) => setRateProgram(e.target.value)}>
-                {PROGRAMS.map(p => <option key={p} value={p}>{p}</option>)}
-              </select>
-            </div>
-            <div>
-              <label className="text-xs text-slate-500 mb-1 block">Year</label>
-              <select className="border rounded px-3 py-1.5 text-sm" value={rateYear} onChange={(e) => setRateYear(parseInt(e.target.value))}>
-                {[2024, 2025, 2026].map(y => <option key={y} value={y}>{y}</option>)}
-              </select>
-            </div>
-          </div>
-
-          {ratesLoading ? (
-            <div className="flex items-center justify-center py-6">
-              <Loader2 className="w-5 h-5 animate-spin text-slate-400" />
-            </div>
-          ) : filteredRates.length === 0 ? (
-            <p className="text-sm text-slate-500 text-center py-4">No billing codes found for {rateProgram} in {rateYear}.</p>
-          ) : (
-            <div className="overflow-x-auto">
-              <table className="w-full text-sm">
-                <thead>
-                  <tr className="border-b bg-slate-50">
-                    <th className="text-left py-2 px-3 font-medium">CPT Code</th>
-                    <th className="text-left py-2 px-3 font-medium">Description</th>
-                    <th className="text-right py-2 px-3 font-medium">Claim Rate</th>
-                    <th className="text-right py-2 px-3 font-medium">Invoice Rate</th>
-                    <th className="text-center py-2 px-3 font-medium w-20">Edit</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {filteredRates.map((r: any) => (
-                    <tr key={r.id} className="border-b hover:bg-slate-50">
-                      <td className="py-2 px-3 font-mono text-xs">{r.cptCode}</td>
-                      <td className="py-2 px-3 text-slate-600 text-xs">{r.description || "—"}</td>
-                      <td className="py-2 px-3 text-right text-slate-500">{formatCurrency(r.claimRateCents)}</td>
-                      <td className="py-2 px-3 text-right">
-                        {editingRateId === r.id ? (
-                          <input
-                            type="number"
-                            step="0.01"
-                            className="border rounded px-2 py-1 text-sm text-right w-24"
-                            value={editRateValue}
-                            onChange={(e) => setEditRateValue(e.target.value)}
-                            onKeyDown={(e) => {
-                              if (e.key === "Enter") saveRate(r);
-                              if (e.key === "Escape") setEditingRateId(null);
-                            }}
-                            autoFocus
-                          />
-                        ) : (
-                          <span className={`font-medium ${r.invoiceRateCents !== r.claimRateCents ? "text-blue-700" : ""}`}>
-                            {formatCurrency(r.invoiceRateCents)}
-                          </span>
-                        )}
-                      </td>
-                      <td className="py-2 px-3 text-center">
-                        {editingRateId === r.id ? (
-                          <div className="flex items-center justify-center gap-1">
-                            <Button variant="ghost" size="sm" onClick={() => saveRate(r)} disabled={savingRate}>
-                              {savingRate ? <Loader2 className="w-3 h-3 animate-spin" /> : <CircleCheck className="w-4 h-4 text-green-600" />}
-                            </Button>
-                            <Button variant="ghost" size="sm" onClick={() => setEditingRateId(null)}>
-                              <CircleX className="w-4 h-4 text-slate-400" />
-                            </Button>
-                          </div>
-                        ) : (
-                          <Button variant="ghost" size="sm" onClick={() => { setEditingRateId(r.id); setEditRateValue((r.invoiceRateCents / 100).toFixed(2)); }}>
-                            <Pencil className="w-3.5 h-3.5 text-slate-400" />
-                          </Button>
-                        )}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          )}
-        </CardContent>
-      </Card>
-
-      <Card>
-        <CardHeader className="pb-3">
           <div className="flex items-center justify-between">
             <CardTitle className="text-base">Staffing Overview</CardTitle>
             <div className="flex gap-2">
@@ -639,6 +549,96 @@ function PracticeDetailView({ practice, onBack, currentMonth, currentYear, lynkP
                 </table>
               </div>
             </>
+          )}
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader className="pb-3">
+          <CardTitle className="text-base">Billing Rates</CardTitle>
+          <p className="text-xs text-slate-500">Set custom invoice rates for this practice. The claim rate is the Medicare fee schedule rate. The invoice rate is what you charge this practice.</p>
+        </CardHeader>
+        <CardContent>
+          <div className="flex items-end gap-3 mb-4">
+            <div>
+              <label className="text-xs text-slate-500 mb-1 block">Program</label>
+              <select className="border rounded px-3 py-1.5 text-sm" value={rateProgram} onChange={(e) => setRateProgram(e.target.value)}>
+                {PROGRAMS.map(p => <option key={p} value={p}>{p}</option>)}
+              </select>
+            </div>
+            <div>
+              <label className="text-xs text-slate-500 mb-1 block">Year</label>
+              <select className="border rounded px-3 py-1.5 text-sm" value={rateYear} onChange={(e) => setRateYear(parseInt(e.target.value))}>
+                {[2024, 2025, 2026].map(y => <option key={y} value={y}>{y}</option>)}
+              </select>
+            </div>
+          </div>
+
+          {ratesLoading ? (
+            <div className="flex items-center justify-center py-6">
+              <Loader2 className="w-5 h-5 animate-spin text-slate-400" />
+            </div>
+          ) : filteredRates.length === 0 ? (
+            <p className="text-sm text-slate-500 text-center py-4">No billing codes found for {rateProgram} in {rateYear}.</p>
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="border-b bg-slate-50">
+                    <th className="text-left py-2 px-3 font-medium">CPT Code</th>
+                    <th className="text-left py-2 px-3 font-medium">Description</th>
+                    <th className="text-right py-2 px-3 font-medium">Claim Rate</th>
+                    <th className="text-right py-2 px-3 font-medium">Invoice Rate</th>
+                    <th className="text-center py-2 px-3 font-medium w-20">Edit</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {filteredRates.map((r: any) => (
+                    <tr key={r.id} className="border-b hover:bg-slate-50">
+                      <td className="py-2 px-3 font-mono text-xs">{r.cptCode}</td>
+                      <td className="py-2 px-3 text-slate-600 text-xs">{r.description || "—"}</td>
+                      <td className="py-2 px-3 text-right text-slate-500">{formatCurrency(r.claimRateCents)}</td>
+                      <td className="py-2 px-3 text-right">
+                        {editingRateId === r.id ? (
+                          <input
+                            type="number"
+                            step="0.01"
+                            className="border rounded px-2 py-1 text-sm text-right w-24"
+                            value={editRateValue}
+                            onChange={(e) => setEditRateValue(e.target.value)}
+                            onKeyDown={(e) => {
+                              if (e.key === "Enter") saveRate(r);
+                              if (e.key === "Escape") setEditingRateId(null);
+                            }}
+                            autoFocus
+                          />
+                        ) : (
+                          <span className={`font-medium ${r.invoiceRateCents !== r.claimRateCents ? "text-blue-700" : ""}`}>
+                            {formatCurrency(r.invoiceRateCents)}
+                          </span>
+                        )}
+                      </td>
+                      <td className="py-2 px-3 text-center">
+                        {editingRateId === r.id ? (
+                          <div className="flex items-center justify-center gap-1">
+                            <Button variant="ghost" size="sm" onClick={() => saveRate(r)} disabled={savingRate}>
+                              {savingRate ? <Loader2 className="w-3 h-3 animate-spin" /> : <CircleCheck className="w-4 h-4 text-green-600" />}
+                            </Button>
+                            <Button variant="ghost" size="sm" onClick={() => setEditingRateId(null)}>
+                              <CircleX className="w-4 h-4 text-slate-400" />
+                            </Button>
+                          </div>
+                        ) : (
+                          <Button variant="ghost" size="sm" onClick={() => { setEditingRateId(r.id); setEditRateValue((r.invoiceRateCents / 100).toFixed(2)); }}>
+                            <Pencil className="w-3.5 h-3.5 text-slate-400" />
+                          </Button>
+                        )}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           )}
         </CardContent>
       </Card>
