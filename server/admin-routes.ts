@@ -1,13 +1,15 @@
 import type { Express, Request, Response, NextFunction } from "express";
 import { storage } from "./storage";
-import { adminLoginSchema, cptBillingCodes, staffRoleOverrides, tcStaffTimeLogs, programSnapshots, practices } from "@shared/schema";
+import { adminLoginSchema, cptBillingCodes, staffRoleOverrides, tcStaffTimeLogs, programSnapshots, practices, eraUploads, eraLineItems } from "@shared/schema";
 import bcrypt from "bcryptjs";
 import crypto from "crypto";
 import { z } from "zod";
 import { runFullSync, runHistoricalSync, runRevenueSync, runHistoricalRevenueSync, getSyncStatus } from "./thoroughcare-sync";
 import { testConnection } from "./thoroughcare-client";
 import { db } from "./db";
-import { eq, and } from "drizzle-orm";
+import { eq, and, desc, sql } from "drizzle-orm";
+import multer from "multer";
+import { parse835, mapCptToProgram } from "./era-parser";
 
 declare global {
   namespace Express {
@@ -628,6 +630,233 @@ export async function registerAdminRoutes(app: Express) {
       res.json({ success: true });
     } catch (error) {
       res.status(500).json({ success: false, message: "Failed to delete role override" });
+    }
+  });
+
+  const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 10 * 1024 * 1024 } });
+
+  app.post("/api/admin/era/upload", adminAuth, upload.single("file"), async (req: Request, res: Response) => {
+    try {
+      const file = (req as any).file;
+      if (!file) {
+        return res.status(400).json({ success: false, message: "No file uploaded" });
+      }
+      const { practiceId, month, year, department } = req.body;
+      if (!practiceId || !month || !year) {
+        return res.status(400).json({ success: false, message: "practiceId, month, and year are required" });
+      }
+
+      const content = file.buffer.toString("utf-8");
+      const result = parse835(content);
+
+      const [uploadRecord] = await db.insert(eraUploads).values({
+        practiceId: parseInt(practiceId),
+        department: department || null,
+        month: month.toUpperCase(),
+        year: parseInt(year),
+        filename: file.originalname,
+        status: result.errors.length > 0 ? "parse_errors" : "processed",
+        totalClaims: result.totalClaims,
+        totalPaidCents: result.totalPaidCents,
+        totalBilledCents: result.totalBilledCents,
+        totalAdjustmentCents: result.totalAdjustmentCents,
+        matchedClaims: 0,
+        unmatchedClaims: 0,
+        uploadedBy: req.adminUser?.id || null,
+        rawContent: content,
+        parseErrors: result.errors.length > 0 ? JSON.stringify(result.errors) : null,
+      }).returning();
+
+      let matchedCount = 0;
+      let unmatchedCount = 0;
+
+      for (const claim of result.claims) {
+        const programType = mapCptToProgram(claim.cptCode);
+
+        let systemRevenueCents: number | null = null;
+        let varianceCents: number | null = null;
+        let matchStatus = "unmatched";
+
+        if (programType) {
+          const billingCodes = await storage.getCptBillingCodes(parseInt(year));
+          const matchingCode = billingCodes.find(c => c.code === claim.cptCode && c.isActive);
+          if (matchingCode) {
+            systemRevenueCents = matchingCode.rateCents * claim.units;
+            varianceCents = claim.paidCents - systemRevenueCents;
+            matchStatus = "matched";
+            matchedCount++;
+          } else {
+            unmatchedCount++;
+          }
+        } else {
+          unmatchedCount++;
+        }
+
+        await db.insert(eraLineItems).values({
+          uploadId: uploadRecord.id,
+          claimId: claim.claimId,
+          patientName: claim.patientName,
+          payerClaimId: claim.payerClaimId,
+          serviceDate: claim.serviceDate,
+          cptCode: claim.cptCode,
+          modifier: claim.modifier,
+          units: claim.units,
+          billedCents: claim.billedCents,
+          paidCents: claim.paidCents,
+          allowedCents: claim.allowedCents,
+          adjustmentCents: claim.adjustmentCents,
+          adjustmentReason: claim.adjustmentReason,
+          programType: programType || "UNKNOWN",
+          matchStatus,
+          systemRevenueCents,
+          varianceCents,
+          notes: null,
+        });
+      }
+
+      await db.update(eraUploads)
+        .set({ matchedClaims: matchedCount, unmatchedClaims: unmatchedCount })
+        .where(eq(eraUploads.id, uploadRecord.id));
+
+      res.json({
+        success: true,
+        upload: { ...uploadRecord, matchedClaims: matchedCount, unmatchedClaims: unmatchedCount },
+        summary: {
+          totalClaims: result.totalClaims,
+          totalLineItems: result.claims.length,
+          totalPaid: result.totalPaidCents / 100,
+          totalBilled: result.totalBilledCents / 100,
+          totalAdjustments: result.totalAdjustmentCents / 100,
+          matched: matchedCount,
+          unmatched: unmatchedCount,
+          payerName: result.payerName,
+          payeeName: result.payeeName,
+          errors: result.errors,
+        },
+      });
+    } catch (error: any) {
+      console.error("ERA upload error:", error);
+      res.status(500).json({ success: false, message: error.message || "Failed to process ERA file" });
+    }
+  });
+
+  app.get("/api/admin/era/uploads", adminAuth, async (req: Request, res: Response) => {
+    try {
+      const { practiceId, month, year } = req.query;
+      let query = db.select({
+        id: eraUploads.id,
+        practiceId: eraUploads.practiceId,
+        department: eraUploads.department,
+        month: eraUploads.month,
+        year: eraUploads.year,
+        filename: eraUploads.filename,
+        status: eraUploads.status,
+        totalClaims: eraUploads.totalClaims,
+        totalPaidCents: eraUploads.totalPaidCents,
+        totalBilledCents: eraUploads.totalBilledCents,
+        totalAdjustmentCents: eraUploads.totalAdjustmentCents,
+        matchedClaims: eraUploads.matchedClaims,
+        unmatchedClaims: eraUploads.unmatchedClaims,
+        uploadedAt: eraUploads.uploadedAt,
+      }).from(eraUploads).orderBy(desc(eraUploads.uploadedAt));
+
+      const conditions: any[] = [];
+      if (practiceId) conditions.push(eq(eraUploads.practiceId, parseInt(practiceId as string)));
+      if (month) conditions.push(eq(eraUploads.month, (month as string).toUpperCase()));
+      if (year) conditions.push(eq(eraUploads.year, parseInt(year as string)));
+
+      const results = conditions.length > 0
+        ? await query.where(and(...conditions))
+        : await query;
+
+      res.json({ success: true, uploads: results });
+    } catch (error: any) {
+      res.status(500).json({ success: false, message: error.message });
+    }
+  });
+
+  app.get("/api/admin/era/uploads/:id", adminAuth, async (req: Request, res: Response) => {
+    try {
+      const id = parseInt(req.params.id);
+      const [upload] = await db.select().from(eraUploads).where(eq(eraUploads.id, id));
+      if (!upload) {
+        return res.status(404).json({ success: false, message: "Upload not found" });
+      }
+      const lineItems = await db.select().from(eraLineItems).where(eq(eraLineItems.uploadId, id));
+
+      res.json({ success: true, upload: { ...upload, rawContent: undefined }, lineItems });
+    } catch (error: any) {
+      res.status(500).json({ success: false, message: error.message });
+    }
+  });
+
+  app.get("/api/admin/era/reconciliation", adminAuth, async (req: Request, res: Response) => {
+    try {
+      const { practiceId, month, year } = req.query;
+      if (!month || !year) {
+        return res.status(400).json({ success: false, message: "month and year are required" });
+      }
+
+      const conditions: any[] = [
+        eq(eraLineItems.matchStatus, "matched"),
+      ];
+
+      const uploadConditions: any[] = [
+        eq(eraUploads.month, (month as string).toUpperCase()),
+        eq(eraUploads.year, parseInt(year as string)),
+      ];
+      if (practiceId) uploadConditions.push(eq(eraUploads.practiceId, parseInt(practiceId as string)));
+
+      const uploads = await db.select({ id: eraUploads.id }).from(eraUploads).where(and(...uploadConditions));
+      const uploadIds = uploads.map(u => u.id);
+
+      if (uploadIds.length === 0) {
+        return res.json({
+          success: true,
+          summary: { totalPaid: 0, totalSystemRevenue: 0, totalVariance: 0, lineCount: 0 },
+          discrepancies: [],
+        });
+      }
+
+      const allLineItems = await db.select().from(eraLineItems)
+        .where(sql`${eraLineItems.uploadId} IN (${sql.join(uploadIds.map(id => sql`${id}`), sql`, `)})`);
+
+      const matched = allLineItems.filter(li => li.matchStatus === "matched");
+      const discrepancies = matched.filter(li => li.varianceCents !== null && li.varianceCents !== 0);
+
+      const totalPaid = matched.reduce((s, li) => s + (li.paidCents || 0), 0);
+      const totalSystemRevenue = matched.reduce((s, li) => s + (li.systemRevenueCents || 0), 0);
+      const totalVariance = totalPaid - totalSystemRevenue;
+
+      res.json({
+        success: true,
+        summary: {
+          totalPaid: totalPaid / 100,
+          totalSystemRevenue: totalSystemRevenue / 100,
+          totalVariance: totalVariance / 100,
+          lineCount: matched.length,
+          discrepancyCount: discrepancies.length,
+        },
+        discrepancies: discrepancies.map(d => ({
+          ...d,
+          paidDollars: (d.paidCents || 0) / 100,
+          systemRevenueDollars: (d.systemRevenueCents || 0) / 100,
+          varianceDollars: (d.varianceCents || 0) / 100,
+        })),
+      });
+    } catch (error: any) {
+      res.status(500).json({ success: false, message: error.message });
+    }
+  });
+
+  app.delete("/api/admin/era/uploads/:id", adminAuth, async (req: Request, res: Response) => {
+    try {
+      const id = parseInt(req.params.id);
+      await db.delete(eraLineItems).where(eq(eraLineItems.uploadId, id));
+      await db.delete(eraUploads).where(eq(eraUploads.id, id));
+      res.json({ success: true });
+    } catch (error: any) {
+      res.status(500).json({ success: false, message: error.message });
     }
   });
 

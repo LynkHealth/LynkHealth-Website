@@ -816,3 +816,60 @@ export const insertTcStaffTimeLogSchema = createInsertSchema(tcStaffTimeLogs).om
 
 export type InsertTcStaffTimeLog = z.infer<typeof insertTcStaffTimeLogSchema>;
 export type TcStaffTimeLog = typeof tcStaffTimeLogs.$inferSelect;
+
+export const eraUploads = pgTable("era_uploads", {
+  id: serial("id").primaryKey(),
+  practiceId: integer("practice_id").notNull(),
+  department: text("department"),
+  month: text("month").notNull(),
+  year: integer("year").notNull(),
+  filename: text("filename").notNull(),
+  status: text("status").notNull().default("processing"),
+  totalClaims: integer("total_claims").default(0),
+  totalPaidCents: integer("total_paid_cents").default(0),
+  totalBilledCents: integer("total_billed_cents").default(0),
+  totalAdjustmentCents: integer("total_adjustment_cents").default(0),
+  matchedClaims: integer("matched_claims").default(0),
+  unmatchedClaims: integer("unmatched_claims").default(0),
+  uploadedBy: integer("uploaded_by"),
+  uploadedAt: timestamp("uploaded_at").defaultNow().notNull(),
+  rawContent: text("raw_content"),
+  parseErrors: text("parse_errors"),
+});
+
+export const insertEraUploadSchema = createInsertSchema(eraUploads).omit({
+  id: true,
+  uploadedAt: true,
+});
+
+export type InsertEraUpload = z.infer<typeof insertEraUploadSchema>;
+export type EraUpload = typeof eraUploads.$inferSelect;
+
+export const eraLineItems = pgTable("era_line_items", {
+  id: serial("id").primaryKey(),
+  uploadId: integer("upload_id").notNull(),
+  claimId: text("claim_id"),
+  patientName: text("patient_name"),
+  payerClaimId: text("payer_claim_id"),
+  serviceDate: text("service_date"),
+  cptCode: text("cpt_code"),
+  modifier: text("modifier"),
+  units: integer("units").default(1),
+  billedCents: integer("billed_cents").default(0),
+  paidCents: integer("paid_cents").default(0),
+  allowedCents: integer("allowed_cents").default(0),
+  adjustmentCents: integer("adjustment_cents").default(0),
+  adjustmentReason: text("adjustment_reason"),
+  programType: text("program_type"),
+  matchStatus: text("match_status").default("pending"),
+  systemRevenueCents: integer("system_revenue_cents"),
+  varianceCents: integer("variance_cents"),
+  notes: text("notes"),
+});
+
+export const insertEraLineItemSchema = createInsertSchema(eraLineItems).omit({
+  id: true,
+});
+
+export type InsertEraLineItem = z.infer<typeof insertEraLineItemSchema>;
+export type EraLineItem = typeof eraLineItems.$inferSelect;

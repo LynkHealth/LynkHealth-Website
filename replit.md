@@ -86,6 +86,16 @@ A clinical dashboard accessible at `/clinical/*` routes provides a full care coo
 - API route: GET `/api/admin/staffing?month=&year=&practiceId=` (admin-auth protected)
 - Data refreshes each sync — old month data is cleared and replaced with fresh data
 
+### ERA/EOB Reconciliation
+- Admin dashboard "ERA/EOB" tab for uploading and reconciling Electronic Remittance Advice (835) files
+- Database tables: `era_uploads` (upload metadata with totals, match counts, status), `era_line_items` (parsed service lines with CPT codes, paid/billed/allowed/adjustment amounts, match status, variance)
+- X12 835 parser (`server/era-parser.ts`) handles ISA delimiter detection, CLP (claim), SVC (service line), CAS (adjustments at both claim and service level), NM1 (patient), DTM (dates), AMT (allowed amounts)
+- CPT-to-program mapping covers CCM, RPM, BHI, PCM, RTM, APCM, AWV, TCM codes
+- Upload flow: Parse 835 → create upload record → create line items → match CPT codes against billing rates → calculate variance (paid vs expected)
+- Reconciliation view: Summary cards (total paid, expected, variance, discrepancy count) + discrepancy detail table
+- Upload history with practice/month/year filtering, detail drill-down showing all line items
+- API routes: POST `/api/admin/era/upload` (multipart), GET `/api/admin/era/uploads`, GET `/api/admin/era/uploads/:id`, GET `/api/admin/era/reconciliation`, DELETE `/api/admin/era/uploads/:id`
+
 ### System Design Choices
 The architecture emphasizes robust validation and error handling. SEO strategy focuses on national reach and service quality. A comprehensive cache management system ensures users always see the latest content after deployments while optimizing performance through aggressive caching of static assets, using a service worker and build-time timestamp injection. HTTP cache headers are carefully configured for various asset types to balance freshness and performance.
 
