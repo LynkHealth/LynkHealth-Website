@@ -348,11 +348,14 @@ function PracticeDetailView({ practice, onBack, currentMonth, currentYear, lynkP
 
   const staffRows = staffingQuery.data?.data || [];
   type DeptBreakdown = { name: string; minutes: number; encounters: number; programs: Record<string, number>; revenueCents: number; claims: number };
+  const normalizeStaffName = (name: string) => name.replace(/\s*\([^)]*\)\s*$/, "").trim();
   const staffMap = new Map<string, { id: string; name: string; role: string; totalMinutes: number; logCount: number; programs: Record<string, number>; revenueCents: number; estimatedClaims: number; deptBreakdown: Map<string, DeptBreakdown> }>();
   for (const r of staffRows) {
-    const key = r.staffTcId || r.staffName || "Unknown";
+    const rawName = r.staffName || "Unknown";
+    const cleanName = normalizeStaffName(rawName);
+    const key = cleanName.toLowerCase();
     if (!staffMap.has(key)) {
-      staffMap.set(key, { id: key, name: r.staffName || "Unknown", role: r.staffRole || "Unknown", totalMinutes: 0, logCount: 0, programs: {}, revenueCents: 0, estimatedClaims: 0, deptBreakdown: new Map() });
+      staffMap.set(key, { id: r.staffTcId || key, name: cleanName, role: r.staffRole || "Unknown", totalMinutes: 0, logCount: 0, programs: {}, revenueCents: 0, estimatedClaims: 0, deptBreakdown: new Map() });
     }
     const entry = staffMap.get(key)!;
     const mins = Number(r.totalMinutes) || 0;
@@ -818,11 +821,14 @@ function StaffingTab({ practices, currentMonth, currentYear, lynkPracticeId, dep
   }
 
   type PracticeBreakdown = { name: string; minutes: number; encounters: number; programs: Record<string, number>; revenueCents: number; claims: number };
+  const normalizeStaffName = (name: string) => name.replace(/\s*\([^)]*\)\s*$/, "").trim();
   const staffMap = new Map<string, { id: string; name: string; role: string; totalMinutes: number; logCount: number; programs: Record<string, number>; revenueCents: number; estimatedClaims: number; practiceIds: Set<number>; departments: Set<string>; practiceBreakdown: Map<string, PracticeBreakdown> }>();
   for (const r of rows) {
-    const key = r.staffTcId || r.staffName || "Unknown";
+    const rawName = r.staffName || "Unknown";
+    const cleanName = normalizeStaffName(rawName);
+    const key = cleanName.toLowerCase();
     if (!staffMap.has(key)) {
-      staffMap.set(key, { id: key, name: r.staffName || "Unknown", role: r.staffRole || "Unknown", totalMinutes: 0, logCount: 0, programs: {}, revenueCents: 0, estimatedClaims: 0, practiceIds: new Set(), departments: new Set(), practiceBreakdown: new Map() });
+      staffMap.set(key, { id: r.staffTcId || key, name: cleanName, role: r.staffRole || "Unknown", totalMinutes: 0, logCount: 0, programs: {}, revenueCents: 0, estimatedClaims: 0, practiceIds: new Set(), departments: new Set(), practiceBreakdown: new Map() });
     }
     const entry = staffMap.get(key)!;
     const mins = Number(r.totalMinutes) || 0;
