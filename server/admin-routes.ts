@@ -1,6 +1,6 @@
 import type { Express, Request, Response, NextFunction } from "express";
 import { storage } from "./storage";
-import { adminLoginSchema, cptBillingCodes, staffRoleOverrides, tcStaffTimeLogs } from "@shared/schema";
+import { adminLoginSchema, cptBillingCodes, staffRoleOverrides, tcStaffTimeLogs, programSnapshots, practices } from "@shared/schema";
 import bcrypt from "bcryptjs";
 import crypto from "crypto";
 import { z } from "zod";
@@ -482,6 +482,113 @@ export async function registerAdminRoutes(app: Express) {
     } catch (error) {
       console.error("Staff revenue report error:", error);
       res.status(500).json({ success: false, message: "Failed to fetch staff revenue report" });
+    }
+  });
+
+  app.get("/api/admin/new-enrollments", adminAuth, async (req: Request, res: Response) => {
+    try {
+      const MONTHS = ["JAN", "FEB", "MAR", "APR", "MAY", "JUN", "JUL", "AUG", "SEP", "OCT", "NOV", "DEC"];
+      const month = req.query.month as string;
+      const year = parseInt(req.query.year as string);
+      const practiceIdParam = req.query.practiceId as string | undefined;
+      const departmentParam = req.query.department as string | undefined;
+
+      if (!month || !year) {
+        return res.status(400).json({ success: false, message: "month and year required" });
+      }
+
+      const monthIdx = MONTHS.indexOf(month);
+      let prevMonth: string;
+      let prevYear: number;
+      if (monthIdx === 0) {
+        prevMonth = "DEC";
+        prevYear = year - 1;
+      } else {
+        prevMonth = MONTHS[monthIdx - 1];
+        prevYear = year;
+      }
+
+      const allPractices = await db.select().from(practices);
+      const lynkPractice = allPractices.find(p => p.name === "Lynk Health" || p.name?.includes("Lynk Demo"));
+      const lynkId = lynkPractice?.id || 5;
+      const practiceNameMap = new Map<number, string>();
+      for (const p of allPractices) practiceNameMap.set(p.id, p.name);
+
+      const currentSnaps = await db.select().from(programSnapshots)
+        .where(and(
+          eq(programSnapshots.month, month),
+          eq(programSnapshots.year, year),
+        ));
+      const prevSnaps = await db.select().from(programSnapshots)
+        .where(and(
+          eq(programSnapshots.month, prevMonth),
+          eq(programSnapshots.year, prevYear),
+        ));
+
+      const prevMap = new Map<string, number>();
+      for (const s of prevSnaps) {
+        if (s.practiceId === lynkId) continue;
+        const key = `${s.practiceId}|${s.programType}|${s.department || ""}`;
+        prevMap.set(key, s.patientsEnrolled || 0);
+      }
+
+      type EnrollmentDelta = {
+        practiceId: number;
+        practiceName: string;
+        programType: string;
+        department: string | null;
+        currentEnrolled: number;
+        previousEnrolled: number;
+        newEnrollments: number;
+      };
+
+      const deltas: EnrollmentDelta[] = [];
+      let totalNew = 0;
+
+      for (const s of currentSnaps) {
+        if (s.practiceId === lynkId) continue;
+        if (practiceIdParam && String(s.practiceId) !== practiceIdParam) continue;
+        if (departmentParam && s.department !== departmentParam) continue;
+        if (!departmentParam && s.department) continue;
+        const key = `${s.practiceId}|${s.programType}|${s.department || ""}`;
+        const prev = prevMap.get(key) || 0;
+        const current = s.patientsEnrolled || 0;
+        const diff = Math.max(0, current - prev);
+        if (diff > 0 || current > 0) {
+          deltas.push({
+            practiceId: s.practiceId,
+            practiceName: practiceNameMap.get(s.practiceId) || "Unknown",
+            programType: s.programType,
+            department: s.department,
+            currentEnrolled: current,
+            previousEnrolled: prev,
+            newEnrollments: diff,
+          });
+        }
+        totalNew += diff;
+      }
+
+      const overrides = await db.select().from(staffRoleOverrides);
+      const enrollmentSpecialist = overrides.find(o => o.overrideRole === "Enrollment Specialist");
+
+      res.json({
+        success: true,
+        month,
+        year,
+        previousMonth: prevMonth,
+        previousYear: prevYear,
+        totalNewEnrollments: totalNew,
+        enrollmentSpecialist: enrollmentSpecialist ? {
+          staffTcId: enrollmentSpecialist.staffTcId,
+          staffName: enrollmentSpecialist.staffName,
+          role: enrollmentSpecialist.overrideRole,
+        } : null,
+        deltas: deltas.filter(d => !d.department).sort((a, b) => b.newEnrollments - a.newEnrollments),
+        departmentDeltas: deltas.filter(d => d.department).sort((a, b) => b.newEnrollments - a.newEnrollments),
+      });
+    } catch (error) {
+      console.error("New enrollments error:", error);
+      res.status(500).json({ success: false, message: "Failed to calculate new enrollments" });
     }
   });
 
