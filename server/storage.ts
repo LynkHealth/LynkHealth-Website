@@ -951,7 +951,7 @@ export class DatabaseStorage implements IStorage {
 
   async generateInvoices(month: string, year: number): Promise<Invoice[]> {
     const allPractices = await db.select().from(practices)
-      .where(ne(practices.name, "Lynk Demo"))
+      .where(and(ne(practices.name, "Lynk Demo"), eq(practices.status, "active")))
       .orderBy(practices.name);
 
     const codeData = await db.select().from(revenueByCode)
