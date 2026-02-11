@@ -1175,8 +1175,15 @@ export class DatabaseStorage implements IStorage {
       .from(revenueSnapshots)
       .where(and(...revConditions));
 
+    const practicesWithDeptRevenue = new Set<string>();
+    for (const r of revRows) {
+      if (r.department) practicesWithDeptRevenue.add(`${r.practiceId}|${r.programType}`);
+    }
+
     const revMap = new Map<string, { revenue: number; claims: number }>();
     for (const r of revRows) {
+      const hasDeptData = practicesWithDeptRevenue.has(`${r.practiceId}|${r.programType}`);
+      if (!r.department && hasDeptData) continue;
       const key = `${r.practiceId}|${r.department || ""}|${r.programType}`;
       const existing = revMap.get(key) || { revenue: 0, claims: 0 };
       existing.revenue += Number(r.totalRevenue) || 0;
@@ -1190,8 +1197,10 @@ export class DatabaseStorage implements IStorage {
       totalMinutesMap.set(key, (totalMinutesMap.get(key) || 0) + (Number(s.totalMinutes) || 0));
     }
 
-    return staffRows.map(s => {
+    const allocatedRevKeys = new Set<string>();
+    const result = staffRows.map(s => {
       const key = `${s.practiceId}|${s.department || ""}|${s.programType}`;
+      allocatedRevKeys.add(key);
       const rev = revMap.get(key);
       const totalMins = totalMinutesMap.get(key) || 1;
       const staffMins = Number(s.totalMinutes) || 0;
@@ -1204,6 +1213,26 @@ export class DatabaseStorage implements IStorage {
         estimatedClaims,
       };
     });
+
+    for (const key of Array.from(revMap.keys())) {
+      if (allocatedRevKeys.has(key)) continue;
+      const rev = revMap.get(key)!;
+      const [pId, dept, prog] = key.split("|");
+      result.push({
+        staffTcId: "__unallocated__",
+        staffName: "Unallocated (No Time Logs)",
+        staffRole: "—",
+        practiceId: parseInt(pId),
+        department: dept || null,
+        programType: prog,
+        totalMinutes: 0,
+        logCount: 0,
+        estimatedRevenueCents: rev.revenue,
+        estimatedClaims: rev.claims,
+      } as any);
+    }
+
+    return result;
   }
 
   async clearStaffTimeLogs(month: string, year: number): Promise<void> {
