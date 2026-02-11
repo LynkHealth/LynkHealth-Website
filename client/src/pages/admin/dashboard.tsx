@@ -275,6 +275,16 @@ function PracticeDetailView({ practice, onBack, currentMonth, currentYear, lynkP
   const [staffYear, setStaffYear] = useState(currentYear);
   const [expandedStaffId, setExpandedStaffId] = useState<string | null>(null);
 
+  const enrollmentQuery = useQuery({
+    queryKey: ["/api/admin/new-enrollments", "practice-detail", practice.id, staffMonth, staffYear],
+    queryFn: async () => {
+      const res = await adminFetch(`/api/admin/new-enrollments?month=${staffMonth}&year=${staffYear}&practiceId=${practice.id}`);
+      if (!res.ok) throw new Error("Failed to fetch enrollment data");
+      return res.json();
+    },
+  });
+  const enrollmentData = enrollmentQuery.data;
+
   const formatCurrency = (cents: number) => {
     return `$${(cents / 100).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
   };
@@ -578,6 +588,80 @@ function PracticeDetailView({ practice, onBack, currentMonth, currentYear, lynkP
           )}
         </CardContent>
       </Card>
+
+      {enrollmentData && (enrollmentData.totalNewEnrollments > 0 || enrollmentData.deltas?.length > 0) && (
+        <Card className="border-amber-200">
+          <CardHeader className="pb-2">
+            <div className="flex items-center justify-between">
+              <CardTitle className="text-base flex items-center gap-2">
+                <Users className="h-4 w-4 text-amber-600" />
+                New Enrollments — {MONTH_DISPLAY[staffMonth]} {staffYear}
+              </CardTitle>
+              {enrollmentData.enrollmentSpecialist && (
+                <span className="text-sm font-medium text-amber-700 bg-amber-50 px-2.5 py-1 rounded">
+                  {enrollmentData.enrollmentSpecialist.staffName}
+                </span>
+              )}
+            </div>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 mb-4">
+              <div className="bg-amber-50 rounded-lg p-3 text-center">
+                <p className="text-xs text-amber-600">New Enrollments</p>
+                <p className="text-2xl font-bold text-amber-700">+{enrollmentData.totalNewEnrollments}</p>
+                <p className="text-[10px] text-amber-500">vs {MONTH_DISPLAY[enrollmentData.previousMonth]} {enrollmentData.previousYear}</p>
+              </div>
+              <div className="bg-slate-50 rounded-lg p-3 text-center">
+                <p className="text-xs text-slate-500">Total Enrolled</p>
+                <p className="text-2xl font-bold">{enrollmentData.deltas?.reduce((s: number, d: any) => s + d.currentEnrolled, 0).toLocaleString()}</p>
+              </div>
+              <div className="bg-slate-50 rounded-lg p-3 text-center">
+                <p className="text-xs text-slate-500">Programs with Growth</p>
+                <p className="text-2xl font-bold">{enrollmentData.deltas?.filter((d: any) => d.newEnrollments > 0).length}</p>
+              </div>
+            </div>
+            {enrollmentData.deltas?.filter((d: any) => d.newEnrollments > 0).length > 0 && (
+              <div className="overflow-x-auto">
+                <table className="w-full text-sm">
+                  <thead>
+                    <tr className="border-b bg-amber-50/50">
+                      <th className="text-left py-2 px-3 font-medium">Program</th>
+                      <th className="text-right py-2 px-3 font-medium">New</th>
+                      <th className="text-right py-2 px-3 font-medium">Previous</th>
+                      <th className="text-right py-2 px-3 font-medium">Current</th>
+                      <th className="text-right py-2 px-3 font-medium">Growth</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {enrollmentData.deltas?.filter((d: any) => d.newEnrollments > 0).map((d: any, i: number) => (
+                      <tr key={i} className="border-b hover:bg-amber-50/30">
+                        <td className="py-1.5 px-3">
+                          <span className={`px-1.5 py-0.5 rounded text-xs font-medium ${programColors[d.programType] || "bg-slate-50 text-slate-700"}`}>
+                            {d.programType}
+                          </span>
+                        </td>
+                        <td className="py-1.5 px-3 text-right font-bold text-amber-700">+{d.newEnrollments}</td>
+                        <td className="py-1.5 px-3 text-right tabular-nums text-slate-500">{d.previousEnrolled.toLocaleString()}</td>
+                        <td className="py-1.5 px-3 text-right tabular-nums">{d.currentEnrolled.toLocaleString()}</td>
+                        <td className="py-1.5 px-3 text-right text-xs text-green-600">
+                          {d.previousEnrolled > 0 ? `+${((d.newEnrollments / d.previousEnrolled) * 100).toFixed(1)}%` : "New"}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                  <tfoot>
+                    <tr className="bg-amber-50 font-bold">
+                      <td className="py-2 px-3">Total</td>
+                      <td className="py-2 px-3 text-right text-amber-700">+{enrollmentData.totalNewEnrollments}</td>
+                      <td className="py-2 px-3" colSpan={3}></td>
+                    </tr>
+                  </tfoot>
+                </table>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      )}
 
       <Card>
         <CardHeader className="pb-3">
