@@ -19,12 +19,16 @@ export const contactInquiries = pgTable("contact_inquiries", {
   phone: text("phone"),
   organizationType: text("organization_type").notNull(),
   message: text("message"),
+  emailHash: text("email_hash"),
+  encryptionKeyId: text("encryption_key_id"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
 export const insertContactInquirySchema = createInsertSchema(contactInquiries).omit({
   id: true,
   createdAt: true,
+  emailHash: true,
+  encryptionKeyId: true,
 });
 
 export type InsertContactInquiry = z.infer<typeof insertContactInquirySchema>;
@@ -40,12 +44,16 @@ export const nightCoverageInquiries = pgTable("night_coverage_inquiries", {
   careSetting: text("care_setting").notNull(),
   expectedVolume: text("expected_volume").notNull(),
   message: text("message"),
+  emailHash: text("email_hash"),
+  encryptionKeyId: text("encryption_key_id"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
 export const insertNightCoverageInquirySchema = createInsertSchema(nightCoverageInquiries).omit({
   id: true,
   createdAt: true,
+  emailHash: true,
+  encryptionKeyId: true,
 });
 
 export type InsertNightCoverageInquiry = z.infer<typeof insertNightCoverageInquirySchema>;
@@ -64,12 +72,20 @@ export const woundCareReferrals = pgTable("wound_care_referrals", {
   careSetting: text("care_setting").notNull(),
   urgency: text("urgency").notNull(),
   notes: text("notes"),
+  patientNameHash: text("patient_name_hash"),
+  patientDobHash: text("patient_dob_hash"),
+  emailHash: text("email_hash"),
+  encryptionKeyId: text("encryption_key_id"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
 export const insertWoundCareReferralSchema = createInsertSchema(woundCareReferrals).omit({
   id: true,
   createdAt: true,
+  patientNameHash: true,
+  patientDobHash: true,
+  emailHash: true,
+  encryptionKeyId: true,
 });
 
 export type InsertWoundCareReferral = z.infer<typeof insertWoundCareReferralSchema>;
@@ -95,6 +111,10 @@ export const adminUsers = pgTable("admin_users", {
   name: text("name").notNull(),
   passwordHash: text("password_hash").notNull(),
   role: text("role").notNull().default("admin"),
+  failedLoginAttempts: integer("failed_login_attempts").default(0),
+  lockedUntil: timestamp("locked_until"),
+  lastPasswordChange: timestamp("last_password_change"),
+  mustChangePassword: integer("must_change_password").default(0),
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
@@ -111,10 +131,51 @@ export const adminSessions = pgTable("admin_sessions", {
   userId: integer("user_id").notNull(),
   token: text("token").notNull().unique(),
   expiresAt: timestamp("expires_at").notNull(),
+  lastActivity: timestamp("last_activity").defaultNow(),
+  ipAddress: text("ip_address"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
 export type AdminSession = typeof adminSessions.$inferSelect;
+
+export const passwordHistory = pgTable("password_history", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull(),
+  passwordHash: text("password_hash").notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+export type PasswordHistory = typeof passwordHistory.$inferSelect;
+
+export const loginAttempts = pgTable("login_attempts", {
+  id: serial("id").primaryKey(),
+  email: text("email").notNull(),
+  ipAddress: text("ip_address"),
+  success: integer("success").notNull().default(0),
+  failureReason: text("failure_reason"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+export type LoginAttempt = typeof loginAttempts.$inferSelect;
+
+export const auditLogs = pgTable("audit_logs", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id"),
+  userEmail: text("user_email"),
+  userRole: text("user_role"),
+  action: text("action").notNull(),
+  resourceType: text("resource_type"),
+  resourceId: text("resource_id"),
+  details: text("details"),
+  ipAddress: text("ip_address"),
+  userAgent: text("user_agent"),
+  outcome: text("outcome").default("success"),
+  phiAccessed: integer("phi_accessed").default(0),
+  timestamp: timestamp("timestamp").defaultNow().notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+export type AuditLog = typeof auditLogs.$inferSelect;
 
 export const practices = pgTable("practices", {
   id: serial("id").primaryKey(),
@@ -269,6 +330,20 @@ export const adminLoginSchema = z.object({
 });
 
 export type AdminLoginInput = z.infer<typeof adminLoginSchema>;
+
+export const adminPasswordSchema = z.string()
+  .min(12, "Password must be at least 12 characters")
+  .regex(/[A-Z]/, "Must contain an uppercase letter")
+  .regex(/[a-z]/, "Must contain a lowercase letter")
+  .regex(/[0-9]/, "Must contain a number")
+  .regex(/[^A-Za-z0-9]/, "Must contain a special character");
+
+export const changePasswordSchema = z.object({
+  currentPassword: z.string().min(1, "Current password is required"),
+  newPassword: adminPasswordSchema,
+});
+
+export type ChangePasswordInput = z.infer<typeof changePasswordSchema>;
 
 // ============================================================
 // Clinical Platform Tables

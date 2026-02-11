@@ -7,6 +7,7 @@ import { z } from "zod";
 import mailchimp from "@mailchimp/mailchimp_marketing";
 import { registerAdminRoutes, seedAdminUsers, seedBillingCodes } from "./admin-routes";
 import { registerClinicalRoutes } from "./clinical-routes";
+import { writeAuditLog, AuditAction, getClientIp } from "./audit";
 
 // Initialize Mailchimp
 mailchimp.setConfig({

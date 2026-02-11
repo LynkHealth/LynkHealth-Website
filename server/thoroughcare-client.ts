@@ -13,8 +13,7 @@ async function getAccessToken(): Promise<string> {
   const clientSecret = process.env.THOROUGHCARE_CLIENT_SECRET;
 
   if (!clientId || !clientSecret) {
-    const envKeys = Object.keys(process.env).filter(k => k.includes("THOROUGH") || k.includes("thorough")).join(", ");
-    throw new Error(`ThoroughCare API credentials not configured. ID=${!!clientId}, Secret=${!!clientSecret}. Related env keys: [${envKeys}]`);
+    throw new Error("ThoroughCare API credentials not configured. Ensure THOROUGHCARE_CLIENT_ID and THOROUGHCARE_CLIENT_SECRET environment variables are set.");
   }
 
   const res = await fetch(`${TC_BASE}/oauth/token`, {
@@ -35,7 +34,9 @@ async function getAccessToken(): Promise<string> {
   return cachedToken.token;
 }
 
-async function tcFetch(path: string, params?: Record<string, string>): Promise<any> {
+const MAX_RETRIES = 5;
+
+async function tcFetch(path: string, params?: Record<string, string>, retryCount: number = 0): Promise<any> {
   const token = await getAccessToken();
   const url = new URL(`${TC_BASE}${path}`);
   if (params) {
@@ -47,10 +48,13 @@ async function tcFetch(path: string, params?: Record<string, string>): Promise<a
   });
 
   if (res.status === 429) {
+    if (retryCount >= MAX_RETRIES) {
+      throw new Error(`ThoroughCare API rate limit exceeded after ${MAX_RETRIES} retries for ${path}`);
+    }
     const resetHeader = res.headers.get("X-RateLimit-Reset");
     const waitMs = resetHeader ? Math.max(0, new Date(resetHeader).getTime() - Date.now()) : 2000;
     await sleep(waitMs);
-    return tcFetch(path, params);
+    return tcFetch(path, params, retryCount + 1);
   }
 
   if (!res.ok) {

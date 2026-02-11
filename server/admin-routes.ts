@@ -1,6 +1,8 @@
 import type { Express, Request, Response, NextFunction } from "express";
+// @ts-ignore - No type definitions available
+import rateLimit from "express-rate-limit";
 import { storage } from "./storage";
-import { adminLoginSchema, cptBillingCodes, staffRoleOverrides, tcStaffTimeLogs, programSnapshots, practices, eraUploads, eraLineItems } from "@shared/schema";
+import { adminLoginSchema, changePasswordSchema, adminPasswordSchema, cptBillingCodes, staffRoleOverrides, tcStaffTimeLogs, programSnapshots, practices, eraUploads, eraLineItems } from "@shared/schema";
 import bcrypt from "bcryptjs";
 import crypto from "crypto";
 import { z } from "zod";
@@ -10,6 +12,22 @@ import { db } from "./db";
 import { eq, and, desc, sql } from "drizzle-orm";
 import multer from "multer";
 import { parse835, mapCptToProgram } from "./era-parser";
+import { writeAuditLog, getAuditLogs, AuditAction, getClientIp } from "./audit";
+
+const INACTIVITY_TIMEOUT_MS = 15 * 60 * 1000;
+const MAX_SESSION_LIFETIME_MS = 4 * 60 * 60 * 1000;
+const MAX_FAILED_ATTEMPTS = 5;
+const LOCKOUT_WINDOW_MINUTES = 30;
+const PASSWORD_HISTORY_COUNT = 5;
+
+const loginRateLimit = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 5,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { success: false, message: "Too many login attempts. Please try again later." },
+  validate: { xForwardedForHeader: false, ip: false },
+});
 
 declare global {
   namespace Express {
@@ -19,26 +37,75 @@ declare global {
   }
 }
 
+function setSessionCookie(res: Response, token: string) {
+  res.cookie("admin_session", token, {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === "production",
+    sameSite: "strict",
+    maxAge: INACTIVITY_TIMEOUT_MS,
+    path: "/",
+  });
+}
+
+function clearSessionCookie(res: Response) {
+  res.clearCookie("admin_session", {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === "production",
+    sameSite: "strict",
+    path: "/",
+  });
+}
+
 export async function adminAuth(req: Request, res: Response, next: NextFunction) {
-  const token = req.headers.authorization?.replace("Bearer ", "") || req.cookies?.admin_token;
+  const token = req.cookies?.admin_session || req.headers.authorization?.replace("Bearer ", "") || req.cookies?.admin_token;
   if (!token) {
     return res.status(401).json({ success: false, message: "Unauthorized" });
   }
   const session = await storage.getAdminSession(token);
   if (!session) {
+    clearSessionCookie(res);
     return res.status(401).json({ success: false, message: "Session expired" });
   }
-  if (session.expiresAt && new Date(session.expiresAt) < new Date()) {
+
+  const now = new Date();
+
+  if (now > new Date(session.expiresAt)) {
     await storage.deleteAdminSession(token);
+    clearSessionCookie(res);
     return res.status(401).json({ success: false, message: "Session expired" });
   }
-  const { db } = await import("./db");
-  const { adminUsers } = await import("@shared/schema");
-  const { eq } = await import("drizzle-orm");
-  const [adminUser] = await db.select().from(adminUsers).where(eq(adminUsers.id, session.userId));
+
+  if (session.lastActivity) {
+    const inactiveSince = now.getTime() - new Date(session.lastActivity).getTime();
+    if (inactiveSince > INACTIVITY_TIMEOUT_MS) {
+      await storage.deleteAdminSession(token);
+      await writeAuditLog({
+        action: AuditAction.SESSION_TIMEOUT,
+        userId: session.userId,
+        resourceType: "session",
+        ipAddress: getClientIp(req),
+        userAgent: (req.headers["user-agent"] || "").substring(0, 500),
+        outcome: "success",
+      });
+      clearSessionCookie(res);
+      return res.status(401).json({ success: false, message: "Session timed out due to inactivity" });
+    }
+  }
+
+  const adminUser = await storage.getAdminUserById(session.userId);
   if (!adminUser) {
     return res.status(401).json({ success: false, message: "User not found" });
   }
+
+  try {
+    const { adminSessions: sessionsTable } = await import("@shared/schema");
+    await db.update(sessionsTable)
+      .set({ lastActivity: now })
+      .where(eq(sessionsTable.token, token));
+  } catch (e) {}
+
+  setSessionCookie(res, token);
+
   req.adminUser = { id: adminUser.id, email: adminUser.email, name: adminUser.name, role: adminUser.role };
   next();
 }
@@ -54,20 +121,66 @@ export function requireRole(...roles: string[]) {
 }
 
 export async function registerAdminRoutes(app: Express) {
-  app.post("/api/admin/login", async (req, res) => {
+  app.post("/api/admin/login", loginRateLimit, async (req, res) => {
     try {
       const { email, password } = adminLoginSchema.parse(req.body);
+      const ipAddress = getClientIp(req);
+
+      const recentFailures = await storage.getRecentFailedAttempts(email, LOCKOUT_WINDOW_MINUTES);
+      if (recentFailures >= MAX_FAILED_ATTEMPTS) {
+        await writeAuditLog({
+          action: AuditAction.LOGIN_LOCKED,
+          resourceType: "user",
+          details: { email },
+          ipAddress,
+          userAgent: (req.headers["user-agent"] || "").substring(0, 500),
+          outcome: "failure",
+        });
+        return res.status(429).json({ success: false, message: "Account temporarily locked. Please try again later." });
+      }
+
       const user = await storage.getAdminUserByEmail(email);
       if (!user) {
+        await storage.recordLoginAttempt(email, ipAddress, false, "user_not_found");
         return res.status(401).json({ success: false, message: "Invalid email or password" });
       }
+
+      if (user.lockedUntil && new Date(user.lockedUntil) > new Date()) {
+        return res.status(429).json({ success: false, message: "Account temporarily locked. Please try again later." });
+      }
+
       const valid = await bcrypt.compare(password, user.passwordHash);
       if (!valid) {
+        await storage.recordLoginAttempt(email, ipAddress, false, "invalid_password");
+        await writeAuditLog({
+          action: AuditAction.LOGIN_FAILURE,
+          userId: user.id,
+          resourceType: "user",
+          details: { reason: "invalid_password" },
+          ipAddress,
+          userAgent: (req.headers["user-agent"] || "").substring(0, 500),
+          outcome: "failure",
+        });
         return res.status(401).json({ success: false, message: "Invalid email or password" });
       }
+
+      await storage.recordLoginAttempt(email, ipAddress, true);
+
       const token = crypto.randomBytes(48).toString("hex");
-      const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
+      const expiresAt = new Date(Date.now() + MAX_SESSION_LIFETIME_MS);
       await storage.createAdminSession(user.id, token, expiresAt);
+
+      await writeAuditLog({
+        action: AuditAction.LOGIN_SUCCESS,
+        userId: user.id,
+        resourceType: "user",
+        ipAddress,
+        userAgent: (req.headers["user-agent"] || "").substring(0, 500),
+        outcome: "success",
+      });
+
+      setSessionCookie(res, token);
+
       res.json({
         success: true,
         token,
@@ -83,15 +196,88 @@ export async function registerAdminRoutes(app: Express) {
   });
 
   app.post("/api/admin/logout", adminAuth, async (req, res) => {
-    const token = req.headers.authorization?.replace("Bearer ", "");
+    const token = req.cookies?.admin_session || req.headers.authorization?.replace("Bearer ", "");
     if (token) {
       await storage.deleteAdminSession(token);
     }
+    await writeAuditLog({
+      action: AuditAction.LOGOUT,
+      userId: req.adminUser?.id,
+      resourceType: "user",
+      ipAddress: getClientIp(req),
+      userAgent: (req.headers["user-agent"] || "").substring(0, 500),
+      outcome: "success",
+    });
+    clearSessionCookie(res);
     res.json({ success: true });
   });
 
   app.get("/api/admin/me", adminAuth, async (req, res) => {
     res.json({ success: true, user: req.adminUser });
+  });
+
+  app.post("/api/admin/change-password", adminAuth, async (req, res) => {
+    try {
+      const { currentPassword, newPassword } = changePasswordSchema.parse(req.body);
+      const user = await storage.getAdminUserById(req.adminUser!.id);
+      if (!user) {
+        return res.status(404).json({ success: false, message: "User not found" });
+      }
+      const validCurrent = await bcrypt.compare(currentPassword, user.passwordHash);
+      if (!validCurrent) {
+        return res.status(401).json({ success: false, message: "Current password is incorrect" });
+      }
+      const history = await storage.getPasswordHistory(user.id, PASSWORD_HISTORY_COUNT);
+      for (const entry of history) {
+        if (await bcrypt.compare(newPassword, entry.passwordHash)) {
+          return res.status(400).json({ success: false, message: `Cannot reuse the last ${PASSWORD_HISTORY_COUNT} passwords` });
+        }
+      }
+      const newHash = await bcrypt.hash(newPassword, 12);
+      await storage.addPasswordHistory(user.id, user.passwordHash);
+      await storage.updateAdminUser(user.id, {
+        passwordHash: newHash,
+        lastPasswordChange: new Date(),
+      });
+      await storage.deleteUserSessions(user.id);
+      const newToken = crypto.randomBytes(48).toString("hex");
+      const expiresAt = new Date(Date.now() + MAX_SESSION_LIFETIME_MS);
+      await storage.createAdminSession(user.id, newToken, expiresAt);
+      setSessionCookie(res, newToken);
+      await writeAuditLog({
+        action: AuditAction.PASSWORD_CHANGE,
+        userId: user.id,
+        resourceType: "user",
+        ipAddress: getClientIp(req),
+        userAgent: (req.headers["user-agent"] || "").substring(0, 500),
+        outcome: "success",
+      });
+      res.json({ success: true, token: newToken, message: "Password changed successfully" });
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ success: false, message: "Invalid password data", errors: error.errors });
+      }
+      console.error("Change password error:", error);
+      res.status(500).json({ success: false, message: "Failed to change password" });
+    }
+  });
+
+  app.get("/api/admin/audit-logs", adminAuth, requireRole("admin"), async (req, res) => {
+    try {
+      const { action, userId, startDate, endDate, limit, offset } = req.query;
+      const logs = await getAuditLogs({
+        action: action as string,
+        userId: userId ? Number(userId) : undefined,
+        startDate: startDate ? new Date(startDate as string) : undefined,
+        endDate: endDate ? new Date(endDate as string) : undefined,
+        limit: limit ? Number(limit) : 100,
+        offset: offset ? Number(offset) : 0,
+      });
+      res.json({ success: true, logs });
+    } catch (error) {
+      console.error("Error fetching audit logs:", error);
+      res.status(500).json({ success: false, message: "Failed to fetch audit logs" });
+    }
   });
 
   app.get("/api/admin/dashboard", adminAuth, async (req, res) => {

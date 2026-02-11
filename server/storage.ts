@@ -1,6 +1,10 @@
-import { users, contactInquiries, nightCoverageInquiries, woundCareReferrals, adminUsers, adminSessions, practices, programSnapshots, revenueSnapshots, revenueByCode, cptBillingCodes, patients, patientConditions, patientMedications, patientAllergies, patientVitals, patientInsurance, programEnrollments, carePlans, carePlanItems, timeLogs, clinicalTasks, patientAssessments, calendarEvents, claims, carePlanTemplates, carePlanTemplateItems, poorEngagementForms, billingEvaluationForms, invoices, invoiceLineItems, type User, type InsertUser, type ContactInquiry, type InsertContactInquiry, type NightCoverageInquiry, type InsertNightCoverageInquiry, type WoundCareReferral, type InsertWoundCareReferral, type AdminUser, type InsertAdminUser, type AdminSession, type Practice, type InsertPractice, type ProgramSnapshot, type InsertProgramSnapshot, type RevenueSnapshot, type InsertRevenueSnapshot, type RevenueByCode, type CptBillingCode, type InsertCptBillingCode, type Patient, type InsertPatient, type PatientCondition, type InsertPatientCondition, type PatientMedication, type InsertPatientMedication, type PatientAllergy, type InsertPatientAllergy, type PatientVital, type InsertPatientVital, type PatientInsurance, type InsertPatientInsurance, type ProgramEnrollment, type InsertProgramEnrollment, type CarePlan, type InsertCarePlan, type CarePlanItem, type InsertCarePlanItem, type TimeLog, type InsertTimeLog, type ClinicalTask, type InsertClinicalTask, type PatientAssessment, type InsertPatientAssessment, type CalendarEvent, type InsertCalendarEvent, type Claim, type InsertClaim, type CarePlanTemplate, type InsertCarePlanTemplate, type CarePlanTemplateItem, type InsertCarePlanTemplateItem, type PoorEngagementForm, type InsertPoorEngagementForm, type BillingEvaluationForm, type InsertBillingEvaluationForm, type Invoice, type InsertInvoice, type InvoiceLineItem, type InsertInvoiceLineItem, invoiceRates, type InvoiceRate, type InsertInvoiceRate, tcStaffTimeLogs, type TcStaffTimeLog, type InsertTcStaffTimeLog } from "@shared/schema";
+import { users, contactInquiries, nightCoverageInquiries, woundCareReferrals, adminUsers, adminSessions, practices, programSnapshots, revenueSnapshots, revenueByCode, cptBillingCodes, patients, patientConditions, patientMedications, patientAllergies, patientVitals, patientInsurance, programEnrollments, carePlans, carePlanItems, timeLogs, clinicalTasks, patientAssessments, calendarEvents, claims, carePlanTemplates, carePlanTemplateItems, poorEngagementForms, billingEvaluationForms, invoices, invoiceLineItems, auditLogs, loginAttempts, passwordHistory, type User, type InsertUser, type ContactInquiry, type InsertContactInquiry, type NightCoverageInquiry, type InsertNightCoverageInquiry, type WoundCareReferral, type InsertWoundCareReferral, type AdminUser, type InsertAdminUser, type AdminSession, type Practice, type InsertPractice, type ProgramSnapshot, type InsertProgramSnapshot, type RevenueSnapshot, type InsertRevenueSnapshot, type RevenueByCode, type CptBillingCode, type InsertCptBillingCode, type Patient, type InsertPatient, type PatientCondition, type InsertPatientCondition, type PatientMedication, type InsertPatientMedication, type PatientAllergy, type InsertPatientAllergy, type PatientVital, type InsertPatientVital, type PatientInsurance, type InsertPatientInsurance, type ProgramEnrollment, type InsertProgramEnrollment, type CarePlan, type InsertCarePlan, type CarePlanItem, type InsertCarePlanItem, type TimeLog, type InsertTimeLog, type ClinicalTask, type InsertClinicalTask, type PatientAssessment, type InsertPatientAssessment, type CalendarEvent, type InsertCalendarEvent, type Claim, type InsertClaim, type CarePlanTemplate, type InsertCarePlanTemplate, type CarePlanTemplateItem, type InsertCarePlanTemplateItem, type PoorEngagementForm, type InsertPoorEngagementForm, type BillingEvaluationForm, type InsertBillingEvaluationForm, type Invoice, type InsertInvoice, type InvoiceLineItem, type InsertInvoiceLineItem, invoiceRates, type InvoiceRate, type InsertInvoiceRate, tcStaffTimeLogs, type TcStaffTimeLog, type InsertTcStaffTimeLog, type AuditLog, type LoginAttempt, type PasswordHistory } from "@shared/schema";
 import { db } from "./db";
-import { eq, ne, and, desc, or, ilike, sql, gte, lte, isNull } from "drizzle-orm";
+import { eq, ne, and, desc, or, ilike, sql, gte, lte, isNull, lt } from "drizzle-orm";
+import {
+  encryptField, decryptField, hashForSearch,
+  getCurrentKeyId, isEncryptionConfigured,
+} from "./encryption";
 
 export interface IStorage {
   getUser(id: number): Promise<User | undefined>;
@@ -13,10 +17,19 @@ export interface IStorage {
   createWoundCareReferral(referral: InsertWoundCareReferral): Promise<WoundCareReferral>;
   getWoundCareReferrals(): Promise<WoundCareReferral[]>;
   getAdminUserByEmail(email: string): Promise<AdminUser | undefined>;
+  getAdminUserById(id: number): Promise<AdminUser | undefined>;
   createAdminUser(user: InsertAdminUser): Promise<AdminUser>;
+  updateAdminUser(id: number, updates: Partial<AdminUser>): Promise<AdminUser | undefined>;
+  getAdminUsers(): Promise<AdminUser[]>;
   createAdminSession(userId: number, token: string, expiresAt: Date): Promise<AdminSession>;
   getAdminSession(token: string): Promise<AdminSession | undefined>;
   deleteAdminSession(token: string): Promise<void>;
+  deleteUserSessions(userId: number): Promise<void>;
+  cleanExpiredSessions(): Promise<void>;
+  recordLoginAttempt(email: string, ipAddress: string, success: boolean, failureReason?: string): Promise<void>;
+  getRecentFailedAttempts(email: string, minutes: number): Promise<number>;
+  addPasswordHistory(userId: number, hash: string): Promise<void>;
+  getPasswordHistory(userId: number, limit: number): Promise<PasswordHistory[]>;
   getPractices(): Promise<Practice[]>;
   createPractice(practice: InsertPractice): Promise<Practice>;
   getProgramSnapshots(practiceId?: number, programType?: string, month?: string, year?: number): Promise<ProgramSnapshot[]>;
@@ -228,8 +241,62 @@ export class DatabaseStorage implements IStorage {
     return session || undefined;
   }
 
+  async getAdminUserById(id: number): Promise<AdminUser | undefined> {
+    const [user] = await db.select().from(adminUsers).where(eq(adminUsers.id, id));
+    return user || undefined;
+  }
+
+  async updateAdminUser(id: number, updates: Partial<AdminUser>): Promise<AdminUser | undefined> {
+    const [updated] = await db.update(adminUsers).set(updates).where(eq(adminUsers.id, id)).returning();
+    return updated || undefined;
+  }
+
+  async getAdminUsers(): Promise<AdminUser[]> {
+    return await db.select().from(adminUsers).orderBy(adminUsers.name);
+  }
+
   async deleteAdminSession(token: string): Promise<void> {
     await db.delete(adminSessions).where(eq(adminSessions.token, token));
+  }
+
+  async deleteUserSessions(userId: number): Promise<void> {
+    await db.delete(adminSessions).where(eq(adminSessions.userId, userId));
+  }
+
+  async cleanExpiredSessions(): Promise<void> {
+    const now = new Date();
+    await db.delete(adminSessions).where(lt(adminSessions.expiresAt, now));
+  }
+
+  async recordLoginAttempt(email: string, ipAddress: string, success: boolean, failureReason?: string): Promise<void> {
+    await db.insert(loginAttempts).values({
+      email,
+      ipAddress,
+      success: success ? 1 : 0,
+      failureReason: failureReason || null,
+    });
+  }
+
+  async getRecentFailedAttempts(email: string, minutes: number): Promise<number> {
+    const cutoff = new Date(Date.now() - minutes * 60 * 1000);
+    const results = await db.select().from(loginAttempts)
+      .where(and(
+        eq(loginAttempts.email, email),
+        eq(loginAttempts.success, 0),
+        gte(loginAttempts.createdAt, cutoff),
+      ));
+    return results.length;
+  }
+
+  async addPasswordHistory(userId: number, hash: string): Promise<void> {
+    await db.insert(passwordHistory).values({ userId, passwordHash: hash });
+  }
+
+  async getPasswordHistory(userId: number, limit: number): Promise<PasswordHistory[]> {
+    return await db.select().from(passwordHistory)
+      .where(eq(passwordHistory.userId, userId))
+      .orderBy(desc(passwordHistory.createdAt))
+      .limit(limit);
   }
 
   async getPractices(): Promise<Practice[]> {
@@ -725,22 +792,6 @@ export class DatabaseStorage implements IStorage {
     const [updated] = await db.update(claims)
       .set(updates)
       .where(eq(claims.id, id))
-      .returning();
-    return updated || undefined;
-  }
-
-  // ============================================================
-  // Admin Users
-  // ============================================================
-
-  async getAdminUsers(): Promise<AdminUser[]> {
-    return await db.select().from(adminUsers).orderBy(adminUsers.name);
-  }
-
-  async updateAdminUser(id: number, updates: Partial<InsertAdminUser>): Promise<AdminUser | undefined> {
-    const [updated] = await db.update(adminUsers)
-      .set(updates)
-      .where(eq(adminUsers.id, id))
       .returning();
     return updated || undefined;
   }
