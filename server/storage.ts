@@ -147,6 +147,7 @@ export interface IStorage {
 
   // Staff Time Logs
   getStaffingReport(month: string, year: number, practiceId?: number, department?: string): Promise<any[]>;
+  getStaffRevenueReport(month: string, year: number, practiceId?: number, department?: string): Promise<any[]>;
   clearStaffTimeLogs(month: string, year: number): Promise<void>;
 
   // Dashboard Aggregates
@@ -1126,6 +1127,83 @@ export class DatabaseStorage implements IStorage {
       .orderBy(desc(sql`SUM(${tcStaffTimeLogs.minutes})`));
 
     return rows;
+  }
+
+  async getStaffRevenueReport(month: string, year: number, practiceId?: number, department?: string): Promise<any[]> {
+    const staffConditions = [
+      eq(tcStaffTimeLogs.month, month),
+      eq(tcStaffTimeLogs.year, year),
+    ];
+    if (practiceId) staffConditions.push(eq(tcStaffTimeLogs.practiceId, practiceId));
+    if (department) staffConditions.push(eq(tcStaffTimeLogs.department, department));
+
+    const staffRows = await db.select({
+      staffTcId: tcStaffTimeLogs.staffTcId,
+      staffName: tcStaffTimeLogs.staffName,
+      staffRole: tcStaffTimeLogs.staffRole,
+      practiceId: tcStaffTimeLogs.practiceId,
+      department: tcStaffTimeLogs.department,
+      programType: tcStaffTimeLogs.programType,
+      totalMinutes: sql<number>`COALESCE(SUM(${tcStaffTimeLogs.minutes}), 0)`.as("total_minutes"),
+      logCount: sql<number>`COUNT(*)`.as("log_count"),
+    })
+      .from(tcStaffTimeLogs)
+      .where(and(...staffConditions))
+      .groupBy(
+        tcStaffTimeLogs.staffTcId,
+        tcStaffTimeLogs.staffName,
+        tcStaffTimeLogs.staffRole,
+        tcStaffTimeLogs.practiceId,
+        tcStaffTimeLogs.department,
+        tcStaffTimeLogs.programType
+      );
+
+    const revConditions = [
+      eq(revenueSnapshots.month, month),
+      eq(revenueSnapshots.year, year),
+    ];
+    if (practiceId) revConditions.push(eq(revenueSnapshots.practiceId, practiceId));
+    if (department) revConditions.push(eq(revenueSnapshots.department, department));
+
+    const revRows = await db.select({
+      practiceId: revenueSnapshots.practiceId,
+      department: revenueSnapshots.department,
+      programType: revenueSnapshots.programType,
+      totalRevenue: revenueSnapshots.totalRevenue,
+      claimCount: revenueSnapshots.claimCount,
+    })
+      .from(revenueSnapshots)
+      .where(and(...revConditions));
+
+    const revMap = new Map<string, { revenue: number; claims: number }>();
+    for (const r of revRows) {
+      const key = `${r.practiceId}|${r.department || ""}|${r.programType}`;
+      const existing = revMap.get(key) || { revenue: 0, claims: 0 };
+      existing.revenue += Number(r.totalRevenue) || 0;
+      existing.claims += Number(r.claimCount) || 0;
+      revMap.set(key, existing);
+    }
+
+    const totalMinutesMap = new Map<string, number>();
+    for (const s of staffRows) {
+      const key = `${s.practiceId}|${s.department || ""}|${s.programType}`;
+      totalMinutesMap.set(key, (totalMinutesMap.get(key) || 0) + (Number(s.totalMinutes) || 0));
+    }
+
+    return staffRows.map(s => {
+      const key = `${s.practiceId}|${s.department || ""}|${s.programType}`;
+      const rev = revMap.get(key);
+      const totalMins = totalMinutesMap.get(key) || 1;
+      const staffMins = Number(s.totalMinutes) || 0;
+      const proportion = staffMins / totalMins;
+      const estimatedRevenue = rev ? Math.round(rev.revenue * proportion) : 0;
+      const estimatedClaims = rev ? Math.round(rev.claims * proportion) : 0;
+      return {
+        ...s,
+        estimatedRevenueCents: estimatedRevenue,
+        estimatedClaims,
+      };
+    });
   }
 
   async clearStaffTimeLogs(month: string, year: number): Promise<void> {

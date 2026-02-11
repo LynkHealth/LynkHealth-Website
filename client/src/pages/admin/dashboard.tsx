@@ -328,42 +328,50 @@ function PracticeDetailView({ practice, onBack, currentMonth, currentYear, lynkP
 
   const isLynkPractice = practice.id === lynkPracticeId;
   const staffingQuery = useQuery({
-    queryKey: ["/api/admin/staffing", "practice-detail", practice.id, staffMonth, staffYear],
+    queryKey: ["/api/admin/staff-revenue", "practice-detail", practice.id, staffMonth, staffYear],
     queryFn: async () => {
-      const res = await adminFetch(`/api/admin/staffing?month=${staffMonth}&year=${staffYear}&practiceId=${practice.id}`);
+      const res = await adminFetch(`/api/admin/staff-revenue?month=${staffMonth}&year=${staffYear}&practiceId=${practice.id}`);
       if (!res.ok) throw new Error("Failed to fetch staffing data");
       return res.json();
     },
   });
 
   const staffRows = staffingQuery.data?.data || [];
-  type DeptBreakdown = { name: string; minutes: number; encounters: number; programs: Record<string, number> };
-  const staffMap = new Map<string, { id: string; name: string; role: string; totalMinutes: number; logCount: number; programs: Record<string, number>; deptBreakdown: Map<string, DeptBreakdown> }>();
+  type DeptBreakdown = { name: string; minutes: number; encounters: number; programs: Record<string, number>; revenueCents: number; claims: number };
+  const staffMap = new Map<string, { id: string; name: string; role: string; totalMinutes: number; logCount: number; programs: Record<string, number>; revenueCents: number; estimatedClaims: number; deptBreakdown: Map<string, DeptBreakdown> }>();
   for (const r of staffRows) {
     const key = r.staffTcId || r.staffName || "Unknown";
     if (!staffMap.has(key)) {
-      staffMap.set(key, { id: key, name: r.staffName || "Unknown", role: r.staffRole || "Unknown", totalMinutes: 0, logCount: 0, programs: {}, deptBreakdown: new Map() });
+      staffMap.set(key, { id: key, name: r.staffName || "Unknown", role: r.staffRole || "Unknown", totalMinutes: 0, logCount: 0, programs: {}, revenueCents: 0, estimatedClaims: 0, deptBreakdown: new Map() });
     }
     const entry = staffMap.get(key)!;
     const mins = Number(r.totalMinutes) || 0;
     const logs = Number(r.logCount) || 0;
+    const rev = Number(r.estimatedRevenueCents) || 0;
+    const clms = Number(r.estimatedClaims) || 0;
     entry.totalMinutes += mins;
     entry.logCount += logs;
+    entry.revenueCents += rev;
+    entry.estimatedClaims += clms;
     entry.programs[r.programType] = (entry.programs[r.programType] || 0) + mins;
     if (isLynkPractice && r.department) {
       const dk = r.department;
-      if (!entry.deptBreakdown.has(dk)) entry.deptBreakdown.set(dk, { name: dk, minutes: 0, encounters: 0, programs: {} });
+      if (!entry.deptBreakdown.has(dk)) entry.deptBreakdown.set(dk, { name: dk, minutes: 0, encounters: 0, programs: {}, revenueCents: 0, claims: 0 });
       const db = entry.deptBreakdown.get(dk)!;
       db.minutes += mins;
       db.encounters += logs;
+      db.revenueCents += rev;
+      db.claims += clms;
       db.programs[r.programType] = (db.programs[r.programType] || 0) + mins;
     }
   }
-  const practiceStaffList = Array.from(staffMap.values()).sort((a, b) => b.totalMinutes - a.totalMinutes);
+  const practiceStaffList = Array.from(staffMap.values()).sort((a, b) => b.revenueCents - a.revenueCents);
   const practiceTotalMinutes = practiceStaffList.reduce((sum, s) => sum + s.totalMinutes, 0);
   const practiceTotalHours = Math.round(practiceTotalMinutes / 60 * 10) / 10;
   const practiceTotalFTE = Math.round(practiceTotalHours / FTE_HOURS * 100) / 100;
   const practiceTotalLogs = practiceStaffList.reduce((sum, s) => sum + s.logCount, 0);
+  const practiceTotalRevenue = practiceStaffList.reduce((sum, s) => sum + s.revenueCents, 0);
+  const practiceTotalClaims = practiceStaffList.reduce((sum, s) => sum + s.estimatedClaims, 0);
   const practiceProgramTotals: Record<string, number> = {};
   for (const s of practiceStaffList) {
     for (const [prog, mins] of Object.entries(s.programs)) {
@@ -437,7 +445,15 @@ function PracticeDetailView({ practice, onBack, currentMonth, currentYear, lynkP
             <p className="text-sm text-slate-500 text-center py-6">No staffing data for {MONTH_DISPLAY[staffMonth]} {staffYear}.</p>
           ) : (
             <>
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-4">
+              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 mb-4">
+                <div className="bg-green-50 rounded-lg p-3 text-center">
+                  <p className="text-xs text-slate-500">Revenue</p>
+                  <p className="text-xl font-bold text-green-700">${(practiceTotalRevenue / 100).toLocaleString("en-US", { minimumFractionDigits: 0, maximumFractionDigits: 0 })}</p>
+                </div>
+                <div className="bg-indigo-50 rounded-lg p-3 text-center">
+                  <p className="text-xs text-slate-500">Claims</p>
+                  <p className="text-xl font-bold text-indigo-700">{practiceTotalClaims.toLocaleString()}</p>
+                </div>
                 <div className="bg-slate-50 rounded-lg p-3 text-center">
                   <p className="text-xs text-slate-500">Staff</p>
                   <p className="text-xl font-bold">{practiceStaffList.length}</p>
@@ -469,17 +485,20 @@ function PracticeDetailView({ practice, onBack, currentMonth, currentYear, lynkP
                   <thead>
                     <tr className="border-b bg-slate-50">
                       <th className="text-left py-2 px-3 font-medium">Staff Member</th>
+                      <th className="text-right py-2 px-3 font-medium">Revenue</th>
+                      <th className="text-right py-2 px-3 font-medium">Claims</th>
                       <th className="text-right py-2 px-3 font-medium">Hours</th>
                       <th className="text-center py-2 px-3 font-medium">FTE</th>
                       <th className="text-right py-2 px-3 font-medium">Encounters</th>
-                      <th className="text-left py-2 px-3 font-medium">Program Breakdown</th>
+                      <th className="text-left py-2 px-3 font-medium">Programs</th>
                     </tr>
                   </thead>
                   <tbody>
                     {practiceStaffList.map((s) => {
                       const hrs = Math.round(s.totalMinutes / 60 * 10) / 10;
                       const fte = Math.round(hrs / FTE_HOURS * 100) / 100;
-                      const deptBreakdowns = Array.from(s.deptBreakdown.values()).sort((a, b) => b.minutes - a.minutes);
+                      const rev = s.revenueCents / 100;
+                      const deptBreakdowns = Array.from(s.deptBreakdown.values()).sort((a, b) => b.revenueCents - a.revenueCents);
                       const hasDepts = isLynkPractice && deptBreakdowns.length > 1;
                       const isOpen = expandedStaffId === s.id;
                       return (
@@ -494,6 +513,8 @@ function PracticeDetailView({ practice, onBack, currentMonth, currentYear, lynkP
                                 <span className="text-xs text-slate-400">{s.role}</span>
                               </div>
                             </td>
+                            <td className="py-2 px-3 text-right tabular-nums font-medium text-green-700">${rev.toLocaleString("en-US", { minimumFractionDigits: 0, maximumFractionDigits: 0 })}</td>
+                            <td className="py-2 px-3 text-right tabular-nums">{s.estimatedClaims.toLocaleString()}</td>
                             <td className="py-2 px-3 text-right tabular-nums">{hrs.toLocaleString()}</td>
                             <td className="py-2 px-3 text-center">
                               <span className={`px-2 py-0.5 rounded text-xs font-medium ${
@@ -513,11 +534,14 @@ function PracticeDetailView({ practice, onBack, currentMonth, currentYear, lynkP
                           </tr>
                           {isOpen && deptBreakdowns.map((db, j) => {
                             const dbHrs = Math.round(db.minutes / 60 * 10) / 10;
+                            const dbRev = db.revenueCents / 100;
                             return (
                               <tr key={`dept-${j}`} className="border-b bg-slate-50/80">
                                 <td className="py-1.5 px-3 pl-10">
                                   <span className="text-xs text-slate-500 font-medium">{db.name}</span>
                                 </td>
+                                <td className="py-1.5 px-3 text-right tabular-nums text-xs text-green-600">${dbRev.toLocaleString("en-US", { minimumFractionDigits: 0, maximumFractionDigits: 0 })}</td>
+                                <td className="py-1.5 px-3 text-right tabular-nums text-xs text-slate-600">{db.claims.toLocaleString()}</td>
                                 <td className="py-1.5 px-3 text-right tabular-nums text-xs text-slate-600">{dbHrs.toLocaleString()}</td>
                                 <td className="py-1.5 px-3 text-center text-xs text-slate-400">—</td>
                                 <td className="py-1.5 px-3 text-right tabular-nums text-xs text-slate-600">{db.encounters.toLocaleString()}</td>
@@ -540,6 +564,8 @@ function PracticeDetailView({ practice, onBack, currentMonth, currentYear, lynkP
                   <tfoot>
                     <tr className="bg-slate-100 font-bold">
                       <td className="py-2 px-3">Total ({practiceStaffList.length} staff)</td>
+                      <td className="py-2 px-3 text-right text-green-700">${(practiceTotalRevenue / 100).toLocaleString("en-US", { minimumFractionDigits: 0, maximumFractionDigits: 0 })}</td>
+                      <td className="py-2 px-3 text-right">{practiceTotalClaims.toLocaleString()}</td>
                       <td className="py-2 px-3 text-right">{practiceTotalHours.toLocaleString()}</td>
                       <td className="py-2 px-3 text-center">{practiceTotalFTE.toFixed(2)}</td>
                       <td className="py-2 px-3 text-right">{practiceTotalLogs.toLocaleString()}</td>
@@ -671,9 +697,9 @@ function StaffingTab({ practices, currentMonth, currentYear, lynkPracticeId, dep
   }
 
   const { data, isLoading } = useQuery({
-    queryKey: ["/api/admin/staffing", selectedMonth, selectedYear, selectedPractice],
+    queryKey: ["/api/admin/staff-revenue", selectedMonth, selectedYear, selectedPractice],
     queryFn: async () => {
-      const res = await adminFetch(`/api/admin/staffing?${queryParams}`);
+      const res = await adminFetch(`/api/admin/staff-revenue?${queryParams}`);
       if (!res.ok) throw new Error("Failed to fetch staffing data");
       return res.json();
     },
@@ -688,18 +714,22 @@ function StaffingTab({ practices, currentMonth, currentYear, lynkPracticeId, dep
     practiceNameMap.set(p.id, p.name);
   }
 
-  type PracticeBreakdown = { name: string; minutes: number; encounters: number; programs: Record<string, number> };
-  const staffMap = new Map<string, { id: string; name: string; role: string; totalMinutes: number; logCount: number; programs: Record<string, number>; practiceIds: Set<number>; departments: Set<string>; practiceBreakdown: Map<string, PracticeBreakdown> }>();
+  type PracticeBreakdown = { name: string; minutes: number; encounters: number; programs: Record<string, number>; revenueCents: number; claims: number };
+  const staffMap = new Map<string, { id: string; name: string; role: string; totalMinutes: number; logCount: number; programs: Record<string, number>; revenueCents: number; estimatedClaims: number; practiceIds: Set<number>; departments: Set<string>; practiceBreakdown: Map<string, PracticeBreakdown> }>();
   for (const r of rows) {
     const key = r.staffTcId || r.staffName || "Unknown";
     if (!staffMap.has(key)) {
-      staffMap.set(key, { id: key, name: r.staffName || "Unknown", role: r.staffRole || "Unknown", totalMinutes: 0, logCount: 0, programs: {}, practiceIds: new Set(), departments: new Set(), practiceBreakdown: new Map() });
+      staffMap.set(key, { id: key, name: r.staffName || "Unknown", role: r.staffRole || "Unknown", totalMinutes: 0, logCount: 0, programs: {}, revenueCents: 0, estimatedClaims: 0, practiceIds: new Set(), departments: new Set(), practiceBreakdown: new Map() });
     }
     const entry = staffMap.get(key)!;
     const mins = Number(r.totalMinutes) || 0;
     const logs = Number(r.logCount) || 0;
+    const rev = Number(r.estimatedRevenueCents) || 0;
+    const clms = Number(r.estimatedClaims) || 0;
     entry.totalMinutes += mins;
     entry.logCount += logs;
+    entry.revenueCents += rev;
+    entry.estimatedClaims += clms;
     entry.programs[r.programType] = (entry.programs[r.programType] || 0) + mins;
     if (r.practiceId) entry.practiceIds.add(r.practiceId);
     if (r.department && r.practiceId === lynkPracticeId) {
@@ -708,15 +738,17 @@ function StaffingTab({ practices, currentMonth, currentYear, lynkPracticeId, dep
     const practiceName = (r.department && r.practiceId === lynkPracticeId) ? r.department : (r.practiceId ? (practiceNameMap.get(r.practiceId) || "Unknown") : "Unknown");
     const pbKey = practiceName;
     if (!entry.practiceBreakdown.has(pbKey)) {
-      entry.practiceBreakdown.set(pbKey, { name: practiceName, minutes: 0, encounters: 0, programs: {} });
+      entry.practiceBreakdown.set(pbKey, { name: practiceName, minutes: 0, encounters: 0, programs: {}, revenueCents: 0, claims: 0 });
     }
     const pb = entry.practiceBreakdown.get(pbKey)!;
     pb.minutes += mins;
     pb.encounters += logs;
+    pb.revenueCents += rev;
+    pb.claims += clms;
     pb.programs[r.programType] = (pb.programs[r.programType] || 0) + mins;
   }
 
-  const staffList = Array.from(staffMap.values()).sort((a, b) => b.totalMinutes - a.totalMinutes);
+  const staffList = Array.from(staffMap.values()).sort((a, b) => b.revenueCents - a.revenueCents);
   const toggleExpand = (id: string) => {
     setExpandedStaff(prev => {
       const next = new Set(prev);
@@ -729,6 +761,8 @@ function StaffingTab({ practices, currentMonth, currentYear, lynkPracticeId, dep
   const totalHours = Math.round(totalMinutes / 60 * 10) / 10;
   const totalFTE = Math.round(totalHours / FTE_HOURS * 100) / 100;
   const totalLogs = staffList.reduce((sum, s) => sum + s.logCount, 0);
+  const totalRevenue = staffList.reduce((sum, s) => sum + s.revenueCents, 0);
+  const totalClaims = staffList.reduce((sum, s) => sum + s.estimatedClaims, 0);
 
   const roleMap = new Map<string, number>();
   for (const s of staffList) {
@@ -737,15 +771,16 @@ function StaffingTab({ practices, currentMonth, currentYear, lynkPracticeId, dep
   const roleSummary = Array.from(roleMap.entries()).sort((a, b) => b[1] - a[1]);
 
   const exportCSV = () => {
-    const header = "Staff Name,Role,Total Hours,FTE,Encounters,Practices,Programs\n";
+    const header = "Staff Name,Role,Revenue,Claims,Total Hours,FTE,Encounters,Practices,Programs\n";
     const csvRows = staffList.map(s => {
       const hours = Math.round(s.totalMinutes / 60 * 10) / 10;
       const fte = Math.round(hours / FTE_HOURS * 100) / 100;
+      const rev = (s.revenueCents / 100).toFixed(2);
       const programs = Object.entries(s.programs).map(([k, v]) => `${k}: ${Math.round(v / 60 * 10) / 10}h`).join("; ");
       const nonLynk = Array.from(s.practiceIds).filter(id => id !== lynkPracticeId).map(id => practiceNameMap.get(id) || "").filter(Boolean);
       const depts = Array.from(s.departments);
       const allPracticeNames = [...nonLynk, ...depts].join("; ");
-      return `"${s.name}","${s.role}",${hours},${fte},${s.logCount},"${allPracticeNames}","${programs}"`;
+      return `"${s.name}","${s.role}",${rev},${s.estimatedClaims},${hours},${fte},${s.logCount},"${allPracticeNames}","${programs}"`;
     });
     const blob = new Blob([header + csvRows.join("\n")], { type: "text/csv" });
     const url = URL.createObjectURL(blob);
@@ -804,7 +839,19 @@ function StaffingTab({ practices, currentMonth, currentYear, lynkPracticeId, dep
         </Card>
       ) : (
         <>
-          <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
+          <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-3">
+            <Card className="bg-green-50 border-green-200">
+              <CardContent className="pt-4 pb-3">
+                <p className="text-xs text-green-600 uppercase tracking-wide">Total Revenue</p>
+                <p className="text-2xl font-bold mt-1 text-green-700">${(totalRevenue / 100).toLocaleString("en-US", { minimumFractionDigits: 0, maximumFractionDigits: 0 })}</p>
+              </CardContent>
+            </Card>
+            <Card className="bg-indigo-50 border-indigo-200">
+              <CardContent className="pt-4 pb-3">
+                <p className="text-xs text-indigo-600 uppercase tracking-wide">Total Claims</p>
+                <p className="text-2xl font-bold mt-1 text-indigo-700">{totalClaims.toLocaleString()}</p>
+              </CardContent>
+            </Card>
             <Card>
               <CardContent className="pt-4 pb-3">
                 <p className="text-xs text-slate-500 uppercase tracking-wide">Active Staff</p>
@@ -848,22 +895,25 @@ function StaffingTab({ practices, currentMonth, currentYear, lynkPracticeId, dep
                   <thead>
                     <tr className="border-b bg-slate-50">
                       <th className="text-left py-2 px-3 font-medium">Staff Member</th>
+                      <th className="text-right py-2 px-3 font-medium">Revenue</th>
+                      <th className="text-right py-2 px-3 font-medium">Claims</th>
                       <th className="text-right py-2 px-3 font-medium">Hours</th>
                       <th className="text-center py-2 px-3 font-medium">FTE</th>
                       <th className="text-right py-2 px-3 font-medium">Encounters</th>
                       <th className="text-left py-2 px-3 font-medium">Practices</th>
-                      <th className="text-left py-2 px-3 font-medium">Program Breakdown</th>
+                      <th className="text-left py-2 px-3 font-medium">Programs</th>
                     </tr>
                   </thead>
                   <tbody>
                     {staffList.map((s, i) => {
                       const hours = Math.round(s.totalMinutes / 60 * 10) / 10;
                       const fte = Math.round(hours / FTE_HOURS * 100) / 100;
+                      const rev = s.revenueCents / 100;
                       const nonLynkPractices = Array.from(s.practiceIds).filter(id => id !== lynkPracticeId).map(id => practiceNameMap.get(id) || "").filter(Boolean);
                       const deptNames = Array.from(s.departments);
                       const practiceNames = [...nonLynkPractices, ...deptNames].join(", ");
                       const isExpanded = expandedStaff.has(s.id);
-                      const breakdowns = Array.from(s.practiceBreakdown.values()).sort((a, b) => b.minutes - a.minutes);
+                      const breakdowns = Array.from(s.practiceBreakdown.values()).sort((a, b) => b.revenueCents - a.revenueCents);
                       const hasMultiple = breakdowns.length > 1;
                       return (
                         <Fragment key={s.id}>
@@ -877,6 +927,8 @@ function StaffingTab({ practices, currentMonth, currentYear, lynkPracticeId, dep
                               <span className="text-xs text-slate-400">{s.role}</span>
                             </div>
                           </td>
+                          <td className="py-2 px-3 text-right tabular-nums font-medium text-green-700">${rev.toLocaleString("en-US", { minimumFractionDigits: 0, maximumFractionDigits: 0 })}</td>
+                          <td className="py-2 px-3 text-right tabular-nums">{s.estimatedClaims.toLocaleString()}</td>
                           <td className="py-2 px-3 text-right tabular-nums">{hours.toLocaleString()}</td>
                           <td className="py-2 px-3 text-center">
                             <span className={`px-2 py-0.5 rounded text-xs font-medium ${
@@ -899,11 +951,14 @@ function StaffingTab({ practices, currentMonth, currentYear, lynkPracticeId, dep
                         </tr>
                         {isExpanded && breakdowns.map((pb, j) => {
                           const pbHours = Math.round(pb.minutes / 60 * 10) / 10;
+                          const pbRev = pb.revenueCents / 100;
                           return (
                             <tr key={`${i}-${j}`} className="border-b bg-slate-50/80">
                               <td className="py-1.5 px-3 pl-10">
                                 <span className="text-xs text-slate-500 font-medium">{pb.name}</span>
                               </td>
+                              <td className="py-1.5 px-3 text-right tabular-nums text-xs text-green-600">${pbRev.toLocaleString("en-US", { minimumFractionDigits: 0, maximumFractionDigits: 0 })}</td>
+                              <td className="py-1.5 px-3 text-right tabular-nums text-xs text-slate-600">{pb.claims.toLocaleString()}</td>
                               <td className="py-1.5 px-3 text-right tabular-nums text-xs text-slate-600">{pbHours.toLocaleString()}</td>
                               <td className="py-1.5 px-3 text-center text-xs text-slate-400">—</td>
                               <td className="py-1.5 px-3 text-right tabular-nums text-xs text-slate-600">{pb.encounters.toLocaleString()}</td>
@@ -927,6 +982,8 @@ function StaffingTab({ practices, currentMonth, currentYear, lynkPracticeId, dep
                   <tfoot>
                     <tr className="bg-slate-100 font-bold">
                       <td className="py-2 px-3">Total ({staffList.length} staff)</td>
+                      <td className="py-2 px-3 text-right text-green-700">${(totalRevenue / 100).toLocaleString("en-US", { minimumFractionDigits: 0, maximumFractionDigits: 0 })}</td>
+                      <td className="py-2 px-3 text-right">{totalClaims.toLocaleString()}</td>
                       <td className="py-2 px-3 text-right">{totalHours.toLocaleString()}</td>
                       <td className="py-2 px-3 text-center">{totalFTE.toFixed(2)}</td>
                       <td className="py-2 px-3 text-right">{totalLogs.toLocaleString()}</td>

@@ -468,6 +468,23 @@ export async function registerAdminRoutes(app: Express) {
     }
   });
 
+  app.get("/api/admin/staff-revenue", adminAuth, async (req, res) => {
+    try {
+      const month = req.query.month as string;
+      const year = parseInt(req.query.year as string);
+      const practiceId = req.query.practiceId ? parseInt(req.query.practiceId as string) : undefined;
+      const department = req.query.department as string | undefined;
+      if (!month || !year) {
+        return res.status(400).json({ success: false, message: "month and year are required" });
+      }
+      const data = await storage.getStaffRevenueReport(month, year, practiceId, department);
+      res.json({ success: true, data });
+    } catch (error) {
+      console.error("Staff revenue report error:", error);
+      res.status(500).json({ success: false, message: "Failed to fetch staff revenue report" });
+    }
+  });
+
 }
 
 export async function seedBillingCodes() {
