@@ -53,7 +53,6 @@ export enum AuditAction {
 
   // Session events
   SESSION_TIMEOUT = "SESSION_TIMEOUT",
-  LOGIN_LOCKED = "LOGIN_LOCKED",
   PASSWORD_CHANGE = "PASSWORD_CHANGE",
 
   // Authorization events

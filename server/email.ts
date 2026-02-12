@@ -1,6 +1,6 @@
 import https from "https";
 
-const SENDGRID_API_KEY = process.env.TWILIO_SENDGRID_API_KEY;
+const SENDGRID_API_KEY = process.env.SENDGRID_API_KEY;
 const FROM_EMAIL = "noreply@lynkhealthcare.com";
 const FROM_NAME = "Lynk Health";
 
@@ -13,7 +13,7 @@ interface EmailOptions {
 
 export async function sendEmail(options: EmailOptions): Promise<boolean> {
   if (!SENDGRID_API_KEY) {
-    console.error("[Email] TWILIO_SENDGRID_API_KEY not configured - cannot send email");
+    console.error("[Email] SENDGRID_API_KEY not configured - cannot send email");
     console.log(`[Email] Would have sent to: ${options.to}, subject: ${options.subject}`);
     return false;
   }

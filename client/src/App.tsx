@@ -30,6 +30,8 @@ import FQHCsPage from "@/pages/who-we-work-with/fqhcs";
 import SNFPage from "@/pages/who-we-work-with/snf";
 import HomeHealthPage from "@/pages/who-we-work-with/home-health";
 import AdminLogin from "@/pages/admin/login";
+import AdminForgotPassword from "@/pages/admin/forgot-password";
+import AdminResetPassword from "@/pages/admin/reset-password";
 import AdminDashboard from "@/pages/admin/dashboard";
 import ClinicalLayout from "@/pages/clinical/layout";
 import ClinicalDashboard from "@/pages/clinical/dashboard";
@@ -72,6 +74,8 @@ function Router() {
     return (
       <Switch>
         <Route path="/admin/login" component={AdminLogin} />
+        <Route path="/admin/forgot-password" component={AdminForgotPassword} />
+        <Route path="/admin/reset-password" component={AdminResetPassword} />
         <Route path="/admin" component={AdminDashboard} />
         <Route path="/admin/:rest*" component={AdminDashboard} />
       </Switch>
