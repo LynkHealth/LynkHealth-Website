@@ -20,6 +20,8 @@ app.use((req, res, next) => {
   next();
 });
 
+const isDev = process.env.NODE_ENV !== "production";
+
 // Security headers via helmet
 app.use(helmet({
   contentSecurityPolicy: {
@@ -29,18 +31,21 @@ app.use(helmet({
       styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com"],
       fontSrc: ["'self'", "https://fonts.gstatic.com"],
       imgSrc: ["'self'", "data:", "https:", "blob:"],
-      connectSrc: ["'self'", "https://www.google-analytics.com", "https://api.secure.thoroughcare.com"],
+      connectSrc: ["'self'", "https://www.google-analytics.com", "https://api.secure.thoroughcare.com", ...(isDev ? ["ws:"] : [])],
       frameSrc: ["'none'"],
       objectSrc: ["'none'"],
       baseUri: ["'self'"],
+      frameAncestors: isDev ? ["'self'", "https://*.replit.dev", "https://*.replit.com", "https://*.repl.co"] : ["'self'"],
     },
   },
   crossOriginEmbedderPolicy: false,
-  hsts: {
+  crossOriginResourcePolicy: isDev ? { policy: "cross-origin" as const } : undefined,
+  hsts: isDev ? false : {
     maxAge: 31536000,
     includeSubDomains: true,
     preload: true,
   },
+  frameguard: isDev ? false : { action: "sameorigin" as const },
 }));
 
 // CORS configuration
