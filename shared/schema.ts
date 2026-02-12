@@ -780,6 +780,7 @@ export const invoices = pgTable("invoices", {
   invoiceNumber: text("invoice_number").notNull(),
   practiceId: integer("practice_id").notNull(),
   practiceName: text("practice_name").notNull(),
+  department: text("department"),
   month: text("month").notNull(),
   year: integer("year").notNull(),
   totalAmountCents: integer("total_amount_cents").notNull().default(0),

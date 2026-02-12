@@ -759,7 +759,7 @@ function PracticeDetailView({ practice, onBack, currentMonth, currentYear, lynkP
   );
 }
 
-function EraTab({ practices, currentMonth, currentYear, lynkPracticeId }: { practices: any[]; currentMonth: string; currentYear: number; lynkPracticeId: number | null }) {
+function EraTab({ practices, currentMonth, currentYear, lynkPracticeId, departmentsByPractice }: { practices: any[]; currentMonth: string; currentYear: number; lynkPracticeId: number | null; departmentsByPractice: Record<number, string[]> }) {
   const MONTHS_LIST = ["JAN", "FEB", "MAR", "APR", "MAY", "JUN", "JUL", "AUG", "SEP", "OCT", "NOV", "DEC"];
   const MONTH_DISPLAY: Record<string, string> = {
     JAN: "January", FEB: "February", MAR: "March", APR: "April",
@@ -959,7 +959,14 @@ function EraTab({ practices, currentMonth, currentYear, lynkPracticeId }: { prac
         </select>
         <select className="border rounded px-3 py-1.5 text-sm" value={selectedPractice} onChange={(e) => setSelectedPractice(e.target.value)}>
           <option value="all">All Practices</option>
-          {otherPractices.map((p: any) => <option key={p.id} value={String(p.id)}>{p.name}</option>)}
+          {(() => {
+            const lynkDepts = (lynkPracticeId && departmentsByPractice[lynkPracticeId]) ? departmentsByPractice[lynkPracticeId] : [];
+            const regEntries = otherPractices.map((p: any) => ({ key: String(p.id), value: String(p.id), name: p.name }));
+            const deptEntries = lynkDepts.map(d => ({ key: `dept:${d}`, value: `dept:${d}`, name: d }));
+            return [...regEntries, ...deptEntries].sort((a, b) => a.name.localeCompare(b.name)).map(e => (
+              <option key={e.key} value={e.value}>{e.name}</option>
+            ));
+          })()}
         </select>
         <Button
           variant={reconView ? "default" : "outline"}
@@ -1059,7 +1066,14 @@ function EraTab({ practices, currentMonth, currentYear, lynkPracticeId }: { prac
               <label className="text-xs font-medium text-slate-600 block mb-1">Practice</label>
               <select className="border rounded px-3 py-1.5 text-sm w-full" value={uploadPractice} onChange={(e) => setUploadPractice(e.target.value)}>
                 <option value="">Select practice...</option>
-                {otherPractices.map((p: any) => <option key={p.id} value={String(p.id)}>{p.name}</option>)}
+                {(() => {
+                  const lynkDepts2 = (lynkPracticeId && departmentsByPractice[lynkPracticeId]) ? departmentsByPractice[lynkPracticeId] : [];
+                  const regEntries = otherPractices.map((p: any) => ({ key: String(p.id), value: String(p.id), name: p.name }));
+                  const deptEntries = lynkDepts2.map(d => ({ key: `dept:${d}`, value: `dept:${d}`, name: d }));
+                  return [...regEntries, ...deptEntries].sort((a, b) => a.name.localeCompare(b.name)).map(e => (
+                    <option key={e.key} value={e.value}>{e.name}</option>
+                  ));
+                })()}
               </select>
             </div>
             <div className="flex-1 min-w-[200px]">
@@ -1343,10 +1357,13 @@ function StaffingTab({ practices, currentMonth, currentYear, lynkPracticeId, dep
         </select>
         <select className="border rounded px-3 py-1.5 text-sm" value={selectedPractice} onChange={(e) => setSelectedPractice(e.target.value)}>
           <option value="all">All Practices</option>
-          {otherPractices.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
-          {lynkDepts.map(dept => (
-            <option key={`dept:${dept}`} value={`dept:${dept}`}>{dept}</option>
-          ))}
+          {(() => {
+            const regEntries = otherPractices.map(p => ({ type: "practice" as const, key: String(p.id), value: String(p.id), name: p.name }));
+            const deptEntries = lynkDepts.map(dept => ({ type: "dept" as const, key: `dept:${dept}`, value: `dept:${dept}`, name: dept }));
+            return [...regEntries, ...deptEntries].sort((a, b) => a.name.localeCompare(b.name)).map(e => (
+              <option key={e.key} value={e.value}>{e.name}</option>
+            ));
+          })()}
         </select>
         <button onClick={exportCSV} className="ml-auto flex items-center gap-1.5 px-3 py-1.5 text-sm border rounded hover:bg-slate-50">
           <Download className="h-4 w-4" /> Export CSV
@@ -2907,25 +2924,16 @@ export default function AdminDashboard() {
                 className="text-xs border border-slate-200 rounded-md px-2 py-1.5 bg-white text-slate-700"
               >
                 <option value="all">All Practices</option>
-                {practices.filter(p => p.id !== lynkPracticeId && p.status === "active").map((p) => (
-                  <option key={p.id} value={p.id}>{p.name}</option>
-                ))}
-                {lynkPracticeId && departmentsByPractice[lynkPracticeId] && departmentsByPractice[lynkPracticeId].map((dept) => (
-                  <option key={`dept:${dept}`} value={`dept:${dept}`}>{dept}</option>
-                ))}
+                {(() => {
+                  const lynkDepts = (lynkPracticeId && departmentsByPractice[lynkPracticeId]) ? departmentsByPractice[lynkPracticeId] : [];
+                  const regularPractices = practices.filter(p => p.id !== lynkPracticeId && p.status === "active").map(p => ({ type: "practice" as const, id: p.id, name: p.name }));
+                  const deptEntries = lynkDepts.map(d => ({ type: "dept" as const, id: d, name: d }));
+                  const allEntries = [...regularPractices, ...deptEntries].sort((a, b) => a.name.localeCompare(b.name));
+                  return allEntries.map(entry => (
+                    <option key={entry.type === "dept" ? `dept:${entry.id}` : entry.id} value={entry.type === "dept" ? `dept:${entry.id}` : entry.id}>{entry.name}</option>
+                  ));
+                })()}
               </select>
-              {selectedPracticeId !== "all" && selectedPracticeId !== lynkPracticeId && departmentsByPractice[selectedPracticeId] && departmentsByPractice[selectedPracticeId].length > 1 && (
-                <select
-                  value={selectedDepartment}
-                  onChange={(e) => setSelectedDepartment(e.target.value === "all" ? "all" : e.target.value)}
-                  className="text-xs border border-slate-200 rounded-md px-2 py-1.5 bg-white text-slate-700"
-                >
-                  <option value="all">All Locations</option>
-                  {departmentsByPractice[selectedPracticeId].map((dept) => (
-                    <option key={dept} value={dept}>{dept}</option>
-                  ))}
-                </select>
-              )}
               <div className="w-px h-5 bg-slate-200 mx-1" />
               <Button variant="ghost" size="sm" onClick={() => navigateMonth(-1)}>
                 <ChevronLeft className="w-4 h-4" />
@@ -3010,7 +3018,8 @@ export default function AdminDashboard() {
                               <p className="text-2xl font-bold text-blue-600">
                                 {selectedPracticeId === "all"
                                   ? practices.filter(p => p.id !== lynkPracticeId && p.status === "active").length + (lynkPracticeId && departmentsByPractice[lynkPracticeId] ? departmentsByPractice[lynkPracticeId].length : 0)
-                                  : selectedDepartment !== "all" ? selectedDepartment : selectedName}
+                                  : selectedDepartment !== "all" ? selectedDepartment
+                                  : selectedName}
                               </p>
                               <p className="text-xs text-slate-500 mt-1">
                                 {selectedPracticeId === "all" ? "Partner Practices" : "Practice"}
@@ -3397,7 +3406,7 @@ export default function AdminDashboard() {
 
               {activeTab === "staffing" && <StaffingTab practices={practices} currentMonth={currentMonth} currentYear={currentYear} lynkPracticeId={lynkPracticeId} departmentsByPractice={departmentsByPractice} />}
 
-              {activeTab === "era" && <EraTab practices={practices} currentMonth={currentMonth} currentYear={currentYear} lynkPracticeId={lynkPracticeId} />}
+              {activeTab === "era" && <EraTab practices={practices} currentMonth={currentMonth} currentYear={currentYear} lynkPracticeId={lynkPracticeId} departmentsByPractice={departmentsByPractice} />}
 
               {activeTab === "practices" && (() => {
                 const otherPractices = practices.filter(p => p.id !== lynkPracticeId);
@@ -3464,41 +3473,47 @@ export default function AdminDashboard() {
                             </tr>
                           </thead>
                           <tbody>
-                            {filteredPractices.map((p: any) => {
-                              let depts: string[] = [];
-                              try { depts = p.departments ? JSON.parse(p.departments) : []; } catch {}
-                              return (
-                                <tr key={p.id} className="border-b hover:bg-slate-50 cursor-pointer" onClick={() => setPracticeDetailId(p.id)}>
-                                  <td className="py-2 px-3 font-medium text-blue-700 hover:underline">{p.name}</td>
-                                  <td className="py-2 px-3 text-slate-500">{p.thoroughcareAlias || "—"}</td>
+                            {(() => {
+                              const regularRows = filteredPractices
+                                .filter((p: any) => p.id !== lynkPracticeId)
+                                .map((p: any) => {
+                                  let depts: string[] = [];
+                                  try { depts = p.departments ? JSON.parse(p.departments) : []; } catch {}
+                                  return { type: "practice" as const, name: p.name, practice: p, depts };
+                                });
+                              const deptRows = showLynkDepts ? lynkDepts.map(dept => ({ type: "dept" as const, name: dept, practice: null as any, depts: [] as string[] })) : [];
+                              const allRows = [...regularRows, ...deptRows].sort((a, b) => a.name.localeCompare(b.name));
+                              return allRows.map(row => row.type === "dept" ? (
+                                <tr key={`lynk-${row.name}`} className="border-b hover:bg-slate-50 cursor-pointer" onClick={() => lynkPracticeId && setPracticeDetailId(lynkPracticeId)}>
+                                  <td className="py-2 px-3 font-medium text-blue-700 hover:underline">{row.name}</td>
+                                  <td className="py-2 px-3 text-slate-500">—</td>
+                                  <td className="py-2 px-3">—</td>
                                   <td className="py-2 px-3">
-                                    {depts.length > 0 ? (
+                                    <span className="px-2 py-0.5 rounded text-xs font-medium bg-green-100 text-green-700">active</span>
+                                  </td>
+                                </tr>
+                              ) : (
+                                <tr key={row.practice.id} className="border-b hover:bg-slate-50 cursor-pointer" onClick={() => setPracticeDetailId(row.practice.id)}>
+                                  <td className="py-2 px-3 font-medium text-blue-700 hover:underline">{row.practice.name}</td>
+                                  <td className="py-2 px-3 text-slate-500">{row.practice.thoroughcareAlias || "—"}</td>
+                                  <td className="py-2 px-3">
+                                    {row.depts.length > 0 ? (
                                       <div className="flex flex-wrap gap-1">
-                                        {depts.slice(0, 5).map((d: string, i: number) => (
+                                        {row.depts.slice(0, 5).map((d: string, i: number) => (
                                           <span key={i} className="bg-slate-100 text-slate-600 px-1.5 py-0.5 rounded text-xs">{d.replace(/\s*\[\d+\]\s*$/, '')}</span>
                                         ))}
-                                        {depts.length > 5 && <span className="text-xs text-slate-400">+{depts.length - 5} more</span>}
+                                        {row.depts.length > 5 && <span className="text-xs text-slate-400">+{row.depts.length - 5} more</span>}
                                       </div>
                                     ) : "—"}
                                   </td>
                                   <td className="py-2 px-3">
                                     <span className={`px-2 py-0.5 rounded text-xs font-medium ${
-                                      p.status === "active" ? "bg-green-100 text-green-700" : "bg-slate-100 text-slate-600"
-                                    }`}>{p.status}</span>
+                                      row.practice.status === "active" ? "bg-green-100 text-green-700" : "bg-slate-100 text-slate-600"
+                                    }`}>{row.practice.status}</span>
                                   </td>
                                 </tr>
-                              );
-                            })}
-                            {showLynkDepts && lynkDepts.map((dept) => (
-                              <tr key={`lynk-${dept}`} className="border-b hover:bg-slate-50 cursor-pointer" onClick={() => lynkPracticeId && setPracticeDetailId(lynkPracticeId)}>
-                                <td className="py-2 px-3 font-medium text-blue-700 hover:underline">{dept}</td>
-                                <td className="py-2 px-3 text-slate-500">lynk</td>
-                                <td className="py-2 px-3">—</td>
-                                <td className="py-2 px-3">
-                                  <span className="px-2 py-0.5 rounded text-xs font-medium bg-green-100 text-green-700">active</span>
-                                </td>
-                              </tr>
-                            ))}
+                              ));
+                            })()}
                           </tbody>
                         </table>
                       </div>

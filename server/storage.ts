@@ -1087,25 +1087,25 @@ export class DatabaseStorage implements IStorage {
       SEP: "September", OCT: "October", NOV: "November", DEC: "December"
     };
 
-    for (const practice of allPractices) {
-      const existing = await db.select().from(invoices)
+    const deptPractice = allPractices.find(p => p.name.toLowerCase() === "your clinic");
+    const deptPracticeId = deptPractice?.id;
+    let deptList: string[] = [];
+    if (deptPracticeId) {
+      const deptRows = await db.selectDistinct({ department: revenueByCode.department })
+        .from(revenueByCode)
         .where(and(
-          eq(invoices.practiceId, practice.id),
-          eq(invoices.month, month),
-          eq(invoices.year, year)
+          eq(revenueByCode.practiceId, deptPracticeId),
+          eq(revenueByCode.month, month),
+          eq(revenueByCode.year, year),
+          sql`${revenueByCode.department} IS NOT NULL`
         ));
-      if (existing.length > 0) continue;
+      deptList = deptRows.map(d => d.department!).filter(Boolean);
+    }
 
-      const practiceRates = await this.getInvoiceRates(year, practice.id);
-      const invoiceRateMap: Record<string, number> = { ...fallbackRateMap };
-      const rateDescMap: Record<string, string> = { ...fallbackDescMap };
-      for (const r of practiceRates) {
-        invoiceRateMap[r.cptCode] = r.invoiceRateCents;
-        if (r.description) rateDescMap[r.cptCode] = r.description;
-      }
-
+    const createInvoice = async (practiceId: number, displayName: string, department: string | null, rateMap: Record<string, number>, descMap: Record<string, string>) => {
       const practiceCodeData = codeData.filter(c => {
-        if (c.practiceId !== practice.id) return false;
+        if (c.practiceId !== practiceId) return false;
+        if (department) return c.department === department;
         return !c.department;
       });
 
@@ -1115,12 +1115,12 @@ export class DatabaseStorage implements IStorage {
 
       for (const row of practiceCodeData) {
         const claimCount = row.claimCount || 0;
-        const rate = invoiceRateMap[row.cptCode] || 0;
+        const rate = rateMap[row.cptCode] || 0;
         const totalCents = claimCount * rate;
         lineItemsData.push({
           programType: row.programType,
           cptCode: row.cptCode,
-          description: rateDescMap[row.cptCode] || null,
+          description: descMap[row.cptCode] || null,
           claimCount,
           rateCents: rate,
           totalCents,
@@ -1129,11 +1129,13 @@ export class DatabaseStorage implements IStorage {
         totalClaims += claimCount;
       }
 
-      const invoiceNumber = `INV-${practice.id}-${year}-${month}`;
+      const deptSlug = department ? `-${department.replace(/\s+/g, "").substring(0, 10)}` : "";
+      const invoiceNumber = `INV-${practiceId}${deptSlug}-${year}-${month}`;
       const [invoice] = await db.insert(invoices).values({
         invoiceNumber,
-        practiceId: practice.id,
-        practiceName: practice.name,
+        practiceId,
+        practiceName: displayName,
+        department,
         month,
         year,
         totalAmountCents,
@@ -1154,7 +1156,44 @@ export class DatabaseStorage implements IStorage {
         });
       }
 
-      generatedInvoices.push(invoice);
+      return invoice;
+    };
+
+    for (const practice of allPractices) {
+      const practiceRates = await this.getInvoiceRates(year, practice.id);
+      const invoiceRateMap: Record<string, number> = { ...fallbackRateMap };
+      const rateDescMap: Record<string, string> = { ...fallbackDescMap };
+      for (const r of practiceRates) {
+        invoiceRateMap[r.cptCode] = r.invoiceRateCents;
+        if (r.description) rateDescMap[r.cptCode] = r.description;
+      }
+
+      if (practice.id === deptPracticeId && deptList.length > 0) {
+        for (const dept of deptList) {
+          const existing = await db.select().from(invoices)
+            .where(and(
+              eq(invoices.practiceId, practice.id),
+              eq(invoices.month, month),
+              eq(invoices.year, year),
+              eq(invoices.department, dept)
+            ));
+          if (existing.length > 0) continue;
+
+          const invoice = await createInvoice(practice.id, dept, dept, invoiceRateMap, rateDescMap);
+          generatedInvoices.push(invoice);
+        }
+      } else {
+        const existing = await db.select().from(invoices)
+          .where(and(
+            eq(invoices.practiceId, practice.id),
+            eq(invoices.month, month),
+            eq(invoices.year, year)
+          ));
+        if (existing.length > 0) continue;
+
+        const invoice = await createInvoice(practice.id, practice.name, null, invoiceRateMap, rateDescMap);
+        generatedInvoices.push(invoice);
+      }
     }
 
     return generatedInvoices;
