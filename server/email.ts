@@ -1,7 +1,7 @@
 import https from "https";
 
 const SENDGRID_API_KEY = process.env.SENDGRID_API_KEY;
-const FROM_EMAIL = "noreply@lynkhealthcare.com";
+const FROM_EMAIL = "info@lynkhealthcare.com";
 const FROM_NAME = "Lynk Health";
 
 interface EmailOptions {
