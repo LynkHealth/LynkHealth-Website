@@ -2907,7 +2907,7 @@ export default function AdminDashboard() {
                 className="text-xs border border-slate-200 rounded-md px-2 py-1.5 bg-white text-slate-700"
               >
                 <option value="all">All Practices</option>
-                {practices.filter(p => p.id !== lynkPracticeId).map((p) => (
+                {practices.filter(p => p.id !== lynkPracticeId && p.status === "active").map((p) => (
                   <option key={p.id} value={p.id}>{p.name}</option>
                 ))}
                 {lynkPracticeId && departmentsByPractice[lynkPracticeId] && departmentsByPractice[lynkPracticeId].map((dept) => (
@@ -2986,8 +2986,10 @@ export default function AdminDashboard() {
                   )}
                   {(() => {
                     let filtered: ProgramSnapshot[];
+                    const activePracticeIds = new Set(practices.filter(p => p.status === "active").map(p => p.id));
                     if (selectedPracticeId === "all") {
                       filtered = snapshots.filter((s) => {
+                        if (!activePracticeIds.has(s.practiceId)) return false;
                         if (s.practiceId === lynkPracticeId) return !!s.department;
                         return !s.department;
                       });
@@ -3007,7 +3009,7 @@ export default function AdminDashboard() {
                             <CardContent className="p-4 text-center">
                               <p className="text-2xl font-bold text-blue-600">
                                 {selectedPracticeId === "all"
-                                  ? practices.filter(p => p.id !== lynkPracticeId).length + (lynkPracticeId && departmentsByPractice[lynkPracticeId] ? departmentsByPractice[lynkPracticeId].length : 0)
+                                  ? practices.filter(p => p.id !== lynkPracticeId && p.status === "active").length + (lynkPracticeId && departmentsByPractice[lynkPracticeId] ? departmentsByPractice[lynkPracticeId].length : 0)
                                   : selectedDepartment !== "all" ? selectedDepartment : selectedName}
                               </p>
                               <p className="text-xs text-slate-500 mt-1">
