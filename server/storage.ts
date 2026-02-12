@@ -1099,7 +1099,7 @@ export class DatabaseStorage implements IStorage {
           eq(revenueByCode.year, year),
           sql`${revenueByCode.department} IS NOT NULL`
         ));
-      deptList = deptRows.map(d => d.department!).filter(Boolean);
+      deptList = deptRows.map(d => d.department!).filter(d => d && d.toUpperCase() !== "PRN");
     }
 
     const createInvoice = async (practiceId: number, displayName: string, department: string | null, rateMap: Record<string, number>, descMap: Record<string, string>) => {
