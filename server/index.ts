@@ -24,22 +24,23 @@ const isDev = process.env.NODE_ENV !== "production";
 
 // Security headers via helmet
 app.use(helmet({
-  contentSecurityPolicy: {
+  contentSecurityPolicy: isDev ? false : {
     directives: {
       defaultSrc: ["'self'"],
       scriptSrc: ["'self'", "'unsafe-inline'", "https://www.googletagmanager.com", "https://www.google-analytics.com"],
       styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com"],
       fontSrc: ["'self'", "https://fonts.gstatic.com"],
       imgSrc: ["'self'", "data:", "https:", "blob:"],
-      connectSrc: ["'self'", "https://www.google-analytics.com", "https://api.secure.thoroughcare.com", ...(isDev ? ["ws:"] : [])],
+      connectSrc: ["'self'", "https://www.google-analytics.com", "https://api.secure.thoroughcare.com"],
       frameSrc: ["'none'"],
       objectSrc: ["'none'"],
       baseUri: ["'self'"],
-      frameAncestors: isDev ? ["'self'", "https://*.replit.dev", "https://*.replit.com", "https://*.repl.co"] : ["'self'"],
+      frameAncestors: ["'self'"],
     },
   },
   crossOriginEmbedderPolicy: false,
-  crossOriginResourcePolicy: isDev ? { policy: "cross-origin" as const } : undefined,
+  crossOriginOpenerPolicy: isDev ? false : { policy: "same-origin" as const },
+  crossOriginResourcePolicy: isDev ? false : undefined,
   hsts: isDev ? false : {
     maxAge: 31536000,
     includeSubDomains: true,
