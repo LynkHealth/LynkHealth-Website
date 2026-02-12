@@ -14,6 +14,7 @@ import multer from "multer";
 import { parse835, mapCptToProgram } from "./era-parser";
 import { writeAuditLog, getAuditLogs, AuditAction, getClientIp } from "./audit";
 import { requirePermission, Permission, hasPermission } from "./rbac";
+import { sendEmail, buildPasswordResetEmail } from "./email";
 
 const INACTIVITY_TIMEOUT_MS = 15 * 60 * 1000;
 const MAX_SESSION_LIFETIME_MS = 4 * 60 * 60 * 1000;
@@ -246,6 +247,114 @@ export async function registerAdminRoutes(app: Express) {
     });
     clearSessionCookie(res);
     res.json({ success: true });
+  });
+
+  const forgotPasswordRateLimit = rateLimit({
+    windowMs: 15 * 60 * 1000,
+    max: 5,
+    message: { success: false, message: "Too many reset requests. Please try again later." },
+  });
+
+  app.post("/api/admin/forgot-password", forgotPasswordRateLimit, async (req, res) => {
+    try {
+      const { email } = z.object({ email: z.string().email() }).parse(req.body);
+      const ipAddress = getClientIp(req);
+
+      const user = await storage.getAdminUserByEmail(email);
+      if (user) {
+        await storage.invalidateUserResetTokens(user.id);
+        const rawToken = crypto.randomBytes(48).toString("hex");
+        const tokenHash = crypto.createHash("sha256").update(rawToken).digest("hex");
+        const expiresAt = new Date(Date.now() + 15 * 60 * 1000);
+        await storage.createPasswordResetToken(user.id, tokenHash, expiresAt);
+
+        const protocol = req.headers["x-forwarded-proto"] || "https";
+        const host = req.headers.host || "localhost:5000";
+        const resetUrl = `${protocol}://${host}/admin/reset-password?token=${rawToken}`;
+
+        const emailContent = buildPasswordResetEmail(resetUrl, user.name);
+        emailContent.to = user.email;
+        await sendEmail(emailContent);
+
+        await writeAuditLog({
+          action: AuditAction.PASSWORD_RESET_REQUESTED,
+          userId: user.id,
+          resourceType: "user",
+          details: { email },
+          ipAddress,
+          userAgent: (req.headers["user-agent"] || "").substring(0, 500),
+          outcome: "success",
+        });
+      }
+
+      res.json({ success: true, message: "If an account exists with that email, a reset link has been sent." });
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ success: false, message: "Please enter a valid email address." });
+      }
+      console.error("Forgot password error:", error);
+      res.status(500).json({ success: false, message: "Something went wrong. Please try again." });
+    }
+  });
+
+  app.post("/api/admin/reset-password", async (req, res) => {
+    try {
+      const { token, newPassword } = z.object({
+        token: z.string().min(1),
+        newPassword: z.string().min(12).regex(/[A-Z]/, "Must contain uppercase").regex(/[a-z]/, "Must contain lowercase").regex(/[0-9]/, "Must contain number").regex(/[^A-Za-z0-9]/, "Must contain special character"),
+      }).parse(req.body);
+
+      const ipAddress = getClientIp(req);
+      const tokenHash = crypto.createHash("sha256").update(token).digest("hex");
+      const resetToken = await storage.getValidPasswordResetToken(tokenHash);
+
+      if (!resetToken) {
+        return res.status(400).json({ success: false, message: "This reset link has expired or already been used. Please request a new one." });
+      }
+
+      const user = await storage.getAdminUserById(resetToken.userId);
+      if (!user) {
+        return res.status(400).json({ success: false, message: "Account not found." });
+      }
+
+      const previousPasswords = await storage.getPasswordHistory(user.id, 5);
+      for (const prev of previousPasswords) {
+        if (await bcrypt.compare(newPassword, prev.passwordHash)) {
+          return res.status(400).json({ success: false, message: "Cannot reuse any of your last 5 passwords." });
+        }
+      }
+
+      const newHash = await bcrypt.hash(newPassword, 12);
+      await storage.updateAdminUser(user.id, {
+        passwordHash: newHash,
+        lastPasswordChange: new Date(),
+        mustChangePassword: 0,
+        failedLoginAttempts: 0,
+        lockedUntil: null,
+      });
+      await storage.addPasswordHistory(user.id, newHash);
+      await storage.markPasswordResetTokenUsed(resetToken.id);
+      await storage.invalidateUserResetTokens(user.id);
+      await storage.deleteUserSessions(user.id);
+
+      await writeAuditLog({
+        action: AuditAction.PASSWORD_CHANGED,
+        userId: user.id,
+        resourceType: "user",
+        details: { method: "reset_link" },
+        ipAddress,
+        userAgent: (req.headers["user-agent"] || "").substring(0, 500),
+        outcome: "success",
+      });
+
+      res.json({ success: true, message: "Password has been reset successfully. You can now sign in." });
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ success: false, message: "Password must be at least 12 characters with uppercase, lowercase, number, and special character." });
+      }
+      console.error("Reset password error:", error);
+      res.status(500).json({ success: false, message: "Something went wrong. Please try again." });
+    }
   });
 
   app.get("/api/admin/me", adminAuth, async (req, res) => {

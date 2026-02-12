@@ -1,4 +1,4 @@
-import { users, contactInquiries, nightCoverageInquiries, woundCareReferrals, adminUsers, adminSessions, practices, programSnapshots, revenueSnapshots, revenueByCode, cptBillingCodes, patients, patientConditions, patientMedications, patientAllergies, patientVitals, patientInsurance, programEnrollments, carePlans, carePlanItems, timeLogs, clinicalTasks, patientAssessments, calendarEvents, claims, carePlanTemplates, carePlanTemplateItems, poorEngagementForms, billingEvaluationForms, invoices, invoiceLineItems, auditLogs, loginAttempts, passwordHistory, type User, type InsertUser, type ContactInquiry, type InsertContactInquiry, type NightCoverageInquiry, type InsertNightCoverageInquiry, type WoundCareReferral, type InsertWoundCareReferral, type AdminUser, type InsertAdminUser, type AdminSession, type Practice, type InsertPractice, type ProgramSnapshot, type InsertProgramSnapshot, type RevenueSnapshot, type InsertRevenueSnapshot, type RevenueByCode, type CptBillingCode, type InsertCptBillingCode, type Patient, type InsertPatient, type PatientCondition, type InsertPatientCondition, type PatientMedication, type InsertPatientMedication, type PatientAllergy, type InsertPatientAllergy, type PatientVital, type InsertPatientVital, type PatientInsurance, type InsertPatientInsurance, type ProgramEnrollment, type InsertProgramEnrollment, type CarePlan, type InsertCarePlan, type CarePlanItem, type InsertCarePlanItem, type TimeLog, type InsertTimeLog, type ClinicalTask, type InsertClinicalTask, type PatientAssessment, type InsertPatientAssessment, type CalendarEvent, type InsertCalendarEvent, type Claim, type InsertClaim, type CarePlanTemplate, type InsertCarePlanTemplate, type CarePlanTemplateItem, type InsertCarePlanTemplateItem, type PoorEngagementForm, type InsertPoorEngagementForm, type BillingEvaluationForm, type InsertBillingEvaluationForm, type Invoice, type InsertInvoice, type InvoiceLineItem, type InsertInvoiceLineItem, invoiceRates, type InvoiceRate, type InsertInvoiceRate, tcStaffTimeLogs, type TcStaffTimeLog, type InsertTcStaffTimeLog, type AuditLog, type LoginAttempt, type PasswordHistory } from "@shared/schema";
+import { users, contactInquiries, nightCoverageInquiries, woundCareReferrals, adminUsers, adminSessions, practices, programSnapshots, revenueSnapshots, revenueByCode, cptBillingCodes, patients, patientConditions, patientMedications, patientAllergies, patientVitals, patientInsurance, programEnrollments, carePlans, carePlanItems, timeLogs, clinicalTasks, patientAssessments, calendarEvents, claims, carePlanTemplates, carePlanTemplateItems, poorEngagementForms, billingEvaluationForms, invoices, invoiceLineItems, auditLogs, loginAttempts, passwordHistory, type User, type InsertUser, type ContactInquiry, type InsertContactInquiry, type NightCoverageInquiry, type InsertNightCoverageInquiry, type WoundCareReferral, type InsertWoundCareReferral, type AdminUser, type InsertAdminUser, type AdminSession, type Practice, type InsertPractice, type ProgramSnapshot, type InsertProgramSnapshot, type RevenueSnapshot, type InsertRevenueSnapshot, type RevenueByCode, type CptBillingCode, type InsertCptBillingCode, type Patient, type InsertPatient, type PatientCondition, type InsertPatientCondition, type PatientMedication, type InsertPatientMedication, type PatientAllergy, type InsertPatientAllergy, type PatientVital, type InsertPatientVital, type PatientInsurance, type InsertPatientInsurance, type ProgramEnrollment, type InsertProgramEnrollment, type CarePlan, type InsertCarePlan, type CarePlanItem, type InsertCarePlanItem, type TimeLog, type InsertTimeLog, type ClinicalTask, type InsertClinicalTask, type PatientAssessment, type InsertPatientAssessment, type CalendarEvent, type InsertCalendarEvent, type Claim, type InsertClaim, type CarePlanTemplate, type InsertCarePlanTemplate, type CarePlanTemplateItem, type InsertCarePlanTemplateItem, type PoorEngagementForm, type InsertPoorEngagementForm, type BillingEvaluationForm, type InsertBillingEvaluationForm, type Invoice, type InsertInvoice, type InvoiceLineItem, type InsertInvoiceLineItem, invoiceRates, type InvoiceRate, type InsertInvoiceRate, tcStaffTimeLogs, type TcStaffTimeLog, type InsertTcStaffTimeLog, type AuditLog, type LoginAttempt, type PasswordHistory, passwordResetTokens } from "@shared/schema";
 import { db } from "./db";
 import { eq, ne, and, desc, or, ilike, sql, gte, lte, isNull, lt } from "drizzle-orm";
 import {
@@ -30,6 +30,10 @@ export interface IStorage {
   getRecentFailedAttempts(email: string, minutes: number): Promise<number>;
   addPasswordHistory(userId: number, hash: string): Promise<void>;
   getPasswordHistory(userId: number, limit: number): Promise<PasswordHistory[]>;
+  createPasswordResetToken(userId: number, tokenHash: string, expiresAt: Date): Promise<void>;
+  getValidPasswordResetToken(tokenHash: string): Promise<{ id: number; userId: number } | undefined>;
+  markPasswordResetTokenUsed(id: number): Promise<void>;
+  invalidateUserResetTokens(userId: number): Promise<void>;
   getPractices(): Promise<Practice[]>;
   createPractice(practice: InsertPractice): Promise<Practice>;
   getProgramSnapshots(practiceId?: number, programType?: string, month?: string, year?: number): Promise<ProgramSnapshot[]>;
@@ -355,6 +359,31 @@ export class DatabaseStorage implements IStorage {
       .where(eq(passwordHistory.userId, userId))
       .orderBy(desc(passwordHistory.createdAt))
       .limit(limit);
+  }
+
+  async createPasswordResetToken(userId: number, tokenHash: string, expiresAt: Date): Promise<void> {
+    await db.insert(passwordResetTokens).values({ userId, tokenHash, expiresAt });
+  }
+
+  async getValidPasswordResetToken(tokenHash: string): Promise<{ id: number; userId: number } | undefined> {
+    const [token] = await db.select({ id: passwordResetTokens.id, userId: passwordResetTokens.userId })
+      .from(passwordResetTokens)
+      .where(and(
+        eq(passwordResetTokens.tokenHash, tokenHash),
+        isNull(passwordResetTokens.usedAt),
+        gte(passwordResetTokens.expiresAt, new Date())
+      ));
+    return token;
+  }
+
+  async markPasswordResetTokenUsed(id: number): Promise<void> {
+    await db.update(passwordResetTokens).set({ usedAt: new Date() }).where(eq(passwordResetTokens.id, id));
+  }
+
+  async invalidateUserResetTokens(userId: number): Promise<void> {
+    await db.update(passwordResetTokens)
+      .set({ usedAt: new Date() })
+      .where(and(eq(passwordResetTokens.userId, userId), isNull(passwordResetTokens.usedAt)));
   }
 
   async getPractices(): Promise<Practice[]> {

@@ -158,6 +158,17 @@ export const loginAttempts = pgTable("login_attempts", {
 
 export type LoginAttempt = typeof loginAttempts.$inferSelect;
 
+export const passwordResetTokens = pgTable("password_reset_tokens", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull(),
+  tokenHash: text("token_hash").notNull(),
+  expiresAt: timestamp("expires_at").notNull(),
+  usedAt: timestamp("used_at"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+export type PasswordResetToken = typeof passwordResetTokens.$inferSelect;
+
 export const auditLogs = pgTable("audit_logs", {
   id: serial("id").primaryKey(),
   userId: integer("user_id"),
