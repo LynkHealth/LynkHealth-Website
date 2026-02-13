@@ -947,20 +947,40 @@ export class DatabaseStorage implements IStorage {
     minutesThisMonth: number;
   }> {
     const now = new Date();
+    const MONTHS = ["JAN", "FEB", "MAR", "APR", "MAY", "JUN", "JUL", "AUG", "SEP", "OCT", "NOV", "DEC"];
+    const currentMonth = MONTHS[now.getMonth()];
+    const currentYear = now.getFullYear();
     const startOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate());
     const endOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1);
-    const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
 
-    const patientConditions: any[] = [eq(patients.status, "active")];
-    if (practiceId) patientConditions.push(eq(patients.practiceId, practiceId));
-    const [patientCount] = await db.select({ count: sql<number>`count(*)` }).from(patients).where(and(...patientConditions));
+    const snapshotConditions: any[] = [
+      eq(programSnapshots.month, currentMonth),
+      eq(programSnapshots.year, currentYear),
+      sql`(${programSnapshots.department} IS NULL OR ${programSnapshots.department} = '')`,
+    ];
+    if (practiceId) snapshotConditions.push(eq(programSnapshots.practiceId, practiceId));
 
-    const enrollmentConditions: any[] = [eq(programEnrollments.status, "enrolled")];
-    if (practiceId) {
-      const patientIds = db.select({ id: patients.id }).from(patients).where(eq(patients.practiceId, practiceId));
-      enrollmentConditions.push(sql`${programEnrollments.patientId} IN (${patientIds})`);
-    }
-    const [enrollmentCount] = await db.select({ count: sql<number>`count(*)` }).from(programEnrollments).where(and(...enrollmentConditions));
+    const [enrollmentResult] = await db.select({
+      totalEnrolled: sql<number>`coalesce(sum(${programSnapshots.patientsEnrolled}), 0)`,
+    }).from(programSnapshots).where(and(...snapshotConditions));
+
+    const patientConditions: any[] = [
+      eq(tcStaffTimeLogs.month, currentMonth),
+      eq(tcStaffTimeLogs.year, currentYear),
+    ];
+    if (practiceId) patientConditions.push(eq(tcStaffTimeLogs.practiceId, practiceId));
+    const [uniquePatients] = await db.select({
+      count: sql<number>`count(distinct ${tcStaffTimeLogs.patientTcId})`,
+    }).from(tcStaffTimeLogs).where(and(...patientConditions));
+
+    const minuteConditions: any[] = [
+      eq(tcStaffTimeLogs.month, currentMonth),
+      eq(tcStaffTimeLogs.year, currentYear),
+    ];
+    if (practiceId) minuteConditions.push(eq(tcStaffTimeLogs.practiceId, practiceId));
+    const [minuteSum] = await db.select({
+      total: sql<number>`coalesce(sum(${tcStaffTimeLogs.minutes}), 0)`,
+    }).from(tcStaffTimeLogs).where(and(...minuteConditions));
 
     const practicePatientIds = practiceId
       ? db.select({ id: patients.id }).from(patients).where(eq(patients.practiceId, practiceId))
@@ -981,17 +1001,12 @@ export class DatabaseStorage implements IStorage {
     if (practicePatientIds) eventConditions.push(sql`${calendarEvents.patientId} IN (${practicePatientIds})`);
     const [eventCount] = await db.select({ count: sql<number>`count(*)` }).from(calendarEvents).where(and(...eventConditions));
 
-    const minuteConditions: any[] = [gte(timeLogs.createdAt, startOfMonth)];
-    if (userId) minuteConditions.push(eq(timeLogs.userId, userId));
-    if (practicePatientIds) minuteConditions.push(sql`${timeLogs.patientId} IN (${practicePatientIds})`);
-    const [minuteSum] = await db.select({ total: sql<number>`coalesce(sum(${timeLogs.durationSeconds}), 0)` }).from(timeLogs).where(and(...minuteConditions));
-
     return {
-      totalPatients: Number(patientCount.count),
-      activeEnrollments: Number(enrollmentCount.count),
+      totalPatients: Number(uniquePatients.count),
+      activeEnrollments: Number(enrollmentResult.totalEnrolled),
       pendingTasks: Number(taskCount.count),
       todayEvents: Number(eventCount.count),
-      minutesThisMonth: Math.round(Number(minuteSum.total) / 60),
+      minutesThisMonth: Number(minuteSum.total),
     };
   }
 
