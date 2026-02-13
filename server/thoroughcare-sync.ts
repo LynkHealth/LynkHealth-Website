@@ -232,8 +232,12 @@ function extractDeptName(raw: string): string {
   return raw.replace(/\s*\[.*?\]\s*$/, "").trim();
 }
 
+const PRN_DEPT_NAMES = ["PRN", "PRN [16]"];
+
 function isActiveDept(raw: string): boolean {
-  return !raw.startsWith("(NA)");
+  if (raw.startsWith("(NA)")) return false;
+  if (PRN_DEPT_NAMES.some(p => raw === p || raw.startsWith("PRN"))) return false;
+  return true;
 }
 
 async function syncOrganizations(): Promise<OrgSyncResult> {
@@ -350,8 +354,6 @@ async function syncOrganizations(): Promise<OrgSyncResult> {
   updateProgress("Organizations", 8, `Synced ${orgs.length} orgs, split ${lynkDeptToDbId.size} Lynk departments into practices`);
   return { tcOrgIds, orgToDbMap, lynkDeptToDbId };
 }
-
-const PRN_DEPT_NAMES = ["PRN", "PRN [16]"];
 
 interface PatientData {
   orgMap: Map<string, number>;
@@ -756,18 +758,23 @@ async function syncTimeLogs(month: string, year: number, patientData?: PatientDa
       const tcOrgId = patientData.orgMap.get(patientId);
       if (tcOrgId !== undefined) {
         if (tcOrgId === LYNK_TC_ORG_ID) {
-          const patientDept = patientData.deptMap.get(patientId);
-          if (patientDept) {
-            const deptPracticeId = patientData.lynkDeptToDbId.get(patientDept);
-            if (deptPracticeId) {
-              dbPracticeId = deptPracticeId;
-              department = null;
+          if (patientData.prnPatients.has(patientId)) {
+            dbPracticeId = tcIdToDbId.get(tcOrgId) || null;
+            department = null;
+          } else {
+            const patientDept = patientData.deptMap.get(patientId);
+            if (patientDept) {
+              const deptPracticeId = patientData.lynkDeptToDbId.get(patientDept);
+              if (deptPracticeId) {
+                dbPracticeId = deptPracticeId;
+                department = null;
+              } else {
+                dbPracticeId = tcIdToDbId.get(tcOrgId) || null;
+                department = patientDept;
+              }
             } else {
               dbPracticeId = tcIdToDbId.get(tcOrgId) || null;
-              department = patientDept;
             }
-          } else {
-            dbPracticeId = tcIdToDbId.get(tcOrgId) || null;
           }
         } else {
           dbPracticeId = tcIdToDbId.get(tcOrgId) || null;
