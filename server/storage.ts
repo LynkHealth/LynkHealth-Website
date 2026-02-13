@@ -1116,7 +1116,7 @@ export class DatabaseStorage implements IStorage {
       SEP: "September", OCT: "October", NOV: "November", DEC: "December"
     };
 
-    const deptPractice = allPractices.find(p => p.name.toLowerCase() === "your clinic");
+    const deptPractice = allPractices.find(p => p.name.toLowerCase() === "lynk healthcare");
     const deptPracticeId = deptPractice?.id;
     let deptList: string[] = [];
     if (deptPracticeId) {

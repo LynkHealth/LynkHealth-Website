@@ -2664,7 +2664,7 @@ export default function AdminDashboard() {
         setRevenue(dashData.revenue || []);
         setRevenueByCode(dashData.revenueByCode || []);
         setCodeDescriptions(dashData.codeDescriptions || {});
-        const lynk = (dashData.practices as Practice[]).find((p: Practice) => p.name.toLowerCase() === "your clinic");
+        const lynk = (dashData.practices as Practice[]).find((p: Practice) => p.name.toLowerCase() === "lynk healthcare");
         if (lynk) setLynkPracticeId(lynk.id);
       }
       if (inquiryData.success) {

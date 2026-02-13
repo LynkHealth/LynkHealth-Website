@@ -673,7 +673,7 @@ export function registerClinicalRoutes(app: Express) {
 
   const getLynkPracticeId = async () => {
     const allPractices = await storage.getPractices();
-    return allPractices.find(p => p.name.toLowerCase() === "your clinic")?.id;
+    return allPractices.find(p => p.name.toLowerCase() === "lynk healthcare")?.id;
   };
 
   const filterRevenueSnapshots = (snapshots: any[], practiceId?: number, department?: string, lynkId?: number) => {
@@ -769,7 +769,7 @@ export function registerClinicalRoutes(app: Express) {
       const allPractices = await storage.getPractices();
       const practiceMap = new Map(allPractices.map(p => [p.id, p.name]));
 
-      const lynkPractice = allPractices.find(p => p.name.toLowerCase() === "your clinic");
+      const lynkPractice = allPractices.find(p => p.name.toLowerCase() === "lynk healthcare");
       const lynkId = lynkPractice?.id;
 
       const practiceData: Record<string, { practiceId: number; department?: string; name: string; revenue: number; claims: number; enrolled: number }> = {};
