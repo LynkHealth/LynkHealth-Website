@@ -27,7 +27,21 @@ interface Practice {
   id: number;
   name: string;
   status?: string;
+  departments?: string;
 }
+
+interface PracticeAssignment {
+  practiceId: number;
+  department: string | null;
+}
+
+interface PracticeEntry {
+  practiceId: number;
+  department: string | null;
+  displayName: string;
+}
+
+const LYNK_PRACTICE_NAME = "Lynk Healthcare";
 
 const ROLES = [
   { value: "super_admin", label: "Super Admin", color: "bg-red-100 text-red-800", description: "Full access to everything" },
@@ -82,7 +96,7 @@ export default function UserManagement() {
   const [practiceUser, setPracticeUser] = useState<AdminUser | null>(null);
   const [form, setForm] = useState({ name: "", email: "", password: "", role: "care_coordinator" });
   const [editForm, setEditForm] = useState({ name: "", email: "", role: "", password: "" });
-  const [selectedPracticeIds, setSelectedPracticeIds] = useState<number[]>([]);
+  const [selectedAssignments, setSelectedAssignments] = useState<PracticeAssignment[]>([]);
   const [permOverrides, setPermOverrides] = useState<Record<string, boolean>>({});
   const [roleDefaults, setRoleDefaults] = useState<string[]>([]);
   const [expandedGroups, setExpandedGroups] = useState<Record<string, boolean>>({});
@@ -97,7 +111,26 @@ export default function UserManagement() {
     queryFn: () => adminFetch("/api/admin/practices").then(r => r.json()),
   });
 
-  const practices = (practicesData?.practices || []).filter(p => p.status !== "inactive");
+  const activePractices = (practicesData?.practices || []).filter(p => p.status !== "inactive");
+
+  const practiceEntries: PracticeEntry[] = activePractices.flatMap(p => {
+    if (p.name === LYNK_PRACTICE_NAME && p.departments) {
+      try {
+        const depts: string[] = JSON.parse(p.departments);
+        return depts
+          .filter(d => !d.startsWith("(NA)"))
+          .map(d => ({
+            practiceId: p.id,
+            department: d,
+            displayName: d.replace(/\s*\[.*?\]\s*$/, ""),
+          }))
+          .sort((a, b) => a.displayName.localeCompare(b.displayName));
+      } catch {
+        return [{ practiceId: p.id, department: null, displayName: p.name }];
+      }
+    }
+    return [{ practiceId: p.id, department: null, displayName: p.name }];
+  });
 
   const createMutation = useMutation({
     mutationFn: async (data: typeof form) => {
@@ -139,10 +172,10 @@ export default function UserManagement() {
   });
 
   const savePracticesMutation = useMutation({
-    mutationFn: async ({ userId, practiceIds }: { userId: number; practiceIds: number[] }) => {
+    mutationFn: async ({ userId, assignments }: { userId: number; assignments: PracticeAssignment[] }) => {
       const res = await adminFetch(`/api/admin/users/${userId}/practice-assignments`, {
         method: "PUT",
-        body: JSON.stringify({ practiceIds }),
+        body: JSON.stringify({ assignments }),
       });
       if (!res.ok) throw new Error(await res.text());
       return res.json();
@@ -186,9 +219,14 @@ export default function UserManagement() {
     try {
       const res = await adminFetch(`/api/admin/users/${user.id}/practice-assignments`);
       const data = await res.json();
-      setSelectedPracticeIds(data.assignments?.map((a: any) => a.practiceId) || []);
+      setSelectedAssignments(
+        (data.assignments || []).map((a: any) => ({
+          practiceId: a.practiceId,
+          department: a.department || null,
+        }))
+      );
     } catch {
-      setSelectedPracticeIds([]);
+      setSelectedAssignments([]);
     }
   };
 
@@ -209,10 +247,24 @@ export default function UserManagement() {
     }
   };
 
-  const togglePractice = (practiceId: number) => {
-    setSelectedPracticeIds(prev =>
-      prev.includes(practiceId) ? prev.filter(id => id !== practiceId) : [...prev, practiceId]
+  const isEntrySelected = (entry: PracticeEntry): boolean => {
+    return selectedAssignments.some(
+      a => a.practiceId === entry.practiceId && a.department === entry.department
     );
+  };
+
+  const toggleEntry = (entry: PracticeEntry) => {
+    setSelectedAssignments(prev => {
+      const exists = prev.some(
+        a => a.practiceId === entry.practiceId && a.department === entry.department
+      );
+      if (exists) {
+        return prev.filter(
+          a => !(a.practiceId === entry.practiceId && a.department === entry.department)
+        );
+      }
+      return [...prev, { practiceId: entry.practiceId, department: entry.department }];
+    });
   };
 
   const isPermEnabled = (perm: string): boolean => {
@@ -469,25 +521,25 @@ export default function UserManagement() {
               Practice Assignments - {practiceUser?.name}
             </DialogTitle>
           </DialogHeader>
-          <div className="space-y-3 max-h-[400px] overflow-y-auto">
-            {practices.length === 0 ? (
+          <div className="space-y-1 max-h-[400px] overflow-y-auto">
+            {practiceEntries.length === 0 ? (
               <p className="text-sm text-slate-500">No practices available.</p>
             ) : (
-              practices.map(p => (
-                <div key={p.id} className="flex items-center gap-3 p-2 rounded-lg hover:bg-slate-50">
+              practiceEntries.map((entry, idx) => (
+                <div key={`${entry.practiceId}-${entry.department || idx}`} className="flex items-center gap-3 p-2 rounded-lg hover:bg-slate-50">
                   <Checkbox
-                    checked={selectedPracticeIds.includes(p.id)}
-                    onCheckedChange={() => togglePractice(p.id)}
+                    checked={isEntrySelected(entry)}
+                    onCheckedChange={() => toggleEntry(entry)}
                   />
-                  <span className="text-sm">{p.name}</span>
+                  <span className="text-sm">{entry.displayName}</span>
                 </div>
               ))
             )}
           </div>
           <div className="flex justify-between items-center pt-2">
-            <p className="text-xs text-slate-400">{selectedPracticeIds.length} practice(s) selected</p>
+            <p className="text-xs text-slate-400">{selectedAssignments.length} practice(s) selected</p>
             <Button
-              onClick={() => practiceUser && savePracticesMutation.mutate({ userId: practiceUser.id, practiceIds: selectedPracticeIds })}
+              onClick={() => practiceUser && savePracticesMutation.mutate({ userId: practiceUser.id, assignments: selectedAssignments })}
               disabled={savePracticesMutation.isPending}
             >
               {savePracticesMutation.isPending ? "Saving..." : "Save Assignments"}

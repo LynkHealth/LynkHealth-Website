@@ -339,16 +339,47 @@ export async function registerAdminRoutes(app: Express) {
   app.put("/api/admin/users/:id/practice-assignments", adminAuth, requirePermission(Permission.MANAGE_USERS), async (req, res) => {
     try {
       const userId = parseInt(req.params.id);
-      const { practiceIds } = z.object({ practiceIds: z.array(z.number()) }).parse(req.body);
+
+      const assignmentsSchema = z.object({
+        assignments: z.array(z.object({
+          practiceId: z.number(),
+          department: z.string().nullable().optional(),
+        })),
+      });
+      const legacySchema = z.object({
+        practiceIds: z.array(z.number()),
+      });
+
+      let assignments: { practiceId: number; department: string | null }[];
+      const assignmentsParse = assignmentsSchema.safeParse(req.body);
+      const legacyParse = legacySchema.safeParse(req.body);
+
+      if (assignmentsParse.success) {
+        assignments = assignmentsParse.data.assignments.map(a => ({
+          practiceId: a.practiceId,
+          department: a.department || null,
+        }));
+      } else if (legacyParse.success) {
+        assignments = legacyParse.data.practiceIds.map(id => ({
+          practiceId: id,
+          department: null,
+        }));
+      } else {
+        return res.status(400).json({ success: false, message: "Invalid request: provide assignments or practiceIds" });
+      }
 
       await db.delete(userPracticeAssignments).where(eq(userPracticeAssignments.userId, userId));
 
-      for (const practiceId of practiceIds) {
-        await db.insert(userPracticeAssignments).values({ userId, practiceId });
+      for (const assignment of assignments) {
+        await db.insert(userPracticeAssignments).values({
+          userId,
+          practiceId: assignment.practiceId,
+          department: assignment.department,
+        });
       }
 
       clearPermissionCache(userId);
-      res.json({ success: true, practiceIds });
+      res.json({ success: true, assignments });
     } catch (error) {
       res.status(500).json({ success: false, message: "Failed to update practice assignments" });
     }
