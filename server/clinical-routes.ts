@@ -2,6 +2,7 @@ import type { Express, Request, Response, NextFunction } from "express";
 import express from "express";
 import { storage } from "./storage";
 import { adminAuth, requireRole } from "./admin-routes";
+import { requirePermission, Permission } from "./rbac";
 import bcrypt from "bcryptjs";
 import {
   insertPatientSchema, insertPatientConditionSchema, insertPatientMedicationSchema,
@@ -541,7 +542,7 @@ export function registerClinicalRoutes(app: Express) {
     }
   });
 
-  app.post("/api/admin/users", adminAuth, requireRole("admin", "supervisor"), async (req, res) => {
+  app.post("/api/admin/users", adminAuth, requirePermission(Permission.MANAGE_USERS), async (req, res) => {
     try {
       const { email, password, role, name } = req.body;
       if (!email || !password || !name) return res.status(400).json({ error: "Email, name, and password required" });
@@ -554,7 +555,7 @@ export function registerClinicalRoutes(app: Express) {
     }
   });
 
-  app.put("/api/admin/users/:id", adminAuth, requireRole("admin", "supervisor"), async (req, res) => {
+  app.put("/api/admin/users/:id", adminAuth, requirePermission(Permission.MANAGE_USERS), async (req, res) => {
     try {
       const updates: any = { ...req.body };
       if (updates.password) {
@@ -905,7 +906,7 @@ export function registerClinicalRoutes(app: Express) {
     }
   });
 
-  app.post("/api/clinical/templates", adminAuth, requireRole("admin", "supervisor"), async (req: any, res) => {
+  app.post("/api/clinical/templates", adminAuth, requirePermission(Permission.MANAGE_TEMPLATES), async (req: any, res) => {
     try {
       const { items, ...templateData } = req.body;
       const data = insertCarePlanTemplateSchema.parse({ ...templateData, createdBy: req.adminUser?.id || templateData.createdBy });
@@ -924,7 +925,7 @@ export function registerClinicalRoutes(app: Express) {
     }
   });
 
-  app.put("/api/clinical/templates/:id", adminAuth, requireRole("admin", "supervisor"), async (req, res) => {
+  app.put("/api/clinical/templates/:id", adminAuth, requirePermission(Permission.MANAGE_TEMPLATES), async (req, res) => {
     try {
       const { items, ...updates } = req.body;
       const template = await storage.updateCarePlanTemplate(parseInt(req.params.id), updates);
@@ -935,7 +936,7 @@ export function registerClinicalRoutes(app: Express) {
     }
   });
 
-  app.delete("/api/clinical/templates/:id", adminAuth, requireRole("admin", "supervisor"), async (req, res) => {
+  app.delete("/api/clinical/templates/:id", adminAuth, requirePermission(Permission.MANAGE_TEMPLATES), async (req, res) => {
     try {
       await storage.deleteCarePlanTemplate(parseInt(req.params.id));
       res.json({ success: true });
@@ -944,7 +945,7 @@ export function registerClinicalRoutes(app: Express) {
     }
   });
 
-  app.post("/api/clinical/templates/:id/items", adminAuth, requireRole("admin", "supervisor"), async (req, res) => {
+  app.post("/api/clinical/templates/:id/items", adminAuth, requirePermission(Permission.MANAGE_TEMPLATES), async (req, res) => {
     try {
       const data = insertCarePlanTemplateItemSchema.parse({ ...req.body, templateId: parseInt(req.params.id) });
       const item = await storage.createCarePlanTemplateItem(data);
@@ -955,7 +956,7 @@ export function registerClinicalRoutes(app: Express) {
     }
   });
 
-  app.delete("/api/clinical/template-items/:id", adminAuth, requireRole("admin", "supervisor"), async (req, res) => {
+  app.delete("/api/clinical/template-items/:id", adminAuth, requirePermission(Permission.MANAGE_TEMPLATES), async (req, res) => {
     try {
       await storage.deleteCarePlanTemplateItem(parseInt(req.params.id));
       res.json({ success: true });
@@ -1058,7 +1059,7 @@ export function registerClinicalRoutes(app: Express) {
     }
   });
 
-  app.patch("/api/clinical/forms/poor-engagement/:id", adminAuth, requireRole("admin", "supervisor"), async (req, res) => {
+  app.patch("/api/clinical/forms/poor-engagement/:id", adminAuth, requirePermission(Permission.MANAGE_FORMS), async (req, res) => {
     try {
       const id = parseInt(req.params.id);
       const { status, reviewNotes } = req.body;
@@ -1108,7 +1109,7 @@ export function registerClinicalRoutes(app: Express) {
     }
   });
 
-  app.patch("/api/clinical/forms/billing-evaluation/:id", adminAuth, requireRole("admin", "supervisor"), async (req, res) => {
+  app.patch("/api/clinical/forms/billing-evaluation/:id", adminAuth, requirePermission(Permission.MANAGE_FORMS), async (req, res) => {
     try {
       const id = parseInt(req.params.id);
       const { status, reviewNotes } = req.body;

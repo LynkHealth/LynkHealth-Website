@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { queryClient } from "@/lib/queryClient";
-import { adminFetch } from "@/lib/admin-auth";
+import { adminFetch, isSuperAdmin, getAdminUser } from "@/lib/admin-auth";
 import { useToast } from "@/hooks/use-toast";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -11,7 +11,8 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
-import { Plus, Edit, Users, Shield, UserCheck } from "lucide-react";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Plus, Edit, Users, Shield, UserCheck, Building2, Key, ChevronDown, ChevronUp } from "lucide-react";
 
 interface AdminUser {
   id: number;
@@ -21,27 +22,81 @@ interface AdminUser {
   createdAt: string;
 }
 
+interface Practice {
+  id: number;
+  name: string;
+  status?: string;
+}
+
 const ROLES = [
-  { value: "admin", label: "Admin", color: "bg-purple-100 text-purple-800" },
-  { value: "supervisor", label: "Supervisor", color: "bg-blue-100 text-blue-800" },
-  { value: "care_manager", label: "Care Manager", color: "bg-green-100 text-green-800" },
-  { value: "provider", label: "Provider", color: "bg-teal-100 text-teal-800" },
+  { value: "super_admin", label: "Super Admin", color: "bg-red-100 text-red-800", description: "Full access to everything" },
+  { value: "admin", label: "Admin", color: "bg-purple-100 text-purple-800", description: "Full access except financials" },
+  { value: "care_coordinator", label: "Care Coordinator", color: "bg-blue-100 text-blue-800", description: "Clinical care with custom permissions" },
+  { value: "enrollment_specialist", label: "Enrollment Specialist", color: "bg-green-100 text-green-800", description: "Patient enrollment with custom permissions" },
+  { value: "billing_specialist", label: "Billing Specialist", color: "bg-amber-100 text-amber-800", description: "Billing & invoices with custom permissions" },
+  { value: "practice_admin", label: "Practice Admin", color: "bg-slate-100 text-slate-800", description: "Single practice access only" },
 ];
+
+const PERMISSION_GROUPS: Record<string, { label: string; permissions: string[] }> = {
+  clinical: {
+    label: "Clinical",
+    permissions: ["VIEW_PATIENTS", "MANAGE_PATIENTS", "VIEW_CLINICAL", "MANAGE_CLINICAL"],
+  },
+  scheduling: {
+    label: "Scheduling & Tasks",
+    permissions: ["VIEW_SCHEDULE", "MANAGE_SCHEDULE", "VIEW_TASKS", "MANAGE_TASKS"],
+  },
+  enrollment: {
+    label: "Enrollment",
+    permissions: ["VIEW_ENROLLMENT", "MANAGE_ENROLLMENT"],
+  },
+  billing: {
+    label: "Billing & Finance",
+    permissions: ["VIEW_BILLING", "MANAGE_BILLING", "VIEW_INVOICES", "MANAGE_INVOICES", "VIEW_ERA_EOB", "MANAGE_ERA_EOB", "VIEW_REVENUE"],
+  },
+  data: {
+    label: "Data & Sync",
+    permissions: ["VIEW_INQUIRIES", "VIEW_REFERRALS", "VIEW_TC_SAMPLES", "TRIGGER_SYNC", "VIEW_SNAPSHOTS"],
+  },
+  admin: {
+    label: "Administration",
+    permissions: ["VIEW_DASHBOARD", "VIEW_PRACTICES", "MANAGE_PRACTICES", "VIEW_AUDIT_LOGS", "MANAGE_USERS", "VIEW_TEMPLATES", "MANAGE_TEMPLATES", "VIEW_FORMS", "MANAGE_FORMS"],
+  },
+  access: {
+    label: "Practice Access",
+    permissions: ["DROP_IN_ASSIGNED_PRACTICES"],
+  },
+};
+
+function formatPermission(p: string): string {
+  return p.replace(/_/g, " ").replace(/\b\w/g, l => l.toUpperCase());
+}
 
 export default function UserManagement() {
   const { toast } = useToast();
+  const currentUser = getAdminUser();
   const [createOpen, setCreateOpen] = useState(false);
   const [editUser, setEditUser] = useState<AdminUser | null>(null);
-  const [form, setForm] = useState({ name: "", email: "", password: "", role: "care_manager" });
+  const [permUser, setPermUser] = useState<AdminUser | null>(null);
+  const [practiceUser, setPracticeUser] = useState<AdminUser | null>(null);
+  const [form, setForm] = useState({ name: "", email: "", password: "", role: "care_coordinator" });
   const [editForm, setEditForm] = useState({ name: "", email: "", role: "", password: "" });
+  const [selectedPracticeIds, setSelectedPracticeIds] = useState<number[]>([]);
+  const [permOverrides, setPermOverrides] = useState<Record<string, boolean>>({});
+  const [roleDefaults, setRoleDefaults] = useState<string[]>([]);
+  const [expandedGroups, setExpandedGroups] = useState<Record<string, boolean>>({});
 
   const { data: users = [], isLoading } = useQuery<AdminUser[]>({
     queryKey: ["/api/admin/users"],
-    queryFn: async () => {
-      const res = await adminFetch("/api/admin/users");
-      return res.json();
-    },
+    queryFn: () => adminFetch("/api/admin/users").then(r => r.json()),
   });
+
+  const { data: practicesData } = useQuery<{ success: boolean; practices: Practice[] }>({
+    queryKey: ["/api/admin/practices"],
+    queryFn: () => adminFetch("/api/admin/practices").then(r => r.json()),
+  });
+
+  const practices = (practicesData?.practices || []).filter(p => p.status !== "inactive");
 
   const createMutation = useMutation({
     mutationFn: async (data: typeof form) => {
@@ -56,7 +111,7 @@ export default function UserManagement() {
       queryClient.invalidateQueries({ queryKey: ["/api/admin/users"] });
       toast({ title: "User created successfully" });
       setCreateOpen(false);
-      setForm({ name: "", email: "", password: "", role: "care_manager" });
+      setForm({ name: "", email: "", password: "", role: "care_coordinator" });
     },
     onError: (err: any) => {
       toast({ title: "Failed to create user", description: err.message, variant: "destructive" });
@@ -82,9 +137,128 @@ export default function UserManagement() {
     },
   });
 
+  const savePracticesMutation = useMutation({
+    mutationFn: async ({ userId, practiceIds }: { userId: number; practiceIds: number[] }) => {
+      const res = await adminFetch(`/api/admin/users/${userId}/practice-assignments`, {
+        method: "PUT",
+        body: JSON.stringify({ practiceIds }),
+      });
+      if (!res.ok) throw new Error(await res.text());
+      return res.json();
+    },
+    onSuccess: () => {
+      toast({ title: "Practice assignments updated" });
+      setPracticeUser(null);
+    },
+    onError: (err: any) => {
+      toast({ title: "Failed to update assignments", description: err.message, variant: "destructive" });
+    },
+  });
+
+  const savePermissionsMutation = useMutation({
+    mutationFn: async ({ userId, permissions }: { userId: number; permissions: { permission: string; allowed: boolean }[] }) => {
+      const res = await adminFetch(`/api/admin/users/${userId}/permissions`, {
+        method: "PUT",
+        body: JSON.stringify({ permissions }),
+      });
+      if (!res.ok) throw new Error(await res.text());
+      return res.json();
+    },
+    onSuccess: () => {
+      toast({ title: "Permissions updated" });
+      setPermUser(null);
+    },
+    onError: (err: any) => {
+      toast({ title: "Failed to update permissions", description: err.message, variant: "destructive" });
+    },
+  });
+
+  const openPracticeAssignments = async (user: AdminUser) => {
+    setPracticeUser(user);
+    try {
+      const res = await adminFetch(`/api/admin/users/${user.id}/practice-assignments`);
+      const data = await res.json();
+      setSelectedPracticeIds(data.assignments?.map((a: any) => a.practiceId) || []);
+    } catch {
+      setSelectedPracticeIds([]);
+    }
+  };
+
+  const openPermissions = async (user: AdminUser) => {
+    setPermUser(user);
+    try {
+      const res = await adminFetch(`/api/admin/users/${user.id}/permissions`);
+      const data = await res.json();
+      setRoleDefaults(data.roleDefaults || []);
+      const overrideMap: Record<string, boolean> = {};
+      (data.overrides || []).forEach((o: any) => {
+        overrideMap[o.permission] = o.allowed;
+      });
+      setPermOverrides(overrideMap);
+    } catch {
+      setRoleDefaults([]);
+      setPermOverrides({});
+    }
+  };
+
+  const togglePractice = (practiceId: number) => {
+    setSelectedPracticeIds(prev =>
+      prev.includes(practiceId) ? prev.filter(id => id !== practiceId) : [...prev, practiceId]
+    );
+  };
+
+  const isPermEnabled = (perm: string): boolean => {
+    if (perm in permOverrides) return permOverrides[perm];
+    return roleDefaults.includes(perm);
+  };
+
+  const togglePerm = (perm: string) => {
+    const isDefault = roleDefaults.includes(perm);
+    const currentlyEnabled = isPermEnabled(perm);
+
+    if (isDefault && currentlyEnabled) {
+      setPermOverrides(prev => ({ ...prev, [perm]: false }));
+    } else if (isDefault && !currentlyEnabled) {
+      const newOverrides = { ...permOverrides };
+      delete newOverrides[perm];
+      setPermOverrides(newOverrides);
+    } else if (!isDefault && !currentlyEnabled) {
+      setPermOverrides(prev => ({ ...prev, [perm]: true }));
+    } else {
+      const newOverrides = { ...permOverrides };
+      delete newOverrides[perm];
+      setPermOverrides(newOverrides);
+    }
+  };
+
+  const savePermissions = () => {
+    if (!permUser) return;
+    const permList = Object.entries(permOverrides).map(([permission, allowed]) => ({
+      permission,
+      allowed,
+    }));
+    savePermissionsMutation.mutate({ userId: permUser.id, permissions: permList });
+  };
+
   const getRoleBadge = (role: string) => {
-    const r = ROLES.find((r) => r.value === role);
-    return <Badge className={r?.color || ""}>{r?.label || role}</Badge>;
+    const r = ROLES.find(r => r.value === role);
+    return <Badge className={r?.color || "bg-slate-100 text-slate-800"}>{r?.label || role}</Badge>;
+  };
+
+  const canEditRole = (targetRole: string) => {
+    if (currentUser?.role === "super_admin") return true;
+    if (targetRole === "super_admin") return false;
+    return false;
+  };
+
+  const availableRoles = ROLES.filter(r => {
+    if (currentUser?.role === "super_admin") return true;
+    if (r.value === "super_admin") return false;
+    return true;
+  });
+
+  const hasCustomPermissions = (role: string) => {
+    return ["care_coordinator", "enrollment_specialist", "billing_specialist"].includes(role);
   };
 
   const handleCreate = (e: React.FormEvent) => {
@@ -108,17 +282,21 @@ export default function UserManagement() {
     setEditForm({ name: user.name, email: user.email, role: user.role, password: "" });
   };
 
-  const roleCounts = ROLES.map((r) => ({
+  const toggleGroup = (group: string) => {
+    setExpandedGroups(prev => ({ ...prev, [group]: !prev[group] }));
+  };
+
+  const roleCounts = ROLES.map(r => ({
     ...r,
-    count: users.filter((u) => u.role === r.value).length,
-  }));
+    count: users.filter(u => u.role === r.value).length,
+  })).filter(r => r.count > 0);
 
   return (
     <div>
       <div className="flex items-center justify-between mb-6">
         <div>
           <h1 className="text-2xl font-bold text-slate-900">User Management</h1>
-          <p className="text-slate-500 text-sm mt-1">Manage care coordinators, supervisors, and admins</p>
+          <p className="text-slate-500 text-sm mt-1">Manage users, practice assignments, and permissions</p>
         </div>
         <Dialog open={createOpen} onOpenChange={setCreateOpen}>
           <DialogTrigger asChild>
@@ -129,22 +307,29 @@ export default function UserManagement() {
             <form onSubmit={handleCreate} className="space-y-4">
               <div>
                 <Label>Full Name</Label>
-                <Input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} required />
+                <Input value={form.name} onChange={e => setForm({ ...form, name: e.target.value })} required />
               </div>
               <div>
                 <Label>Email</Label>
-                <Input type="email" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} required />
+                <Input type="email" value={form.email} onChange={e => setForm({ ...form, email: e.target.value })} required />
               </div>
               <div>
                 <Label>Password</Label>
-                <Input type="password" value={form.password} onChange={(e) => setForm({ ...form, password: e.target.value })} required minLength={6} />
+                <Input type="password" value={form.password} onChange={e => setForm({ ...form, password: e.target.value })} required minLength={6} />
               </div>
               <div>
                 <Label>Role</Label>
-                <Select value={form.role} onValueChange={(v) => setForm({ ...form, role: v })}>
+                <Select value={form.role} onValueChange={v => setForm({ ...form, role: v })}>
                   <SelectTrigger><SelectValue /></SelectTrigger>
                   <SelectContent>
-                    {ROLES.map((r) => (<SelectItem key={r.value} value={r.value}>{r.label}</SelectItem>))}
+                    {availableRoles.map(r => (
+                      <SelectItem key={r.value} value={r.value}>
+                        <div>
+                          <span className="font-medium">{r.label}</span>
+                          <span className="text-xs text-slate-400 ml-2">{r.description}</span>
+                        </div>
+                      </SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
               </div>
@@ -156,21 +341,18 @@ export default function UserManagement() {
         </Dialog>
       </div>
 
-      <div className="grid grid-cols-4 gap-4 mb-6">
-        {roleCounts.map((r) => (
-          <Card key={r.value}>
-            <CardContent className="pt-4 pb-3">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-slate-500">{r.label}s</p>
-                  <p className="text-2xl font-bold">{r.count}</p>
-                </div>
-                {r.value === "admin" ? <Shield className="w-8 h-8 text-purple-300" /> : r.value === "supervisor" ? <UserCheck className="w-8 h-8 text-blue-300" /> : <Users className="w-8 h-8 text-green-300" />}
-              </div>
-            </CardContent>
-          </Card>
-        ))}
-      </div>
+      {roleCounts.length > 0 && (
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3 mb-6">
+          {roleCounts.map(r => (
+            <Card key={r.value} className="border-l-4" style={{ borderLeftColor: r.color.includes("red") ? "#ef4444" : r.color.includes("purple") ? "#a855f7" : r.color.includes("blue") ? "#3b82f6" : r.color.includes("green") ? "#22c55e" : r.color.includes("amber") ? "#f59e0b" : "#64748b" }}>
+              <CardContent className="pt-3 pb-2">
+                <p className="text-xs text-slate-500">{r.label}s</p>
+                <p className="text-xl font-bold">{r.count}</p>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      )}
 
       <Card>
         <CardHeader><CardTitle>All Users</CardTitle></CardHeader>
@@ -178,7 +360,7 @@ export default function UserManagement() {
           {isLoading ? (
             <div className="p-8 text-center text-slate-500">Loading users...</div>
           ) : users.length === 0 ? (
-            <div className="p-8 text-center text-slate-500">No users found. Create the first user above.</div>
+            <div className="p-8 text-center text-slate-500">No users found.</div>
           ) : (
             <Table>
               <TableHeader>
@@ -191,16 +373,26 @@ export default function UserManagement() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {users.map((user) => (
+                {users.map(user => (
                   <TableRow key={user.id}>
                     <TableCell className="font-medium">{user.name}</TableCell>
-                    <TableCell className="text-slate-600">{user.email}</TableCell>
+                    <TableCell className="text-slate-600 text-sm">{user.email}</TableCell>
                     <TableCell>{getRoleBadge(user.role)}</TableCell>
                     <TableCell className="text-sm text-slate-500">{new Date(user.createdAt).toLocaleDateString()}</TableCell>
                     <TableCell>
-                      <Button variant="ghost" size="sm" onClick={() => openEdit(user)}>
-                        <Edit className="w-4 h-4" />
-                      </Button>
+                      <div className="flex gap-1">
+                        <Button variant="ghost" size="sm" title="Edit" onClick={() => openEdit(user)}>
+                          <Edit className="w-4 h-4" />
+                        </Button>
+                        <Button variant="ghost" size="sm" title="Practice Assignments" onClick={() => openPracticeAssignments(user)}>
+                          <Building2 className="w-4 h-4" />
+                        </Button>
+                        {hasCustomPermissions(user.role) && (
+                          <Button variant="ghost" size="sm" title="Permissions" onClick={() => openPermissions(user)}>
+                            <Key className="w-4 h-4" />
+                          </Button>
+                        )}
+                      </div>
                     </TableCell>
                   </TableRow>
                 ))}
@@ -210,28 +402,30 @@ export default function UserManagement() {
         </CardContent>
       </Card>
 
-      <Dialog open={!!editUser} onOpenChange={(open) => !open && setEditUser(null)}>
+      <Dialog open={!!editUser} onOpenChange={open => !open && setEditUser(null)}>
         <DialogContent>
           <DialogHeader><DialogTitle>Edit User</DialogTitle></DialogHeader>
           <form onSubmit={handleEdit} className="space-y-4">
             <div>
               <Label>Full Name</Label>
-              <Input value={editForm.name} onChange={(e) => setEditForm({ ...editForm, name: e.target.value })} required />
+              <Input value={editForm.name} onChange={e => setEditForm({ ...editForm, name: e.target.value })} required />
             </div>
             <div>
               <Label>Email</Label>
-              <Input type="email" value={editForm.email} onChange={(e) => setEditForm({ ...editForm, email: e.target.value })} required />
+              <Input type="email" value={editForm.email} onChange={e => setEditForm({ ...editForm, email: e.target.value })} required />
             </div>
             <div>
               <Label>New Password (leave blank to keep current)</Label>
-              <Input type="password" value={editForm.password} onChange={(e) => setEditForm({ ...editForm, password: e.target.value })} />
+              <Input type="password" value={editForm.password} onChange={e => setEditForm({ ...editForm, password: e.target.value })} />
             </div>
             <div>
               <Label>Role</Label>
-              <Select value={editForm.role} onValueChange={(v) => setEditForm({ ...editForm, role: v })}>
+              <Select value={editForm.role} onValueChange={v => setEditForm({ ...editForm, role: v })}>
                 <SelectTrigger><SelectValue /></SelectTrigger>
                 <SelectContent>
-                  {ROLES.map((r) => (<SelectItem key={r.value} value={r.value}>{r.label}</SelectItem>))}
+                  {availableRoles.map(r => (
+                    <SelectItem key={r.value} value={r.value}>{r.label}</SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
             </div>
@@ -239,6 +433,96 @@ export default function UserManagement() {
               {updateMutation.isPending ? "Saving..." : "Save Changes"}
             </Button>
           </form>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={!!practiceUser} onOpenChange={open => !open && setPracticeUser(null)}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Building2 className="w-5 h-5" />
+              Practice Assignments - {practiceUser?.name}
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-3 max-h-[400px] overflow-y-auto">
+            {practices.length === 0 ? (
+              <p className="text-sm text-slate-500">No practices available.</p>
+            ) : (
+              practices.map(p => (
+                <div key={p.id} className="flex items-center gap-3 p-2 rounded-lg hover:bg-slate-50">
+                  <Checkbox
+                    checked={selectedPracticeIds.includes(p.id)}
+                    onCheckedChange={() => togglePractice(p.id)}
+                  />
+                  <span className="text-sm">{p.name}</span>
+                </div>
+              ))
+            )}
+          </div>
+          <div className="flex justify-between items-center pt-2">
+            <p className="text-xs text-slate-400">{selectedPracticeIds.length} practice(s) selected</p>
+            <Button
+              onClick={() => practiceUser && savePracticesMutation.mutate({ userId: practiceUser.id, practiceIds: selectedPracticeIds })}
+              disabled={savePracticesMutation.isPending}
+            >
+              {savePracticesMutation.isPending ? "Saving..." : "Save Assignments"}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={!!permUser} onOpenChange={open => !open && setPermUser(null)}>
+        <DialogContent className="max-w-lg max-h-[85vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Key className="w-5 h-5" />
+              Permissions - {permUser?.name}
+            </DialogTitle>
+          </DialogHeader>
+          <p className="text-xs text-slate-500 -mt-2">
+            Toggle individual permissions on/off. Checkmarks with a blue background are role defaults.
+          </p>
+          <div className="space-y-2">
+            {Object.entries(PERMISSION_GROUPS).map(([groupKey, group]) => (
+              <div key={groupKey} className="border rounded-lg">
+                <button
+                  className="w-full flex items-center justify-between px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50"
+                  onClick={() => toggleGroup(groupKey)}
+                >
+                  {group.label}
+                  {expandedGroups[groupKey] ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+                </button>
+                {expandedGroups[groupKey] && (
+                  <div className="px-3 pb-2 space-y-1">
+                    {group.permissions.map(perm => {
+                      const enabled = isPermEnabled(perm);
+                      const isDefault = roleDefaults.includes(perm);
+                      const isOverridden = perm in permOverrides;
+                      return (
+                        <div key={perm} className={`flex items-center gap-3 p-1.5 rounded text-sm ${isOverridden ? "bg-amber-50" : ""}`}>
+                          <Checkbox checked={enabled} onCheckedChange={() => togglePerm(perm)} />
+                          <span className={enabled ? "text-slate-700" : "text-slate-400"}>
+                            {formatPermission(perm)}
+                          </span>
+                          {isDefault && !isOverridden && (
+                            <Badge variant="outline" className="text-[10px] ml-auto bg-blue-50 text-blue-600 border-blue-200">default</Badge>
+                          )}
+                          {isOverridden && (
+                            <Badge variant="outline" className="text-[10px] ml-auto bg-amber-50 text-amber-600 border-amber-200">custom</Badge>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+          <div className="flex justify-end pt-2">
+            <Button onClick={savePermissions} disabled={savePermissionsMutation.isPending}>
+              {savePermissionsMutation.isPending ? "Saving..." : "Save Permissions"}
+            </Button>
+          </div>
         </DialogContent>
       </Dialog>
     </div>

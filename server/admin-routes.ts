@@ -13,8 +13,10 @@ import { eq, and, desc, sql } from "drizzle-orm";
 import multer from "multer";
 import { parse835, mapCptToProgram } from "./era-parser";
 import { writeAuditLog, getAuditLogs, AuditAction, getClientIp } from "./audit";
-import { requirePermission, Permission, hasPermission } from "./rbac";
+import { requirePermission, requireAnyPermission, Permission, hasPermission, getEffectivePermissions, clearPermissionCache, getRoleDefaultPermissions, getAllPermissions, getAssignablePermissions } from "./rbac";
 import { sendEmail, buildPasswordResetEmail } from "./email";
+import { getUserPracticeIds, setActivePractice, practiceContext, isUserAssignedToPractice } from "./practice-context";
+import { userPracticeAssignments, userPermissions } from "@shared/schema";
 
 const INACTIVITY_TIMEOUT_MS = 15 * 60 * 1000;
 const MAX_SESSION_LIFETIME_MS = 4 * 60 * 60 * 1000;
@@ -124,6 +126,7 @@ export async function adminAuth(req: Request, res: Response, next: NextFunction)
 
   setSessionCookie(res, token);
 
+  (req as any).adminSession = session;
   req.adminUser = { id: adminUser.id, email: adminUser.email, name: adminUser.name, role: adminUser.role };
   next();
 }
@@ -218,10 +221,20 @@ export async function registerAdminRoutes(app: Express) {
 
       setSessionCookie(res, token);
 
+      const practiceIds = await getUserPracticeIds(user.id);
+      const effectivePerms = await getEffectivePermissions(user.id, user.role);
+
       res.json({
         success: true,
         token,
-        user: { id: user.id, email: user.email, name: user.name, role: user.role },
+        user: {
+          id: user.id,
+          email: user.email,
+          name: user.name,
+          role: user.role,
+          assignedPracticeIds: practiceIds,
+          permissions: Array.from(effectivePerms),
+        },
       });
     } catch (error) {
       if (error instanceof z.ZodError) {
@@ -247,6 +260,162 @@ export async function registerAdminRoutes(app: Express) {
     });
     clearSessionCookie(res);
     res.json({ success: true });
+  });
+
+  app.get("/api/admin/me", adminAuth, async (req, res) => {
+    try {
+      const user = req.adminUser!;
+      const practiceIds = await getUserPracticeIds(user.id);
+      const effectivePerms = await getEffectivePermissions(user.id, user.role);
+      const session = (req as any).adminSession;
+      res.json({
+        success: true,
+        user: {
+          ...user,
+          assignedPracticeIds: practiceIds,
+          permissions: Array.from(effectivePerms),
+          activePracticeId: session?.activePracticeId || null,
+        },
+      });
+    } catch (error) {
+      res.status(500).json({ success: false, message: "Failed to get user info" });
+    }
+  });
+
+  app.post("/api/admin/switch-practice", adminAuth, async (req, res) => {
+    try {
+      const { practiceId } = z.object({ practiceId: z.number().nullable() }).parse(req.body);
+      const user = req.adminUser!;
+      const role = user.role;
+
+      if (role === "practice_admin") {
+        return res.status(403).json({ success: false, message: "Practice admins cannot switch practices" });
+      }
+
+      if (practiceId !== null) {
+        if (role === "super_admin" || role === "admin") {
+          // can access any practice
+        } else {
+          const assigned = await isUserAssignedToPractice(user.id, practiceId);
+          if (!assigned) {
+            return res.status(403).json({ success: false, message: "Not assigned to this practice" });
+          }
+        }
+      }
+
+      const token = req.cookies?.admin_session || req.headers.authorization?.replace("Bearer ", "");
+      if (token) {
+        await setActivePractice(token, practiceId);
+      }
+
+      await writeAuditLog(auditFromRequest(req, {
+        action: AuditAction.PHI_READ,
+        resourceType: "practice_switch",
+        resourceId: practiceId?.toString() || "all",
+        outcome: "success",
+        details: { switchedToPracticeId: practiceId },
+      }));
+
+      res.json({ success: true, activePracticeId: practiceId });
+    } catch (error) {
+      res.status(500).json({ success: false, message: "Failed to switch practice" });
+    }
+  });
+
+  app.get("/api/admin/users/:id/practice-assignments", adminAuth, requirePermission(Permission.MANAGE_USERS), async (req, res) => {
+    try {
+      const userId = parseInt(req.params.id);
+      const assignments = await db.select().from(userPracticeAssignments).where(eq(userPracticeAssignments.userId, userId));
+      res.json({ success: true, assignments });
+    } catch (error) {
+      res.status(500).json({ success: false, message: "Failed to get practice assignments" });
+    }
+  });
+
+  app.put("/api/admin/users/:id/practice-assignments", adminAuth, requirePermission(Permission.MANAGE_USERS), async (req, res) => {
+    try {
+      const userId = parseInt(req.params.id);
+      const { practiceIds } = z.object({ practiceIds: z.array(z.number()) }).parse(req.body);
+
+      await db.delete(userPracticeAssignments).where(eq(userPracticeAssignments.userId, userId));
+
+      for (const practiceId of practiceIds) {
+        await db.insert(userPracticeAssignments).values({ userId, practiceId });
+      }
+
+      clearPermissionCache(userId);
+      res.json({ success: true, practiceIds });
+    } catch (error) {
+      res.status(500).json({ success: false, message: "Failed to update practice assignments" });
+    }
+  });
+
+  app.get("/api/admin/users/:id/permissions", adminAuth, requirePermission(Permission.MANAGE_USERS), async (req, res) => {
+    try {
+      const userId = parseInt(req.params.id);
+      const user = await storage.getAdminUserById(userId);
+      if (!user) return res.status(404).json({ success: false, message: "User not found" });
+
+      const overrides = await db.select().from(userPermissions).where(eq(userPermissions.userId, userId));
+      const effective = await getEffectivePermissions(userId, user.role);
+      const defaults = getRoleDefaultPermissions(user.role);
+
+      res.json({
+        success: true,
+        roleDefaults: defaults,
+        overrides: overrides.map(o => ({ permission: o.permission, allowed: o.allowed === 1 })),
+        effective: Array.from(effective),
+        allPermissions: getAllPermissions(),
+        assignable: getAssignablePermissions(),
+      });
+    } catch (error) {
+      res.status(500).json({ success: false, message: "Failed to get user permissions" });
+    }
+  });
+
+  app.put("/api/admin/users/:id/permissions", adminAuth, requirePermission(Permission.MANAGE_USERS), async (req, res) => {
+    try {
+      const userId = parseInt(req.params.id);
+      const user = await storage.getAdminUserById(userId);
+      if (!user) return res.status(404).json({ success: false, message: "User not found" });
+
+      if (user.role === "super_admin") {
+        return res.status(403).json({ success: false, message: "Cannot modify super admin permissions" });
+      }
+
+      const { permissions: permUpdates } = z.object({
+        permissions: z.array(z.object({
+          permission: z.string(),
+          allowed: z.boolean(),
+        })),
+      }).parse(req.body);
+
+      await db.delete(userPermissions).where(eq(userPermissions.userId, userId));
+
+      for (const update of permUpdates) {
+        await db.insert(userPermissions).values({
+          userId,
+          permission: update.permission,
+          allowed: update.allowed ? 1 : 0,
+        });
+      }
+
+      clearPermissionCache(userId);
+      const effective = await getEffectivePermissions(userId, user.role);
+      res.json({ success: true, effective: Array.from(effective) });
+    } catch (error) {
+      res.status(500).json({ success: false, message: "Failed to update permissions" });
+    }
+  });
+
+  app.get("/api/admin/roles", adminAuth, (req, res) => {
+    const { USER_ROLES } = require("@shared/schema");
+    res.json({
+      success: true,
+      roles: USER_ROLES,
+      assignable: getAssignablePermissions(),
+      allPermissions: getAllPermissions(),
+    });
   });
 
   const forgotPasswordRateLimit = rateLimit({

@@ -8,7 +8,14 @@ export type ProgramType = typeof PROGRAM_TYPES[number];
 export const ENROLLMENT_STATUSES = ["enrolled", "not_enrolled", "inactive", "deceased", "discharged", "declined", "pending_consent"] as const;
 export type EnrollmentStatus = typeof ENROLLMENT_STATUSES[number];
 
-export const USER_ROLES = ["admin", "supervisor", "care_manager", "provider"] as const;
+export const USER_ROLES = [
+  "super_admin",
+  "admin",
+  "care_coordinator",
+  "enrollment_specialist",
+  "billing_specialist",
+  "practice_admin",
+] as const;
 export type UserRole = typeof USER_ROLES[number];
 
 export const contactInquiries = pgTable("contact_inquiries", {
@@ -126,6 +133,37 @@ export const insertAdminUserSchema = createInsertSchema(adminUsers).omit({
 export type InsertAdminUser = z.infer<typeof insertAdminUserSchema>;
 export type AdminUser = typeof adminUsers.$inferSelect;
 
+export const userPracticeAssignments = pgTable("user_practice_assignments", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull(),
+  practiceId: integer("practice_id").notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+export const insertUserPracticeAssignmentSchema = createInsertSchema(userPracticeAssignments).omit({
+  id: true,
+  createdAt: true,
+});
+
+export type InsertUserPracticeAssignment = z.infer<typeof insertUserPracticeAssignmentSchema>;
+export type UserPracticeAssignment = typeof userPracticeAssignments.$inferSelect;
+
+export const userPermissions = pgTable("user_permissions", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull(),
+  permission: text("permission").notNull(),
+  allowed: integer("allowed").notNull().default(1),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+export const insertUserPermissionSchema = createInsertSchema(userPermissions).omit({
+  id: true,
+  createdAt: true,
+});
+
+export type InsertUserPermission = z.infer<typeof insertUserPermissionSchema>;
+export type UserPermission = typeof userPermissions.$inferSelect;
+
 export const adminSessions = pgTable("admin_sessions", {
   id: serial("id").primaryKey(),
   userId: integer("user_id").notNull(),
@@ -133,6 +171,7 @@ export const adminSessions = pgTable("admin_sessions", {
   expiresAt: timestamp("expires_at").notNull(),
   lastActivity: timestamp("last_activity").defaultNow(),
   ipAddress: text("ip_address"),
+  activePracticeId: integer("active_practice_id"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 

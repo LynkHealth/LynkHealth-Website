@@ -9,11 +9,21 @@
 const TOKEN_KEY = "lynk_admin_token";
 const USER_KEY = "lynk_admin_user";
 
+export interface AdminUserInfo {
+  id: number;
+  email: string;
+  name: string;
+  role: string;
+  assignedPracticeIds?: number[];
+  permissions?: string[];
+  activePracticeId?: number | null;
+}
+
 export function getAdminToken(): string | null {
   return localStorage.getItem(TOKEN_KEY);
 }
 
-export function getAdminUser(): { id: number; email: string; name: string; role: string } | null {
+export function getAdminUser(): AdminUserInfo | null {
   const raw = localStorage.getItem(USER_KEY);
   if (!raw) return null;
   try {
@@ -23,11 +33,33 @@ export function getAdminUser(): { id: number; email: string; name: string; role:
   }
 }
 
-export function setAdminAuth(token: string, user: { id: number; email: string; name: string; role: string }) {
-  // Store token for backward compatibility; httpOnly cookie is the primary auth mechanism
+export function setAdminAuth(token: string, user: AdminUserInfo) {
   localStorage.setItem(TOKEN_KEY, token);
   localStorage.setItem(USER_KEY, JSON.stringify(user));
   document.cookie = `admin_token=${token}; path=/; max-age=${7 * 24 * 60 * 60}; SameSite=Lax`;
+}
+
+export function updateAdminUser(updates: Partial<AdminUserInfo>) {
+  const current = getAdminUser();
+  if (current) {
+    localStorage.setItem(USER_KEY, JSON.stringify({ ...current, ...updates }));
+  }
+}
+
+export function hasPermission(permission: string): boolean {
+  const user = getAdminUser();
+  if (!user) return false;
+  if (user.role === "super_admin") return true;
+  return user.permissions?.includes(permission) ?? false;
+}
+
+export function isSuperAdmin(): boolean {
+  return getAdminUser()?.role === "super_admin";
+}
+
+export function isAdmin(): boolean {
+  const role = getAdminUser()?.role;
+  return role === "super_admin" || role === "admin";
 }
 
 export function clearAdminAuth() {
@@ -40,10 +72,9 @@ export async function adminFetch(url: string, options: RequestInit = {}) {
   const token = getAdminToken();
   const res = await fetch(url, {
     ...options,
-    credentials: "same-origin", // Send httpOnly cookies automatically
+    credentials: "same-origin",
     headers: {
       "Content-Type": "application/json",
-      // Include Bearer token as fallback during migration to cookie-only auth
       ...(token ? { Authorization: `Bearer ${token}` } : {}),
       ...options.headers,
     },
