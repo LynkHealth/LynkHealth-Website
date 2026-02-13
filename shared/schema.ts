@@ -138,6 +138,7 @@ export const userPracticeAssignments = pgTable("user_practice_assignments", {
   id: serial("id").primaryKey(),
   userId: integer("user_id").notNull(),
   practiceId: integer("practice_id").notNull(),
+  department: text("department"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
