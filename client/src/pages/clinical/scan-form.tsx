@@ -57,9 +57,8 @@ export default function ScanIntakeForm() {
 
   const { data: practices = [] } = useQuery<Practice[]>({
     queryKey: ["/api/admin/practices"],
-    queryFn: () => adminFetch("/api/admin/practices").then(r => r.json()),
+    queryFn: () => adminFetch("/api/admin/practices").then(r => r.json()).then(data => data.practices || []),
   });
-
   const activePractices = practices.filter((p: Practice) => p.active !== false);
 
   const scanMutation = useMutation({
