@@ -3,6 +3,7 @@ import express from "express";
 import { storage } from "./storage";
 import { adminAuth, requireRole } from "./admin-routes";
 import { requirePermission, Permission } from "./rbac";
+import { practiceContext } from "./practice-context";
 import bcrypt from "bcryptjs";
 import {
   insertPatientSchema, insertPatientConditionSchema, insertPatientMedicationSchema,
@@ -16,19 +17,33 @@ import {
 } from "@shared/schema";
 import { z } from "zod";
 
+function getRequestPracticeId(req: any): number | undefined {
+  if (req.allPracticeAccess && !req.practiceId) return undefined;
+  return req.practiceId || undefined;
+}
+
+async function verifyPatientPracticeAccess(req: any, patientId: number): Promise<boolean> {
+  if (req.allPracticeAccess) return true;
+  const practiceId = req.practiceId;
+  if (!practiceId) return false;
+  const patient = await storage.getPatient(patientId);
+  if (!patient) return false;
+  return patient.practiceId === practiceId;
+}
 
 export function registerClinicalRoutes(app: Express) {
+  const clinicalAuth = [adminAuth, practiceContext()];
 
   // ============================================================
   // Patients
   // ============================================================
 
-  app.get("/api/clinical/patients", adminAuth, async (req, res) => {
+  app.get("/api/clinical/patients", ...clinicalAuth, async (req, res) => {
     try {
       const page = parseInt(req.query.page as string) || 1;
       const limit = parseInt(req.query.limit as string) || 25;
       const search = req.query.search as string | undefined;
-      const practiceId = req.query.practiceId ? parseInt(req.query.practiceId as string) : undefined;
+      const practiceId = getRequestPracticeId(req);
       const result = await storage.listPatients(practiceId, search, page, limit);
       res.json(result);
     } catch (error) {
@@ -37,9 +52,11 @@ export function registerClinicalRoutes(app: Express) {
     }
   });
 
-  app.get("/api/clinical/patients/:id", adminAuth, async (req, res) => {
+  app.get("/api/clinical/patients/:id", ...clinicalAuth, async (req, res) => {
     try {
-      const patient = await storage.getPatient(parseInt(req.params.id));
+      const patientId = parseInt(req.params.id);
+      if (!await verifyPatientPracticeAccess(req, patientId)) return res.status(403).json({ error: "Access denied" });
+      const patient = await storage.getPatient(patientId);
       if (!patient) return res.status(404).json({ error: "Patient not found" });
       res.json(patient);
     } catch (error) {
@@ -47,9 +64,11 @@ export function registerClinicalRoutes(app: Express) {
     }
   });
 
-  app.post("/api/clinical/patients", adminAuth, async (req, res) => {
+  app.post("/api/clinical/patients", ...clinicalAuth, async (req, res) => {
     try {
       const data = insertPatientSchema.parse(req.body);
+      const scopedPracticeId = getRequestPracticeId(req);
+      if (scopedPracticeId && data.practiceId !== scopedPracticeId) return res.status(403).json({ error: "Cannot create patient in another practice" });
       const patient = await storage.createPatient(data);
       res.status(201).json(patient);
     } catch (error) {
@@ -58,9 +77,11 @@ export function registerClinicalRoutes(app: Express) {
     }
   });
 
-  app.put("/api/clinical/patients/:id", adminAuth, async (req, res) => {
+  app.put("/api/clinical/patients/:id", ...clinicalAuth, async (req, res) => {
     try {
-      const patient = await storage.updatePatient(parseInt(req.params.id), req.body);
+      const patientId = parseInt(req.params.id);
+      if (!await verifyPatientPracticeAccess(req, patientId)) return res.status(403).json({ error: "Access denied" });
+      const patient = await storage.updatePatient(patientId, req.body);
       if (!patient) return res.status(404).json({ error: "Patient not found" });
       res.json(patient);
     } catch (error) {
@@ -68,9 +89,11 @@ export function registerClinicalRoutes(app: Express) {
     }
   });
 
-  app.delete("/api/clinical/patients/:id", adminAuth, async (req, res) => {
+  app.delete("/api/clinical/patients/:id", ...clinicalAuth, async (req, res) => {
     try {
-      await storage.deletePatient(parseInt(req.params.id));
+      const patientId = parseInt(req.params.id);
+      if (!await verifyPatientPracticeAccess(req, patientId)) return res.status(403).json({ error: "Access denied" });
+      await storage.deletePatient(patientId);
       res.json({ success: true });
     } catch (error) {
       res.status(500).json({ error: "Failed to delete patient" });
@@ -81,18 +104,22 @@ export function registerClinicalRoutes(app: Express) {
   // Patient Conditions
   // ============================================================
 
-  app.get("/api/clinical/patients/:id/conditions", adminAuth, async (req, res) => {
+  app.get("/api/clinical/patients/:id/conditions", ...clinicalAuth, async (req, res) => {
     try {
-      const conditions = await storage.getPatientConditions(parseInt(req.params.id));
+      const patientId = parseInt(req.params.id);
+      if (!await verifyPatientPracticeAccess(req, patientId)) return res.status(403).json({ error: "Access denied" });
+      const conditions = await storage.getPatientConditions(patientId);
       res.json(conditions);
     } catch (error) {
       res.status(500).json({ error: "Failed to get conditions" });
     }
   });
 
-  app.post("/api/clinical/patients/:id/conditions", adminAuth, async (req, res) => {
+  app.post("/api/clinical/patients/:id/conditions", ...clinicalAuth, async (req, res) => {
     try {
-      const data = insertPatientConditionSchema.parse({ ...req.body, patientId: parseInt(req.params.id) });
+      const patientId = parseInt(req.params.id);
+      if (!await verifyPatientPracticeAccess(req, patientId)) return res.status(403).json({ error: "Access denied" });
+      const data = insertPatientConditionSchema.parse({ ...req.body, patientId });
       const condition = await storage.createPatientCondition(data);
       res.status(201).json(condition);
     } catch (error) {
@@ -101,7 +128,7 @@ export function registerClinicalRoutes(app: Express) {
     }
   });
 
-  app.delete("/api/clinical/conditions/:id", adminAuth, async (req, res) => {
+  app.delete("/api/clinical/conditions/:id", ...clinicalAuth, async (req, res) => {
     try {
       await storage.deletePatientCondition(parseInt(req.params.id));
       res.json({ success: true });
@@ -114,18 +141,22 @@ export function registerClinicalRoutes(app: Express) {
   // Patient Medications
   // ============================================================
 
-  app.get("/api/clinical/patients/:id/medications", adminAuth, async (req, res) => {
+  app.get("/api/clinical/patients/:id/medications", ...clinicalAuth, async (req, res) => {
     try {
-      const medications = await storage.getPatientMedications(parseInt(req.params.id));
+      const patientId = parseInt(req.params.id);
+      if (!await verifyPatientPracticeAccess(req, patientId)) return res.status(403).json({ error: "Access denied" });
+      const medications = await storage.getPatientMedications(patientId);
       res.json(medications);
     } catch (error) {
       res.status(500).json({ error: "Failed to get medications" });
     }
   });
 
-  app.post("/api/clinical/patients/:id/medications", adminAuth, async (req, res) => {
+  app.post("/api/clinical/patients/:id/medications", ...clinicalAuth, async (req, res) => {
     try {
-      const data = insertPatientMedicationSchema.parse({ ...req.body, patientId: parseInt(req.params.id) });
+      const patientId = parseInt(req.params.id);
+      if (!await verifyPatientPracticeAccess(req, patientId)) return res.status(403).json({ error: "Access denied" });
+      const data = insertPatientMedicationSchema.parse({ ...req.body, patientId });
       const medication = await storage.createPatientMedication(data);
       res.status(201).json(medication);
     } catch (error) {
@@ -134,7 +165,7 @@ export function registerClinicalRoutes(app: Express) {
     }
   });
 
-  app.put("/api/clinical/medications/:id", adminAuth, async (req, res) => {
+  app.put("/api/clinical/medications/:id", ...clinicalAuth, async (req, res) => {
     try {
       const medication = await storage.updatePatientMedication(parseInt(req.params.id), req.body);
       if (!medication) return res.status(404).json({ error: "Medication not found" });
@@ -144,7 +175,7 @@ export function registerClinicalRoutes(app: Express) {
     }
   });
 
-  app.delete("/api/clinical/medications/:id", adminAuth, async (req, res) => {
+  app.delete("/api/clinical/medications/:id", ...clinicalAuth, async (req, res) => {
     try {
       await storage.deletePatientMedication(parseInt(req.params.id));
       res.json({ success: true });
@@ -157,18 +188,22 @@ export function registerClinicalRoutes(app: Express) {
   // Patient Allergies
   // ============================================================
 
-  app.get("/api/clinical/patients/:id/allergies", adminAuth, async (req, res) => {
+  app.get("/api/clinical/patients/:id/allergies", ...clinicalAuth, async (req, res) => {
     try {
-      const allergies = await storage.getPatientAllergies(parseInt(req.params.id));
+      const patientId = parseInt(req.params.id);
+      if (!await verifyPatientPracticeAccess(req, patientId)) return res.status(403).json({ error: "Access denied" });
+      const allergies = await storage.getPatientAllergies(patientId);
       res.json(allergies);
     } catch (error) {
       res.status(500).json({ error: "Failed to get allergies" });
     }
   });
 
-  app.post("/api/clinical/patients/:id/allergies", adminAuth, async (req, res) => {
+  app.post("/api/clinical/patients/:id/allergies", ...clinicalAuth, async (req, res) => {
     try {
-      const data = insertPatientAllergySchema.parse({ ...req.body, patientId: parseInt(req.params.id) });
+      const patientId = parseInt(req.params.id);
+      if (!await verifyPatientPracticeAccess(req, patientId)) return res.status(403).json({ error: "Access denied" });
+      const data = insertPatientAllergySchema.parse({ ...req.body, patientId });
       const allergy = await storage.createPatientAllergy(data);
       res.status(201).json(allergy);
     } catch (error) {
@@ -177,7 +212,7 @@ export function registerClinicalRoutes(app: Express) {
     }
   });
 
-  app.delete("/api/clinical/allergies/:id", adminAuth, async (req, res) => {
+  app.delete("/api/clinical/allergies/:id", ...clinicalAuth, async (req, res) => {
     try {
       await storage.deletePatientAllergy(parseInt(req.params.id));
       res.json({ success: true });
@@ -190,19 +225,23 @@ export function registerClinicalRoutes(app: Express) {
   // Patient Vitals
   // ============================================================
 
-  app.get("/api/clinical/patients/:id/vitals", adminAuth, async (req, res) => {
+  app.get("/api/clinical/patients/:id/vitals", ...clinicalAuth, async (req, res) => {
     try {
+      const patientId = parseInt(req.params.id);
+      if (!await verifyPatientPracticeAccess(req, patientId)) return res.status(403).json({ error: "Access denied" });
       const limit = req.query.limit ? parseInt(req.query.limit as string) : undefined;
-      const vitals = await storage.getPatientVitals(parseInt(req.params.id), limit);
+      const vitals = await storage.getPatientVitals(patientId, limit);
       res.json(vitals);
     } catch (error) {
       res.status(500).json({ error: "Failed to get vitals" });
     }
   });
 
-  app.post("/api/clinical/patients/:id/vitals", adminAuth, async (req, res) => {
+  app.post("/api/clinical/patients/:id/vitals", ...clinicalAuth, async (req, res) => {
     try {
-      const data = insertPatientVitalSchema.parse({ ...req.body, patientId: parseInt(req.params.id) });
+      const patientId = parseInt(req.params.id);
+      if (!await verifyPatientPracticeAccess(req, patientId)) return res.status(403).json({ error: "Access denied" });
+      const data = insertPatientVitalSchema.parse({ ...req.body, patientId });
       const vital = await storage.createPatientVital(data);
       res.status(201).json(vital);
     } catch (error) {
@@ -215,18 +254,22 @@ export function registerClinicalRoutes(app: Express) {
   // Patient Insurance
   // ============================================================
 
-  app.get("/api/clinical/patients/:id/insurance", adminAuth, async (req, res) => {
+  app.get("/api/clinical/patients/:id/insurance", ...clinicalAuth, async (req, res) => {
     try {
-      const insurance = await storage.getPatientInsurance(parseInt(req.params.id));
+      const patientId = parseInt(req.params.id);
+      if (!await verifyPatientPracticeAccess(req, patientId)) return res.status(403).json({ error: "Access denied" });
+      const insurance = await storage.getPatientInsurance(patientId);
       res.json(insurance);
     } catch (error) {
       res.status(500).json({ error: "Failed to get insurance" });
     }
   });
 
-  app.post("/api/clinical/patients/:id/insurance", adminAuth, async (req, res) => {
+  app.post("/api/clinical/patients/:id/insurance", ...clinicalAuth, async (req, res) => {
     try {
-      const data = insertPatientInsuranceSchema.parse({ ...req.body, patientId: parseInt(req.params.id) });
+      const patientId = parseInt(req.params.id);
+      if (!await verifyPatientPracticeAccess(req, patientId)) return res.status(403).json({ error: "Access denied" });
+      const data = insertPatientInsuranceSchema.parse({ ...req.body, patientId });
       const insurance = await storage.createPatientInsurance(data);
       res.status(201).json(insurance);
     } catch (error) {
@@ -235,7 +278,7 @@ export function registerClinicalRoutes(app: Express) {
     }
   });
 
-  app.put("/api/clinical/insurance/:id", adminAuth, async (req, res) => {
+  app.put("/api/clinical/insurance/:id", ...clinicalAuth, async (req, res) => {
     try {
       const insurance = await storage.updatePatientInsurance(parseInt(req.params.id), req.body);
       if (!insurance) return res.status(404).json({ error: "Insurance not found" });
@@ -245,7 +288,7 @@ export function registerClinicalRoutes(app: Express) {
     }
   });
 
-  app.delete("/api/clinical/insurance/:id", adminAuth, async (req, res) => {
+  app.delete("/api/clinical/insurance/:id", ...clinicalAuth, async (req, res) => {
     try {
       await storage.deletePatientInsurance(parseInt(req.params.id));
       res.json({ success: true });
@@ -258,18 +301,20 @@ export function registerClinicalRoutes(app: Express) {
   // Program Enrollments
   // ============================================================
 
-  app.get("/api/clinical/patients/:id/enrollments", adminAuth, async (req, res) => {
+  app.get("/api/clinical/patients/:id/enrollments", ...clinicalAuth, async (req, res) => {
     try {
-      const enrollments = await storage.getEnrollments(parseInt(req.params.id));
+      const patientId = parseInt(req.params.id);
+      if (!await verifyPatientPracticeAccess(req, patientId)) return res.status(403).json({ error: "Access denied" });
+      const enrollments = await storage.getEnrollments(patientId);
       res.json(enrollments);
     } catch (error) {
       res.status(500).json({ error: "Failed to get enrollments" });
     }
   });
 
-  app.get("/api/clinical/worklist/:programType", adminAuth, async (req, res) => {
+  app.get("/api/clinical/worklist/:programType", ...clinicalAuth, async (req, res) => {
     try {
-      const practiceId = req.query.practiceId ? parseInt(req.query.practiceId as string) : undefined;
+      const practiceId = getRequestPracticeId(req);
       const enrollments = await storage.getEnrollmentsByProgram(req.params.programType, practiceId);
       res.json(enrollments);
     } catch (error) {
@@ -277,7 +322,7 @@ export function registerClinicalRoutes(app: Express) {
     }
   });
 
-  app.get("/api/clinical/worklists", adminAuth, async (req, res) => {
+  app.get("/api/clinical/worklists", ...clinicalAuth, async (req, res) => {
     try {
       const page = parseInt(req.query.page as string) || 1;
       const limit = parseInt(req.query.limit as string) || 25;
@@ -321,7 +366,7 @@ export function registerClinicalRoutes(app: Express) {
     }
   });
 
-  app.post("/api/clinical/enrollments", adminAuth, async (req, res) => {
+  app.post("/api/clinical/enrollments", ...clinicalAuth, async (req, res) => {
     try {
       const data = insertProgramEnrollmentSchema.parse(req.body);
       const enrollment = await storage.createEnrollment(data);
@@ -332,7 +377,7 @@ export function registerClinicalRoutes(app: Express) {
     }
   });
 
-  app.put("/api/clinical/enrollments/:id", adminAuth, async (req, res) => {
+  app.put("/api/clinical/enrollments/:id", ...clinicalAuth, async (req, res) => {
     try {
       const enrollment = await storage.updateEnrollment(parseInt(req.params.id), req.body);
       if (!enrollment) return res.status(404).json({ error: "Enrollment not found" });
@@ -346,16 +391,18 @@ export function registerClinicalRoutes(app: Express) {
   // Care Plans
   // ============================================================
 
-  app.get("/api/clinical/patients/:id/care-plans", adminAuth, async (req, res) => {
+  app.get("/api/clinical/patients/:id/care-plans", ...clinicalAuth, async (req, res) => {
     try {
-      const plans = await storage.getCarePlans(parseInt(req.params.id));
+      const patientId = parseInt(req.params.id);
+      if (!await verifyPatientPracticeAccess(req, patientId)) return res.status(403).json({ error: "Access denied" });
+      const plans = await storage.getCarePlans(patientId);
       res.json(plans);
     } catch (error) {
       res.status(500).json({ error: "Failed to get care plans" });
     }
   });
 
-  app.get("/api/clinical/care-plans/:id", adminAuth, async (req, res) => {
+  app.get("/api/clinical/care-plans/:id", ...clinicalAuth, async (req, res) => {
     try {
       const plan = await storage.getCarePlan(parseInt(req.params.id));
       if (!plan) return res.status(404).json({ error: "Care plan not found" });
@@ -365,7 +412,7 @@ export function registerClinicalRoutes(app: Express) {
     }
   });
 
-  app.post("/api/clinical/care-plans", adminAuth, async (req, res) => {
+  app.post("/api/clinical/care-plans", ...clinicalAuth, async (req, res) => {
     try {
       const data = insertCarePlanSchema.parse(req.body);
       const plan = await storage.createCarePlan(data);
@@ -376,7 +423,7 @@ export function registerClinicalRoutes(app: Express) {
     }
   });
 
-  app.put("/api/clinical/care-plans/:id", adminAuth, async (req, res) => {
+  app.put("/api/clinical/care-plans/:id", ...clinicalAuth, async (req, res) => {
     try {
       const plan = await storage.updateCarePlan(parseInt(req.params.id), req.body);
       if (!plan) return res.status(404).json({ error: "Care plan not found" });
@@ -390,7 +437,7 @@ export function registerClinicalRoutes(app: Express) {
   // Care Plan Items
   // ============================================================
 
-  app.get("/api/clinical/care-plans/:id/items", adminAuth, async (req, res) => {
+  app.get("/api/clinical/care-plans/:id/items", ...clinicalAuth, async (req, res) => {
     try {
       const items = await storage.getCarePlanItems(parseInt(req.params.id));
       res.json(items);
@@ -399,7 +446,7 @@ export function registerClinicalRoutes(app: Express) {
     }
   });
 
-  app.post("/api/clinical/care-plan-items", adminAuth, async (req, res) => {
+  app.post("/api/clinical/care-plan-items", ...clinicalAuth, async (req, res) => {
     try {
       const data = insertCarePlanItemSchema.parse(req.body);
       const item = await storage.createCarePlanItem(data);
@@ -410,7 +457,7 @@ export function registerClinicalRoutes(app: Express) {
     }
   });
 
-  app.put("/api/clinical/care-plan-items/:id", adminAuth, async (req, res) => {
+  app.put("/api/clinical/care-plan-items/:id", ...clinicalAuth, async (req, res) => {
     try {
       const item = await storage.updateCarePlanItem(parseInt(req.params.id), req.body);
       if (!item) return res.status(404).json({ error: "Care plan item not found" });
@@ -420,7 +467,7 @@ export function registerClinicalRoutes(app: Express) {
     }
   });
 
-  app.delete("/api/clinical/care-plan-items/:id", adminAuth, async (req, res) => {
+  app.delete("/api/clinical/care-plan-items/:id", ...clinicalAuth, async (req, res) => {
     try {
       await storage.deleteCarePlanItem(parseInt(req.params.id));
       res.json({ success: true });
@@ -433,31 +480,35 @@ export function registerClinicalRoutes(app: Express) {
   // Time Logs
   // ============================================================
 
-  app.get("/api/clinical/patients/:id/time-logs", adminAuth, async (req, res) => {
+  app.get("/api/clinical/patients/:id/time-logs", ...clinicalAuth, async (req, res) => {
     try {
-      const logs = await storage.getTimeLogs(parseInt(req.params.id));
+      const patientId = parseInt(req.params.id);
+      if (!await verifyPatientPracticeAccess(req, patientId)) return res.status(403).json({ error: "Access denied" });
+      const logs = await storage.getTimeLogs(patientId);
       res.json(logs);
     } catch (error) {
       res.status(500).json({ error: "Failed to get time logs" });
     }
   });
 
-  app.get("/api/clinical/patients/:id/time-summary", adminAuth, async (req, res) => {
+  app.get("/api/clinical/patients/:id/time-summary", ...clinicalAuth, async (req, res) => {
     try {
+      const patientId = parseInt(req.params.id);
+      if (!await verifyPatientPracticeAccess(req, patientId)) return res.status(403).json({ error: "Access denied" });
       const programType = req.query.programType as string;
       const month = req.query.month as string;
       const year = parseInt(req.query.year as string);
       if (!programType || !month || !year) {
         return res.status(400).json({ error: "programType, month, and year are required" });
       }
-      const summary = await storage.getTimeLogSummary(parseInt(req.params.id), programType, month, year);
+      const summary = await storage.getTimeLogSummary(patientId, programType, month, year);
       res.json(summary);
     } catch (error) {
       res.status(500).json({ error: "Failed to get time summary" });
     }
   });
 
-  app.post("/api/clinical/time-logs", adminAuth, async (req, res) => {
+  app.post("/api/clinical/time-logs", ...clinicalAuth, async (req, res) => {
     try {
       const data = insertTimeLogSchema.parse(req.body);
       const log = await storage.createTimeLog(data);
@@ -472,16 +523,18 @@ export function registerClinicalRoutes(app: Express) {
   // Patient Assessments
   // ============================================================
 
-  app.get("/api/clinical/patients/:id/assessments", adminAuth, async (req, res) => {
+  app.get("/api/clinical/patients/:id/assessments", ...clinicalAuth, async (req, res) => {
     try {
-      const assessments = await storage.getAssessments(parseInt(req.params.id));
+      const patientId = parseInt(req.params.id);
+      if (!await verifyPatientPracticeAccess(req, patientId)) return res.status(403).json({ error: "Access denied" });
+      const assessments = await storage.getAssessments(patientId);
       res.json(assessments);
     } catch (error) {
       res.status(500).json({ error: "Failed to get assessments" });
     }
   });
 
-  app.post("/api/clinical/assessments", adminAuth, async (req, res) => {
+  app.post("/api/clinical/assessments", ...clinicalAuth, async (req, res) => {
     try {
       const data = insertPatientAssessmentSchema.parse(req.body);
       const assessment = await storage.createAssessment(data);
@@ -496,9 +549,9 @@ export function registerClinicalRoutes(app: Express) {
   // Claims
   // ============================================================
 
-  app.get("/api/clinical/claims", adminAuth, async (req, res) => {
+  app.get("/api/clinical/claims", ...clinicalAuth, async (req, res) => {
     try {
-      const practiceId = req.query.practiceId ? parseInt(req.query.practiceId as string) : undefined;
+      const practiceId = getRequestPracticeId(req);
       const programType = req.query.programType as string | undefined;
       const status = req.query.status as string | undefined;
       const claimsList = await storage.getClaims(practiceId, programType, status);
@@ -508,7 +561,7 @@ export function registerClinicalRoutes(app: Express) {
     }
   });
 
-  app.post("/api/clinical/claims", adminAuth, async (req, res) => {
+  app.post("/api/clinical/claims", ...clinicalAuth, async (req, res) => {
     try {
       const data = insertClaimSchema.parse(req.body);
       const claim = await storage.createClaim(data);
@@ -519,7 +572,7 @@ export function registerClinicalRoutes(app: Express) {
     }
   });
 
-  app.put("/api/clinical/claims/:id", adminAuth, async (req, res) => {
+  app.put("/api/clinical/claims/:id", ...clinicalAuth, async (req, res) => {
     try {
       const claim = await storage.updateClaim(parseInt(req.params.id), req.body);
       if (!claim) return res.status(404).json({ error: "Claim not found" });
@@ -756,7 +809,7 @@ export function registerClinicalRoutes(app: Express) {
   // Dashboard
   // ============================================================
 
-  app.get("/api/clinical/dashboard/stats", adminAuth, async (req: any, res) => {
+  app.get("/api/clinical/dashboard/stats", ...clinicalAuth, async (req: any, res) => {
     try {
       const userId = req.adminUser?.id;
       const stats = await storage.getDashboardStats(userId);
@@ -767,7 +820,7 @@ export function registerClinicalRoutes(app: Express) {
     }
   });
 
-  app.get("/api/clinical/dashboard/recent-tasks", adminAuth, async (req: any, res) => {
+  app.get("/api/clinical/dashboard/recent-tasks", ...clinicalAuth, async (req: any, res) => {
     try {
       const userId = req.adminUser?.id;
       const tasks = await storage.getTasks(userId);
@@ -777,7 +830,7 @@ export function registerClinicalRoutes(app: Express) {
     }
   });
 
-  app.get("/api/clinical/dashboard/upcoming-events", adminAuth, async (req: any, res) => {
+  app.get("/api/clinical/dashboard/upcoming-events", ...clinicalAuth, async (req: any, res) => {
     try {
       const userId = req.adminUser?.id;
       const now = new Date();
@@ -793,7 +846,7 @@ export function registerClinicalRoutes(app: Express) {
   // Tasks CRUD (full)
   // ============================================================
 
-  app.get("/api/clinical/tasks", adminAuth, async (req: any, res) => {
+  app.get("/api/clinical/tasks", ...clinicalAuth, async (req: any, res) => {
     try {
       const assignedTo = req.query.assignedTo ? parseInt(req.query.assignedTo as string) : undefined;
       const patientId = req.query.patientId ? parseInt(req.query.patientId as string) : undefined;
@@ -804,7 +857,7 @@ export function registerClinicalRoutes(app: Express) {
     }
   });
 
-  app.post("/api/clinical/tasks", adminAuth, async (req: any, res) => {
+  app.post("/api/clinical/tasks", ...clinicalAuth, async (req: any, res) => {
     try {
       const data = insertClinicalTaskSchema.parse({ ...req.body, createdBy: req.adminUser?.id || req.body.createdBy });
       const task = await storage.createTask(data);
@@ -815,7 +868,7 @@ export function registerClinicalRoutes(app: Express) {
     }
   });
 
-  app.put("/api/clinical/tasks/:id", adminAuth, async (req, res) => {
+  app.put("/api/clinical/tasks/:id", ...clinicalAuth, async (req, res) => {
     try {
       const task = await storage.updateTask(parseInt(req.params.id), req.body);
       if (!task) return res.status(404).json({ error: "Task not found" });
@@ -825,7 +878,7 @@ export function registerClinicalRoutes(app: Express) {
     }
   });
 
-  app.delete("/api/clinical/tasks/:id", adminAuth, async (req, res) => {
+  app.delete("/api/clinical/tasks/:id", ...clinicalAuth, async (req, res) => {
     try {
       await storage.deleteTask(parseInt(req.params.id));
       res.json({ success: true });
@@ -838,7 +891,7 @@ export function registerClinicalRoutes(app: Express) {
   // Calendar Events CRUD (full)
   // ============================================================
 
-  app.get("/api/clinical/events", adminAuth, async (req: any, res) => {
+  app.get("/api/clinical/events", ...clinicalAuth, async (req: any, res) => {
     try {
       const userId = req.query.userId ? parseInt(req.query.userId as string) : undefined;
       const startDate = req.query.startDate ? new Date(req.query.startDate as string) : undefined;
@@ -850,7 +903,7 @@ export function registerClinicalRoutes(app: Express) {
     }
   });
 
-  app.post("/api/clinical/events", adminAuth, async (req: any, res) => {
+  app.post("/api/clinical/events", ...clinicalAuth, async (req: any, res) => {
     try {
       const data = insertCalendarEventSchema.parse({ ...req.body, userId: req.adminUser?.id || req.body.userId });
       const event = await storage.createEvent(data);
@@ -862,7 +915,7 @@ export function registerClinicalRoutes(app: Express) {
     }
   });
 
-  app.put("/api/clinical/events/:id", adminAuth, async (req, res) => {
+  app.put("/api/clinical/events/:id", ...clinicalAuth, async (req, res) => {
     try {
       const event = await storage.updateEvent(parseInt(req.params.id), req.body);
       if (!event) return res.status(404).json({ error: "Event not found" });
@@ -872,7 +925,7 @@ export function registerClinicalRoutes(app: Express) {
     }
   });
 
-  app.delete("/api/clinical/events/:id", adminAuth, async (req, res) => {
+  app.delete("/api/clinical/events/:id", ...clinicalAuth, async (req, res) => {
     try {
       await storage.deleteEvent(parseInt(req.params.id));
       res.json({ success: true });
@@ -885,7 +938,7 @@ export function registerClinicalRoutes(app: Express) {
   // Care Plan Templates
   // ============================================================
 
-  app.get("/api/clinical/templates", adminAuth, async (req, res) => {
+  app.get("/api/clinical/templates", ...clinicalAuth, async (req, res) => {
     try {
       const programType = req.query.programType as string | undefined;
       const templates = await storage.getCarePlanTemplates(programType);
@@ -895,7 +948,7 @@ export function registerClinicalRoutes(app: Express) {
     }
   });
 
-  app.get("/api/clinical/templates/:id", adminAuth, async (req, res) => {
+  app.get("/api/clinical/templates/:id", ...clinicalAuth, async (req, res) => {
     try {
       const template = await storage.getCarePlanTemplate(parseInt(req.params.id));
       if (!template) return res.status(404).json({ error: "Template not found" });
@@ -906,7 +959,7 @@ export function registerClinicalRoutes(app: Express) {
     }
   });
 
-  app.post("/api/clinical/templates", adminAuth, requirePermission(Permission.MANAGE_TEMPLATES), async (req: any, res) => {
+  app.post("/api/clinical/templates", ...clinicalAuth, requirePermission(Permission.MANAGE_TEMPLATES), async (req: any, res) => {
     try {
       const { items, ...templateData } = req.body;
       const data = insertCarePlanTemplateSchema.parse({ ...templateData, createdBy: req.adminUser?.id || templateData.createdBy });
@@ -925,7 +978,7 @@ export function registerClinicalRoutes(app: Express) {
     }
   });
 
-  app.put("/api/clinical/templates/:id", adminAuth, requirePermission(Permission.MANAGE_TEMPLATES), async (req, res) => {
+  app.put("/api/clinical/templates/:id", ...clinicalAuth, requirePermission(Permission.MANAGE_TEMPLATES), async (req, res) => {
     try {
       const { items, ...updates } = req.body;
       const template = await storage.updateCarePlanTemplate(parseInt(req.params.id), updates);
@@ -936,7 +989,7 @@ export function registerClinicalRoutes(app: Express) {
     }
   });
 
-  app.delete("/api/clinical/templates/:id", adminAuth, requirePermission(Permission.MANAGE_TEMPLATES), async (req, res) => {
+  app.delete("/api/clinical/templates/:id", ...clinicalAuth, requirePermission(Permission.MANAGE_TEMPLATES), async (req, res) => {
     try {
       await storage.deleteCarePlanTemplate(parseInt(req.params.id));
       res.json({ success: true });
@@ -945,7 +998,7 @@ export function registerClinicalRoutes(app: Express) {
     }
   });
 
-  app.post("/api/clinical/templates/:id/items", adminAuth, requirePermission(Permission.MANAGE_TEMPLATES), async (req, res) => {
+  app.post("/api/clinical/templates/:id/items", ...clinicalAuth, requirePermission(Permission.MANAGE_TEMPLATES), async (req, res) => {
     try {
       const data = insertCarePlanTemplateItemSchema.parse({ ...req.body, templateId: parseInt(req.params.id) });
       const item = await storage.createCarePlanTemplateItem(data);
@@ -956,7 +1009,7 @@ export function registerClinicalRoutes(app: Express) {
     }
   });
 
-  app.delete("/api/clinical/template-items/:id", adminAuth, requirePermission(Permission.MANAGE_TEMPLATES), async (req, res) => {
+  app.delete("/api/clinical/template-items/:id", ...clinicalAuth, requirePermission(Permission.MANAGE_TEMPLATES), async (req, res) => {
     try {
       await storage.deleteCarePlanTemplateItem(parseInt(req.params.id));
       res.json({ success: true });
@@ -965,7 +1018,7 @@ export function registerClinicalRoutes(app: Express) {
     }
   });
 
-  app.post("/api/clinical/templates/:id/apply", adminAuth, async (req, res) => {
+  app.post("/api/clinical/templates/:id/apply", ...clinicalAuth, async (req, res) => {
     try {
       const templateId = parseInt(req.params.id);
       const { patientId, enrollmentId } = req.body;
@@ -1030,7 +1083,7 @@ export function registerClinicalRoutes(app: Express) {
   // Poor Engagement Forms
   // ============================================================
 
-  app.post("/api/clinical/forms/poor-engagement", adminAuth, async (req, res) => {
+  app.post("/api/clinical/forms/poor-engagement", ...clinicalAuth, async (req, res) => {
     try {
       const parsed = insertPoorEngagementFormSchema.parse({
         ...req.body,
@@ -1048,7 +1101,7 @@ export function registerClinicalRoutes(app: Express) {
     }
   });
 
-  app.get("/api/clinical/forms/poor-engagement", adminAuth, async (req, res) => {
+  app.get("/api/clinical/forms/poor-engagement", ...clinicalAuth, async (req, res) => {
     try {
       const status = req.query.status as string | undefined;
       const forms = await storage.listPoorEngagementForms(status);
@@ -1059,7 +1112,7 @@ export function registerClinicalRoutes(app: Express) {
     }
   });
 
-  app.patch("/api/clinical/forms/poor-engagement/:id", adminAuth, requirePermission(Permission.MANAGE_FORMS), async (req, res) => {
+  app.patch("/api/clinical/forms/poor-engagement/:id", ...clinicalAuth, requirePermission(Permission.MANAGE_FORMS), async (req, res) => {
     try {
       const id = parseInt(req.params.id);
       const { status, reviewNotes } = req.body;
@@ -1080,7 +1133,7 @@ export function registerClinicalRoutes(app: Express) {
   // Billing Evaluation Forms
   // ============================================================
 
-  app.post("/api/clinical/forms/billing-evaluation", adminAuth, async (req, res) => {
+  app.post("/api/clinical/forms/billing-evaluation", ...clinicalAuth, async (req, res) => {
     try {
       const parsed = insertBillingEvaluationFormSchema.parse({
         ...req.body,
@@ -1098,7 +1151,7 @@ export function registerClinicalRoutes(app: Express) {
     }
   });
 
-  app.get("/api/clinical/forms/billing-evaluation", adminAuth, async (req, res) => {
+  app.get("/api/clinical/forms/billing-evaluation", ...clinicalAuth, async (req, res) => {
     try {
       const status = req.query.status as string | undefined;
       const forms = await storage.listBillingEvaluationForms(status);
@@ -1109,7 +1162,7 @@ export function registerClinicalRoutes(app: Express) {
     }
   });
 
-  app.patch("/api/clinical/forms/billing-evaluation/:id", adminAuth, requirePermission(Permission.MANAGE_FORMS), async (req, res) => {
+  app.patch("/api/clinical/forms/billing-evaluation/:id", ...clinicalAuth, requirePermission(Permission.MANAGE_FORMS), async (req, res) => {
     try {
       const id = parseInt(req.params.id);
       const { status, reviewNotes } = req.body;
