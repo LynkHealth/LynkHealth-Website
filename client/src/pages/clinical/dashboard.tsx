@@ -296,20 +296,22 @@ export default function ClinicalDashboard() {
               <div className="flex items-center justify-between">
                 <CardTitle className="flex items-center gap-2 text-lg">
                   <ClipboardList className="h-5 w-5 text-emerald-600" />
-                  Enrollment Breakdown
+                  Patient Breakdown by Program
                 </CardTitle>
                 <Button variant="ghost" size="sm" onClick={() => setShowEnrollmentBreakout(false)}>
                   <X className="h-4 w-4" />
                 </Button>
               </div>
-              <p className="text-sm text-slate-500">Active enrollments by program</p>
+              <p className="text-sm text-slate-500">
+                How {stats?.totalPatients ?? 0} active patients are split across programs
+              </p>
             </CardHeader>
             <CardContent>
               {stats?.enrollmentsByProgram && stats.enrollmentsByProgram.length > 0 ? (
                 <div className="space-y-3">
                   {stats.enrollmentsByProgram.map((program) => {
-                    const percentage = stats.activeEnrollments > 0
-                      ? Math.round((program.count / stats.activeEnrollments) * 100)
+                    const percentage = stats.totalPatients > 0
+                      ? Math.round((program.count / stats.totalPatients) * 100)
                       : 0;
                     const colorClass = PROGRAM_COLORS[program.programType] || "bg-slate-100 text-slate-700";
                     return (
@@ -320,7 +322,7 @@ export default function ClinicalDashboard() {
                         <div className="flex-1">
                           <div className="flex justify-between items-center mb-1">
                             <span className="text-sm font-medium text-slate-700">
-                              {program.count.toLocaleString()} enrolled
+                              {program.count.toLocaleString()} {program.count === 1 ? "patient" : "patients"}
                             </span>
                             <span className="text-xs text-slate-400">{percentage}%</span>
                           </div>
@@ -334,12 +336,9 @@ export default function ClinicalDashboard() {
                       </div>
                     );
                   })}
-                  <div className="pt-3 mt-3 border-t border-slate-100 flex justify-between items-center">
-                    <span className="text-sm font-semibold text-slate-900">Total</span>
-                    <span className="text-sm font-bold text-emerald-600">
-                      {stats.activeEnrollments.toLocaleString()}
-                    </span>
-                  </div>
+                  <p className="text-xs text-slate-400 pt-2 italic">
+                    Patients may appear in multiple programs
+                  </p>
                 </div>
               ) : (
                 <div className="text-center py-6 text-slate-400">

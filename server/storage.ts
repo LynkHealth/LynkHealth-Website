@@ -966,11 +966,6 @@ export class DatabaseStorage implements IStorage {
       totalEnrolled: sql<number>`coalesce(sum(${programSnapshots.patientsEnrolled}), 0)`,
     }).from(programSnapshots).where(and(...snapshotConditions));
 
-    const programBreakdown = await db.select({
-      programType: programSnapshots.programType,
-      count: sql<number>`coalesce(sum(${programSnapshots.patientsEnrolled}), 0)`,
-    }).from(programSnapshots).where(and(...snapshotConditions)).groupBy(programSnapshots.programType);
-
     const patientConditions: any[] = [
       eq(tcStaffTimeLogs.month, currentMonth),
       eq(tcStaffTimeLogs.year, currentYear),
@@ -979,6 +974,11 @@ export class DatabaseStorage implements IStorage {
     const [uniquePatients] = await db.select({
       count: sql<number>`count(distinct ${tcStaffTimeLogs.patientTcId})`,
     }).from(tcStaffTimeLogs).where(and(...patientConditions));
+
+    const patientsByProgram = await db.select({
+      programType: tcStaffTimeLogs.programType,
+      count: sql<number>`count(distinct ${tcStaffTimeLogs.patientTcId})`,
+    }).from(tcStaffTimeLogs).where(and(...patientConditions)).groupBy(tcStaffTimeLogs.programType);
 
     const minuteConditions: any[] = [
       eq(tcStaffTimeLogs.month, currentMonth),
@@ -1011,7 +1011,7 @@ export class DatabaseStorage implements IStorage {
     return {
       totalPatients: Number(uniquePatients.count),
       activeEnrollments: Number(enrollmentResult.totalEnrolled),
-      enrollmentsByProgram: programBreakdown
+      enrollmentsByProgram: patientsByProgram
         .map(r => ({ programType: r.programType, count: Number(r.count) }))
         .filter(r => r.count > 0)
         .sort((a, b) => b.count - a.count),
