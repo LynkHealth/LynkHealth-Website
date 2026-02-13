@@ -1,7 +1,9 @@
+import { useState } from "react";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { adminFetch, getAdminUser } from "@/lib/admin-auth";
 import { queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
+import { useLocation } from "wouter";
 import {
   Users,
   ClipboardList,
@@ -10,6 +12,7 @@ import {
   CheckCircle2,
   Calendar,
   AlertCircle,
+  X,
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -19,6 +22,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 interface DashboardStats {
   totalPatients: number;
   activeEnrollments: number;
+  enrollmentsByProgram: { programType: string; count: number }[];
   pendingTasks: number;
   todayEvents: number;
   minutesThisMonth: number;
@@ -141,9 +145,20 @@ function EventListSkeleton() {
   );
 }
 
+const PROGRAM_COLORS: Record<string, string> = {
+  CCM: "bg-blue-100 text-blue-700",
+  RPM: "bg-emerald-100 text-emerald-700",
+  BHI: "bg-purple-100 text-purple-700",
+  PCM: "bg-amber-100 text-amber-700",
+  TCM: "bg-rose-100 text-rose-700",
+  AWV: "bg-cyan-100 text-cyan-700",
+};
+
 export default function ClinicalDashboard() {
   const user = getAdminUser();
   const { toast } = useToast();
+  const [, navigate] = useLocation();
+  const [showEnrollmentBreakout, setShowEnrollmentBreakout] = useState(false);
 
   const today = new Date().toLocaleDateString("en-US", {
     weekday: "long",
@@ -237,24 +252,105 @@ export default function ClinicalDashboard() {
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         {statsLoading
           ? [1, 2, 3, 4].map((i) => <StatsCardSkeleton key={i} />)
-          : statCards.map((card) => (
-              <Card key={card.title}>
-                <CardContent className="pt-6">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-sm font-medium text-slate-500">{card.title}</p>
-                      <p className="text-3xl font-bold text-slate-900 mt-1">
-                        {card.value.toLocaleString()}
-                      </p>
+          : statCards.map((card) => {
+              const isClickable = card.title === "Total Active Patients" || card.title === "Active Enrollments";
+              return (
+                <Card
+                  key={card.title}
+                  className={isClickable ? "cursor-pointer hover:shadow-md hover:border-slate-300 transition-all" : ""}
+                  onClick={() => {
+                    if (card.title === "Total Active Patients") {
+                      navigate("/clinical/patients");
+                    } else if (card.title === "Active Enrollments") {
+                      setShowEnrollmentBreakout(true);
+                    }
+                  }}
+                >
+                  <CardContent className="pt-6">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="text-sm font-medium text-slate-500">{card.title}</p>
+                        <p className="text-3xl font-bold text-slate-900 mt-1">
+                          {card.value.toLocaleString()}
+                        </p>
+                        {isClickable && (
+                          <p className="text-xs text-slate-400 mt-1">
+                            {card.title === "Active Enrollments" ? "Click for breakdown" : "Click to view"}
+                          </p>
+                        )}
+                      </div>
+                      <div className={`p-3 rounded-lg ${card.color}`}>
+                        <card.icon className="h-6 w-6" />
+                      </div>
                     </div>
-                    <div className={`p-3 rounded-lg ${card.color}`}>
-                      <card.icon className="h-6 w-6" />
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
+                  </CardContent>
+                </Card>
+              );
+            })}
       </div>
+
+      {showEnrollmentBreakout && (
+        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4" onClick={() => setShowEnrollmentBreakout(false)}>
+          <Card className="w-full max-w-md" onClick={(e) => e.stopPropagation()}>
+            <CardHeader className="pb-3">
+              <div className="flex items-center justify-between">
+                <CardTitle className="flex items-center gap-2 text-lg">
+                  <ClipboardList className="h-5 w-5 text-emerald-600" />
+                  Enrollment Breakdown
+                </CardTitle>
+                <Button variant="ghost" size="sm" onClick={() => setShowEnrollmentBreakout(false)}>
+                  <X className="h-4 w-4" />
+                </Button>
+              </div>
+              <p className="text-sm text-slate-500">Active enrollments by program</p>
+            </CardHeader>
+            <CardContent>
+              {stats?.enrollmentsByProgram && stats.enrollmentsByProgram.length > 0 ? (
+                <div className="space-y-3">
+                  {stats.enrollmentsByProgram.map((program) => {
+                    const percentage = stats.activeEnrollments > 0
+                      ? Math.round((program.count / stats.activeEnrollments) * 100)
+                      : 0;
+                    const colorClass = PROGRAM_COLORS[program.programType] || "bg-slate-100 text-slate-700";
+                    return (
+                      <div key={program.programType} className="flex items-center gap-3">
+                        <Badge className={`${colorClass} min-w-[52px] justify-center`}>
+                          {program.programType}
+                        </Badge>
+                        <div className="flex-1">
+                          <div className="flex justify-between items-center mb-1">
+                            <span className="text-sm font-medium text-slate-700">
+                              {program.count.toLocaleString()} enrolled
+                            </span>
+                            <span className="text-xs text-slate-400">{percentage}%</span>
+                          </div>
+                          <div className="h-2 bg-slate-100 rounded-full overflow-hidden">
+                            <div
+                              className="h-full bg-emerald-500 rounded-full transition-all"
+                              style={{ width: `${percentage}%` }}
+                            />
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
+                  <div className="pt-3 mt-3 border-t border-slate-100 flex justify-between items-center">
+                    <span className="text-sm font-semibold text-slate-900">Total</span>
+                    <span className="text-sm font-bold text-emerald-600">
+                      {stats.activeEnrollments.toLocaleString()}
+                    </span>
+                  </div>
+                </div>
+              ) : (
+                <div className="text-center py-6 text-slate-400">
+                  <ClipboardList className="h-8 w-8 mx-auto mb-2" />
+                  <p className="text-sm">No enrollment data available</p>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </div>
+      )}
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <Card>

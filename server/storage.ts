@@ -171,6 +171,7 @@ export interface IStorage {
   getDashboardStats(userId?: number, practiceId?: number | null): Promise<{
     totalPatients: number;
     activeEnrollments: number;
+    enrollmentsByProgram: { programType: string; count: number }[];
     pendingTasks: number;
     todayEvents: number;
     minutesThisMonth: number;
@@ -942,6 +943,7 @@ export class DatabaseStorage implements IStorage {
   async getDashboardStats(userId?: number, practiceId?: number | null): Promise<{
     totalPatients: number;
     activeEnrollments: number;
+    enrollmentsByProgram: { programType: string; count: number }[];
     pendingTasks: number;
     todayEvents: number;
     minutesThisMonth: number;
@@ -963,6 +965,11 @@ export class DatabaseStorage implements IStorage {
     const [enrollmentResult] = await db.select({
       totalEnrolled: sql<number>`coalesce(sum(${programSnapshots.patientsEnrolled}), 0)`,
     }).from(programSnapshots).where(and(...snapshotConditions));
+
+    const programBreakdown = await db.select({
+      programType: programSnapshots.programType,
+      count: sql<number>`coalesce(sum(${programSnapshots.patientsEnrolled}), 0)`,
+    }).from(programSnapshots).where(and(...snapshotConditions)).groupBy(programSnapshots.programType);
 
     const patientConditions: any[] = [
       eq(tcStaffTimeLogs.month, currentMonth),
@@ -1004,6 +1011,10 @@ export class DatabaseStorage implements IStorage {
     return {
       totalPatients: Number(uniquePatients.count),
       activeEnrollments: Number(enrollmentResult.totalEnrolled),
+      enrollmentsByProgram: programBreakdown
+        .map(r => ({ programType: r.programType, count: Number(r.count) }))
+        .filter(r => r.count > 0)
+        .sort((a, b) => b.count - a.count),
       pendingTasks: Number(taskCount.count),
       todayEvents: Number(eventCount.count),
       minutesThisMonth: Number(minuteSum.total),
