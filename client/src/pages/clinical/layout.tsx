@@ -19,60 +19,32 @@ interface Practice {
   name: string;
   active?: boolean;
   status?: string;
-  departments?: string;
 }
-
-const LYNK_PRACTICE_NAME = "Lynk Healthcare";
 
 interface PracticeOption {
   key: string;
   value: string;
   label: string;
   practiceId: number;
-  group?: string;
 }
 
 function buildPracticeOptions(practices: Practice[]): PracticeOption[] {
   const options: PracticeOption[] = [];
-  const lynkPractice = practices.find(p => p.name === LYNK_PRACTICE_NAME);
 
   for (const p of practices) {
     if (p.status === "inactive") continue;
-    if (p.id === lynkPractice?.id) {
-      if (p.departments) {
-        try {
-          const depts = JSON.parse(p.departments) as string[];
-          for (const d of depts) {
-            if (d.startsWith("(NA)")) continue;
-            const cleanName = d.replace(/\s*\[.*?\]\s*$/, "");
-            options.push({
-              key: `dept:${p.id}:${d}`,
-              value: `dept:${p.id}:${d}`,
-              label: cleanName,
-              practiceId: p.id,
-              group: LYNK_PRACTICE_NAME,
-            });
-          }
-        } catch {}
-      }
-    } else {
-      options.push({
-        key: String(p.id),
-        value: p.id.toString(),
-        label: p.name,
-        practiceId: p.id,
-      });
-    }
+    options.push({
+      key: String(p.id),
+      value: p.id.toString(),
+      label: p.name,
+      practiceId: p.id,
+    });
   }
   return options.sort((a, b) => a.label.localeCompare(b.label));
 }
 
 function parsePracticeValue(value: string): number | null {
   if (value === "all") return null;
-  if (value.startsWith("dept:")) {
-    const parts = value.split(":");
-    return parseInt(parts[1]);
-  }
   return parseInt(value);
 }
 

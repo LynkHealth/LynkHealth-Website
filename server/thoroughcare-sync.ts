@@ -14,6 +14,9 @@ import { eq, and } from "drizzle-orm";
 
 const MONTHS = ["JAN", "FEB", "MAR", "APR", "MAY", "JUN", "JUL", "AUG", "SEP", "OCT", "NOV", "DEC"];
 
+const LYNK_TC_ORG_ID = 1707;
+const LYNK_PRACTICE_NAME = "Lynk Healthcare";
+
 const ALL_PROGRAM_TYPES = [
   "CCM",   // Chronic Care Management
   "PCM",   // Principal Care Management
@@ -82,7 +85,7 @@ export async function runFullSync(month?: string, year?: number): Promise<SyncPr
     const orgData = await syncOrganizations();
 
     updateProgress("Patients", 10, "Building patient-to-practice mapping...");
-    const patientData = await buildPatientOrgMap(orgData.tcOrgIds);
+    const patientData = await buildPatientOrgMap(orgData.tcOrgIds, orgData.lynkDeptToDbId);
 
     updateProgress("Enrollments", 20, "Fetching enrollment data...");
     const enrollmentData = await syncEnrollments(patientData);
@@ -94,7 +97,7 @@ export async function runFullSync(month?: string, year?: number): Promise<SyncPr
     const timeData = await syncTimeLogs(targetMonth, targetYear, patientData);
 
     updateProgress("Snapshots", 80, "Building program snapshots...");
-    await buildSnapshots(enrollmentData, timeData, targetMonth, targetYear);
+    await buildSnapshots(enrollmentData, timeData, targetMonth, targetYear, patientData);
 
     updateProgress("Complete", 100, `Sync completed successfully`);
     currentSync.status = "completed";
@@ -161,7 +164,7 @@ export async function runHistoricalSync(totalMonths: number = 24): Promise<SyncP
     const orgData = await syncOrganizations();
 
     updateProgress("Patients", 5, "Building patient-to-practice mapping...");
-    const patientData = await buildPatientOrgMap(orgData.tcOrgIds);
+    const patientData = await buildPatientOrgMap(orgData.tcOrgIds, orgData.lynkDeptToDbId);
 
     updateProgress("Enrollments", 10, "Fetching enrollment data...");
     const enrollmentData = await syncEnrollments(patientData);
@@ -183,7 +186,7 @@ export async function runHistoricalSync(totalMonths: number = 24): Promise<SyncP
       totalTimeLogs += timeData.totalLogs;
 
       updateProgress("Historical Sync", monthPct + Math.round(monthProgressRange / monthRange.length / 2), `Month ${i + 1}/${monthRange.length}: Building snapshots for ${monthLabel}...`);
-      await buildSnapshots(enrollmentData, timeData, month, year);
+      await buildSnapshots(enrollmentData, timeData, month, year, patientData);
     }
 
     updateProgress("Complete", 100, `Historical sync completed: ${totalMonths} months, ${totalTimeLogs} total time logs`);
@@ -216,11 +219,21 @@ export async function runHistoricalSync(totalMonths: number = 24): Promise<SyncP
 interface OrgSyncResult {
   tcOrgIds: number[];
   orgToDbMap: Map<number, number>;
+  lynkDeptToDbId: Map<string, number>;
+}
+
+function extractDeptName(raw: string): string {
+  return raw.replace(/\s*\[.*?\]\s*$/, "").trim();
+}
+
+function isActiveDept(raw: string): boolean {
+  return !raw.startsWith("(NA)");
 }
 
 async function syncOrganizations(): Promise<OrgSyncResult> {
   const orgs = await fetchOrganizations();
   const orgToDbMap = new Map<number, number>();
+  const lynkDeptToDbId = new Map<string, number>();
   const tcOrgIds: number[] = [];
 
   for (const org of orgs) {
@@ -240,16 +253,82 @@ async function syncOrganizations(): Promise<OrgSyncResult> {
       }
     }
 
-    const [existing] = await db.select().from(practices).where(eq(practices.thoroughcareId, tcId));
+    if (tcId === LYNK_TC_ORG_ID) {
+      const existingLynkPractices = await db.select().from(practices).where(eq(practices.thoroughcareId, tcId));
+      const existingByDept = new Map<string | null, typeof existingLynkPractices[0]>();
+      for (const p of existingLynkPractices) {
+        existingByDept.set(p.tcDepartment, p);
+      }
 
-    if (existing) {
+      const parentPractice = existingByDept.get(null) || existingLynkPractices.find(p => !p.tcDepartment);
+      if (parentPractice) {
+        await db.update(practices).set({
+          name: LYNK_PRACTICE_NAME,
+          thoroughcareAlias: alias,
+          status: "active",
+          departments: null,
+        }).where(eq(practices.id, parentPractice.id));
+        orgToDbMap.set(tcId, parentPractice.id);
+      } else {
+        const [newParent] = await db.insert(practices).values({
+          name: LYNK_PRACTICE_NAME,
+          thoroughcareId: tcId,
+          thoroughcareAlias: alias,
+          status: "active",
+          departments: null,
+        }).returning();
+        orgToDbMap.set(tcId, newParent.id);
+      }
+
+      for (const rawDept of deptNames) {
+        const deptClean = extractDeptName(rawDept);
+        const isActive = isActiveDept(rawDept);
+
+        if (!isActive) continue;
+
+        const existing = existingByDept.get(rawDept) ||
+          existingLynkPractices.find(p => p.tcDepartment === rawDept) ||
+          existingLynkPractices.find(p => p.name === deptClean && p.tcDepartment);
+
+        if (existing) {
+          await db.update(practices).set({
+            name: deptClean,
+            thoroughcareId: tcId,
+            tcDepartment: rawDept,
+            thoroughcareAlias: alias,
+            status: "active",
+            departments: null,
+          }).where(eq(practices.id, existing.id));
+          lynkDeptToDbId.set(deptClean, existing.id);
+          lynkDeptToDbId.set(rawDept, existing.id);
+        } else {
+          const [newPractice] = await db.insert(practices).values({
+            name: deptClean,
+            thoroughcareId: tcId,
+            tcDepartment: rawDept,
+            thoroughcareAlias: alias,
+            status: "active",
+            departments: null,
+          }).returning();
+          lynkDeptToDbId.set(deptClean, newPractice.id);
+          lynkDeptToDbId.set(rawDept, newPractice.id);
+        }
+      }
+
+      continue;
+    }
+
+    const existingAll = await db.select().from(practices).where(eq(practices.thoroughcareId, tcId));
+    const existingNonDept = existingAll.find(p => !p.tcDepartment);
+
+    if (existingNonDept) {
       await db.update(practices).set({
         name,
         thoroughcareAlias: alias,
         status: active ? "active" : "inactive",
         departments: deptNames.length > 0 ? JSON.stringify(deptNames) : null,
-      }).where(eq(practices.id, existing.id));
-      orgToDbMap.set(tcId, existing.id);
+      }).where(eq(practices.id, existingNonDept.id));
+      orgToDbMap.set(tcId, existingNonDept.id);
     } else {
       const [newPractice] = await db.insert(practices).values({
         name,
@@ -262,17 +341,18 @@ async function syncOrganizations(): Promise<OrgSyncResult> {
     }
   }
 
-  updateProgress("Organizations", 8, `Synced ${orgs.length} practices`);
-  return { tcOrgIds, orgToDbMap };
+  updateProgress("Organizations", 8, `Synced ${orgs.length} orgs, split ${lynkDeptToDbId.size} Lynk departments into practices`);
+  return { tcOrgIds, orgToDbMap, lynkDeptToDbId };
 }
 
 interface PatientData {
   orgMap: Map<string, number>;
   deptMap: Map<string, string>;
   inactivePatients: Set<string>;
+  lynkDeptToDbId: Map<string, number>;
 }
 
-async function buildPatientOrgMap(tcOrgIds: number[]): Promise<PatientData> {
+async function buildPatientOrgMap(tcOrgIds: number[], lynkDeptToDbId: Map<string, number>): Promise<PatientData> {
   const orgMap = new Map<string, number>();
   const deptMap = new Map<string, string>();
   const inactivePatients = new Set<string>();
@@ -302,7 +382,7 @@ async function buildPatientOrgMap(tcOrgIds: number[]): Promise<PatientData> {
 
   const deptCount = new Set(deptMap.values()).size;
   updateProgress("Patients", 18, `Mapped ${orgMap.size} patients to ${tcOrgIds.length} organizations (${inactivePatients.size} inactive, ${deptCount} departments)`);
-  return { orgMap, deptMap, inactivePatients };
+  return { orgMap, deptMap, inactivePatients, lynkDeptToDbId };
 }
 
 interface ProgramStats {
@@ -593,7 +673,7 @@ async function syncTimeLogs(month: string, year: number, patientData?: PatientDa
   const allPractices = await db.select().from(practices);
   const tcIdToDbId = new Map<number, number>();
   for (const p of allPractices) {
-    if (p.thoroughcareId) {
+    if (p.thoroughcareId && !p.tcDepartment) {
       tcIdToDbId.set(p.thoroughcareId, p.id);
     }
   }
@@ -659,9 +739,25 @@ async function syncTimeLogs(month: string, year: number, patientData?: PatientDa
     if (patientData) {
       const tcOrgId = patientData.orgMap.get(patientId);
       if (tcOrgId !== undefined) {
-        dbPracticeId = tcIdToDbId.get(tcOrgId) || null;
+        if (tcOrgId === LYNK_TC_ORG_ID) {
+          const patientDept = patientData.deptMap.get(patientId);
+          if (patientDept) {
+            const deptPracticeId = patientData.lynkDeptToDbId.get(patientDept);
+            if (deptPracticeId) {
+              dbPracticeId = deptPracticeId;
+              department = null;
+            } else {
+              dbPracticeId = tcIdToDbId.get(tcOrgId) || null;
+              department = patientDept;
+            }
+          } else {
+            dbPracticeId = tcIdToDbId.get(tcOrgId) || null;
+          }
+        } else {
+          dbPracticeId = tcIdToDbId.get(tcOrgId) || null;
+          department = patientData.deptMap.get(patientId) || null;
+        }
       }
-      department = patientData.deptMap.get(patientId) || null;
     }
 
     const logDate = task.executionPeriod?.start
@@ -743,15 +839,18 @@ async function buildSnapshots(
   enrollmentData: EnrollmentData,
   timeData: TimeData,
   month: string,
-  year: number
+  year: number,
+  patientData?: PatientData
 ) {
   const allPractices = await db.select().from(practices);
   const tcIdToDbId = new Map<number, number>();
   for (const p of allPractices) {
-    if (p.thoroughcareId) {
+    if (p.thoroughcareId && !p.tcDepartment) {
       tcIdToDbId.set(p.thoroughcareId, p.id);
     }
   }
+
+  const lynkDeptToDbId = patientData?.lynkDeptToDbId || new Map<string, number>();
 
   await db.delete(programSnapshots)
     .where(and(eq(programSnapshots.month, month), eq(programSnapshots.year, year)));
@@ -767,6 +866,55 @@ async function buildSnapshots(
     }
 
     if (!dbPracticeId) continue;
+
+    if (tcOrgId === LYNK_TC_ORG_ID) {
+      const orgDepts = enrollmentData.byOrgDept.get(tcOrgId);
+      if (orgDepts) {
+        for (const [deptName, deptPrograms] of Array.from(orgDepts.entries())) {
+          const deptPracticeId = lynkDeptToDbId.get(deptName);
+
+          for (const programType of ALL_PROGRAM_TYPES) {
+            const enrollment = deptPrograms.get(programType);
+            if (!enrollment || (enrollment.activePatientIds.size === 0 && enrollment.inactive === 0)) continue;
+
+            const snapshotData = buildSnapshotForProgram(programType, enrollment, timeData);
+            if (deptPracticeId) {
+              await db.insert(programSnapshots).values({
+                practiceId: deptPracticeId,
+                department: null,
+                month,
+                year,
+                ...snapshotData,
+              } as any);
+            } else {
+              await db.insert(programSnapshots).values({
+                practiceId: dbPracticeId,
+                department: deptName,
+                month,
+                year,
+                ...snapshotData,
+              } as any);
+            }
+          }
+        }
+      }
+
+      for (const programType of ALL_PROGRAM_TYPES) {
+        const orgEnrollment = programs.get(programType);
+        if (!orgEnrollment || (orgEnrollment.activePatientIds.size === 0 && orgEnrollment.inactive === 0)) continue;
+
+        const snapshotData = buildSnapshotForProgram(programType, orgEnrollment, timeData);
+        await db.insert(programSnapshots).values({
+          practiceId: dbPracticeId,
+          department: null,
+          month,
+          year,
+          ...snapshotData,
+        } as any);
+      }
+
+      continue;
+    }
 
     for (const programType of ALL_PROGRAM_TYPES) {
       const enrollment = programs.get(programType);
@@ -866,7 +1014,8 @@ function processClaimData(
   deptMap: Map<string, string>,
   tcIdToDbId: Map<number, number>,
   allPractices: any[],
-  ratesMap?: Record<string, number>
+  ratesMap?: Record<string, number>,
+  lynkDeptToDbId?: Map<string, number>
 ): { practiceId: number; department: string | null; programType: string; revenue: number; codeBreakdown: Array<{ cptCode: string; revenue: number }> } | null {
   const patientRef = claim.patient?.reference;
   if (!patientRef) return null;
@@ -876,8 +1025,18 @@ function processClaimData(
   const dept = deptMap.get(patientId) || null;
 
   let dbPracticeId: number | undefined;
+  let resolvedDept: string | null = dept;
+
   if (tcOrgId === 0) {
     dbPracticeId = allPractices[0]?.id;
+  } else if (tcOrgId === LYNK_TC_ORG_ID && dept && lynkDeptToDbId) {
+    const deptPracticeId = lynkDeptToDbId.get(dept);
+    if (deptPracticeId) {
+      dbPracticeId = deptPracticeId;
+      resolvedDept = null;
+    } else {
+      dbPracticeId = tcIdToDbId.get(tcOrgId);
+    }
   } else {
     dbPracticeId = tcIdToDbId.get(tcOrgId);
   }
@@ -930,7 +1089,7 @@ function processClaimData(
     }
   }
 
-  return { practiceId: dbPracticeId, department: dept, programType, revenue: claimRevenue, codeBreakdown };
+  return { practiceId: dbPracticeId, department: resolvedDept, programType, revenue: claimRevenue, codeBreakdown };
 }
 
 async function storeRevenueForMonth(
@@ -1012,11 +1171,11 @@ async function syncClaimsForMonth(
     return { totalClaims: 0, totalRevenueCents: 0 };
   }
 
-  const { orgMap, deptMap } = patientData;
+  const { orgMap, deptMap, lynkDeptToDbId } = patientData;
   const allPractices = await db.select().from(practices);
   const tcIdToDbId = new Map<number, number>();
   for (const p of allPractices) {
-    if (p.thoroughcareId) tcIdToDbId.set(p.thoroughcareId, p.id);
+    if (p.thoroughcareId && !p.tcDepartment) tcIdToDbId.set(p.thoroughcareId, p.id);
   }
 
   const dbRates = await loadCptRatesFromDb(year);
@@ -1025,7 +1184,7 @@ async function syncClaimsForMonth(
   let totalRevenueCents = 0;
 
   for (const claim of filteredClaims) {
-    const result = processClaimData(claim, orgMap, deptMap, tcIdToDbId, allPractices, dbRates);
+    const result = processClaimData(claim, orgMap, deptMap, tcIdToDbId, allPractices, dbRates, lynkDeptToDbId);
     if (!result) continue;
 
     totalRevenueCents += result.revenue;
@@ -1104,7 +1263,7 @@ export async function runRevenueSync(month?: string, year?: number): Promise<Syn
     const orgData = await syncOrganizations();
 
     updateProgress("Patients", 15, "Building patient-to-practice mapping...");
-    const patientData = await buildPatientOrgMap(orgData.tcOrgIds);
+    const patientData = await buildPatientOrgMap(orgData.tcOrgIds, orgData.lynkDeptToDbId);
 
     updateProgress("Claims", 30, `Fetching claims for ${targetMonth} ${targetYear}...`);
     const result = await syncClaimsForMonth(targetMonth, targetYear, patientData);
@@ -1165,13 +1324,13 @@ export async function runHistoricalRevenueSync(totalMonths: number = 24): Promis
     const orgData = await syncOrganizations();
 
     updateProgress("Patients", 8, "Building patient-to-practice mapping...");
-    const patientData = await buildPatientOrgMap(orgData.tcOrgIds);
+    const patientData = await buildPatientOrgMap(orgData.tcOrgIds, orgData.lynkDeptToDbId);
     const { orgMap, deptMap } = patientData;
 
     const allPractices = await db.select().from(practices);
     const tcIdToDbId = new Map<number, number>();
     for (const p of allPractices) {
-      if (p.thoroughcareId) tcIdToDbId.set(p.thoroughcareId, p.id);
+      if (p.thoroughcareId && !p.tcDepartment) tcIdToDbId.set(p.thoroughcareId, p.id);
     }
 
     updateProgress("Claims", 15, "Fetching all claims from ThoroughCare...");
@@ -1223,7 +1382,7 @@ export async function runHistoricalRevenueSync(totalMonths: number = 24): Promis
       const codeRevenueByKey = new Map<string, { practiceId: number; department: string | null; programType: string; cptCode: string; revenue: number; count: number }>();
 
       for (const claim of monthClaims) {
-        const result = processClaimData(claim, orgMap, deptMap, tcIdToDbId, allPractices, dbRates);
+        const result = processClaimData(claim, orgMap, deptMap, tcIdToDbId, allPractices, dbRates, patientData.lynkDeptToDbId);
         if (!result) continue;
 
         totalRevenueCents += result.revenue;

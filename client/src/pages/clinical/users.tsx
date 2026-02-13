@@ -27,7 +27,6 @@ interface Practice {
   id: number;
   name: string;
   status?: string;
-  departments?: string;
 }
 
 interface PracticeAssignment {
@@ -40,8 +39,6 @@ interface PracticeEntry {
   department: string | null;
   displayName: string;
 }
-
-const LYNK_PRACTICE_NAME = "Lynk Healthcare";
 
 const ROLES = [
   { value: "super_admin", label: "Super Admin", color: "bg-red-100 text-red-800", description: "Full access to everything" },
@@ -113,24 +110,11 @@ export default function UserManagement() {
 
   const activePractices = (practicesData?.practices || []).filter(p => p.status !== "inactive");
 
-  const practiceEntries: PracticeEntry[] = activePractices.flatMap(p => {
-    if (p.name === LYNK_PRACTICE_NAME && p.departments) {
-      try {
-        const depts: string[] = JSON.parse(p.departments);
-        return depts
-          .filter(d => !d.startsWith("(NA)"))
-          .map(d => ({
-            practiceId: p.id,
-            department: d,
-            displayName: d.replace(/\s*\[.*?\]\s*$/, ""),
-          }))
-          .sort((a, b) => a.displayName.localeCompare(b.displayName));
-      } catch {
-        return [{ practiceId: p.id, department: null, displayName: p.name }];
-      }
-    }
-    return [{ practiceId: p.id, department: null, displayName: p.name }];
-  });
+  const practiceEntries: PracticeEntry[] = activePractices.map(p => ({
+    practiceId: p.id,
+    department: null,
+    displayName: p.name,
+  })).sort((a, b) => a.displayName.localeCompare(b.displayName));
 
   const createMutation = useMutation({
     mutationFn: async (data: typeof form) => {

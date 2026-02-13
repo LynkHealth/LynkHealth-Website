@@ -16,10 +16,7 @@ interface Practice {
   id: number;
   name: string;
   status?: string;
-  departments?: string;
 }
-
-const LYNK_PRACTICE_NAME = "Lynk Healthcare";
 
 export default function ClinicalEraEob() {
   const now = new Date();
@@ -39,21 +36,12 @@ export default function ClinicalEraEob() {
   });
 
   const practices = (practicesData?.practices || []).filter(p => p.status !== "inactive");
-  const lynkPractice = practices.find(p => p.name === LYNK_PRACTICE_NAME);
-  const lynkPracticeId = lynkPractice?.id || null;
-  const otherPractices = practices.filter(p => p.id !== lynkPracticeId);
 
-  const lynkDepts: string[] = (() => {
-    if (!lynkPractice?.departments) return [];
-    try {
-      return (JSON.parse(lynkPractice.departments) as string[]).filter(d => !d.startsWith("(NA)"));
-    } catch { return []; }
-  })();
-
-  const practiceOptions = [
-    ...otherPractices.map(p => ({ key: String(p.id), value: String(p.id), name: p.name })),
-    ...lynkDepts.map(d => ({ key: `dept:${d}`, value: `dept:${d}`, name: d.replace(/\s*\[.*?\]\s*$/, "") })),
-  ].sort((a, b) => a.name.localeCompare(b.name));
+  const practiceOptions = practices.map(p => ({
+    key: String(p.id),
+    value: String(p.id),
+    name: p.name,
+  })).sort((a, b) => a.name.localeCompare(b.name));
 
   const { data: uploadsData, refetch: refetchUploads } = useQuery({
     queryKey: ["/api/admin/era/uploads", selectedPractice, selectedMonth, selectedYear],
