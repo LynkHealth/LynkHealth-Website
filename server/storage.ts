@@ -171,8 +171,8 @@ export interface IStorage {
   getDashboardStats(userId?: number, practiceId?: number | null): Promise<{
     totalPatients: number;
     activeEnrollments: number;
-    enrollmentsByProgram: { programType: string; enrollments: number; patients: number }[];
-    patientEnrollmentDistribution: { programCount: number; patientCount: number }[];
+    enrollmentsByProgram: { programType: string; enrollments: number }[];
+    avgEnrollmentsPerPatient: number;
     pendingTasks: number;
     todayEvents: number;
     minutesThisMonth: number;
@@ -944,8 +944,8 @@ export class DatabaseStorage implements IStorage {
   async getDashboardStats(userId?: number, practiceId?: number | null): Promise<{
     totalPatients: number;
     activeEnrollments: number;
-    enrollmentsByProgram: { programType: string; enrollments: number; patients: number }[];
-    patientEnrollmentDistribution: { programCount: number; patientCount: number }[];
+    enrollmentsByProgram: { programType: string; enrollments: number }[];
+    avgEnrollmentsPerPatient: number;
     pendingTasks: number;
     todayEvents: number;
     minutesThisMonth: number;
@@ -982,24 +982,6 @@ export class DatabaseStorage implements IStorage {
       count: sql<number>`count(distinct ${tcStaffTimeLogs.patientTcId})`,
     }).from(tcStaffTimeLogs).where(and(...patientConditions));
 
-    const patientsByProgram = await db.select({
-      programType: tcStaffTimeLogs.programType,
-      count: sql<number>`count(distinct ${tcStaffTimeLogs.patientTcId})`,
-    }).from(tcStaffTimeLogs).where(and(...patientConditions)).groupBy(tcStaffTimeLogs.programType);
-
-    const practiceFilter = practiceId ? sql`AND practice_id = ${practiceId}` : sql``;
-    const enrollmentDistribution = await db.execute(sql`
-      SELECT program_count, count(*)::int as patient_count
-      FROM (
-        SELECT patient_tc_id, count(distinct program_type)::int as program_count
-        FROM tc_staff_time_logs
-        WHERE month = ${currentMonth} AND year = ${currentYear} ${practiceFilter}
-        GROUP BY patient_tc_id
-      ) sub
-      GROUP BY program_count
-      ORDER BY program_count
-    `);
-
     const minuteConditions: any[] = [
       eq(tcStaffTimeLogs.month, currentMonth),
       eq(tcStaffTimeLogs.year, currentYear),
@@ -1032,18 +1014,12 @@ export class DatabaseStorage implements IStorage {
       totalPatients: Number(uniquePatients.count),
       activeEnrollments: Number(enrollmentResult.totalEnrolled),
       enrollmentsByProgram: enrollmentsByProgram
-        .map(r => {
-          const pMatch = patientsByProgram.find(p => p.programType === r.programType);
-          return {
-            programType: r.programType,
-            enrollments: Number(r.enrollments),
-            patients: pMatch ? Number(pMatch.count) : 0,
-          };
-        })
+        .map(r => ({ programType: r.programType, enrollments: Number(r.enrollments) }))
         .filter(r => r.enrollments > 0)
         .sort((a, b) => b.enrollments - a.enrollments),
-      patientEnrollmentDistribution: (enrollmentDistribution.rows as any[])
-        .map((r: any) => ({ programCount: Number(r.program_count), patientCount: Number(r.patient_count) })),
+      avgEnrollmentsPerPatient: Number(uniquePatients.count) > 0
+        ? Math.round((Number(enrollmentResult.totalEnrolled) / Number(uniquePatients.count)) * 10) / 10
+        : 0,
       pendingTasks: Number(taskCount.count),
       todayEvents: Number(eventCount.count),
       minutesThisMonth: Number(minuteSum.total),

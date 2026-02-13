@@ -22,8 +22,8 @@ import { Skeleton } from "@/components/ui/skeleton";
 interface DashboardStats {
   totalPatients: number;
   activeEnrollments: number;
-  enrollmentsByProgram: { programType: string; enrollments: number; patients: number }[];
-  patientEnrollmentDistribution: { programCount: number; patientCount: number }[];
+  enrollmentsByProgram: { programType: string; enrollments: number }[];
+  avgEnrollmentsPerPatient: number;
   pendingTasks: number;
   todayEvents: number;
   minutesThisMonth: number;
@@ -309,62 +309,55 @@ export default function ClinicalDashboard() {
             </CardHeader>
             <CardContent className="space-y-5">
               {stats?.enrollmentsByProgram && stats.enrollmentsByProgram.length > 0 ? (
-                <>
-                  <div>
-                    <h4 className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-3">By Program</h4>
-                    <div className="space-y-3">
-                      {stats.enrollmentsByProgram.map((program) => {
-                        const percentage = stats.activeEnrollments > 0
-                          ? Math.round((program.enrollments / stats.activeEnrollments) * 100)
-                          : 0;
-                        const colorClass = PROGRAM_COLORS[program.programType] || "bg-slate-100 text-slate-700";
-                        return (
-                          <div key={program.programType} className="flex items-center gap-3">
-                            <Badge className={`${colorClass} min-w-[52px] justify-center`}>
-                              {program.programType}
-                            </Badge>
-                            <div className="flex-1">
-                              <div className="flex justify-between items-center mb-1">
-                                <span className="text-sm font-medium text-slate-700">
-                                  {program.enrollments.toLocaleString()} {program.enrollments === 1 ? "enrollment" : "enrollments"}
-                                  <span className="text-slate-400 ml-1">
-                                    ({program.patients} {program.patients === 1 ? "patient" : "patients"})
-                                  </span>
-                                </span>
-                                <span className="text-xs text-slate-400">{percentage}%</span>
-                              </div>
-                              <div className="h-2 bg-slate-100 rounded-full overflow-hidden">
-                                <div
-                                  className="h-full bg-emerald-500 rounded-full transition-all"
-                                  style={{ width: `${percentage}%` }}
-                                />
-                              </div>
-                            </div>
-                          </div>
-                        );
-                      })}
+                <div className="space-y-4">
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="text-center p-3 bg-blue-50 rounded-lg">
+                      <p className="text-2xl font-bold text-blue-700">{stats.totalPatients}</p>
+                      <p className="text-xs font-medium text-blue-600">Patients</p>
+                    </div>
+                    <div className="text-center p-3 bg-emerald-50 rounded-lg">
+                      <p className="text-2xl font-bold text-emerald-700">{stats.avgEnrollmentsPerPatient}</p>
+                      <p className="text-xs font-medium text-emerald-600">Avg Programs / Patient</p>
                     </div>
                   </div>
 
-                  {stats.patientEnrollmentDistribution && stats.patientEnrollmentDistribution.length > 0 && (
-                    <div className="pt-1 border-t border-slate-100">
-                      <h4 className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-3">Multi-Program Patients</h4>
-                      <div className="grid grid-cols-3 gap-2">
-                        {stats.patientEnrollmentDistribution.map((d) => {
-                          const label = d.programCount === 1 ? "Single" : d.programCount === 2 ? "Dual" : d.programCount === 3 ? "Triple" : `${d.programCount}x`;
-                          const sublabel = d.programCount === 1 ? "program" : "programs";
-                          return (
-                            <div key={d.programCount} className="text-center p-3 bg-slate-50 rounded-lg">
-                              <p className="text-xl font-bold text-slate-900">{d.patientCount}</p>
-                              <p className="text-xs font-medium text-slate-600">{label}</p>
-                              <p className="text-xs text-slate-400">{d.programCount} {sublabel}</p>
+                  <div className="space-y-3">
+                    {stats.enrollmentsByProgram.map((program) => {
+                      const percentage = stats.activeEnrollments > 0
+                        ? Math.round((program.enrollments / stats.activeEnrollments) * 100)
+                        : 0;
+                      const colorClass = PROGRAM_COLORS[program.programType] || "bg-slate-100 text-slate-700";
+                      return (
+                        <div key={program.programType} className="flex items-center gap-3">
+                          <Badge className={`${colorClass} min-w-[52px] justify-center`}>
+                            {program.programType}
+                          </Badge>
+                          <div className="flex-1">
+                            <div className="flex justify-between items-center mb-1">
+                              <span className="text-sm font-medium text-slate-700">
+                                {program.enrollments.toLocaleString()} {program.enrollments === 1 ? "enrollment" : "enrollments"}
+                              </span>
+                              <span className="text-xs text-slate-400">{percentage}%</span>
                             </div>
-                          );
-                        })}
-                      </div>
-                    </div>
-                  )}
-                </>
+                            <div className="h-2 bg-slate-100 rounded-full overflow-hidden">
+                              <div
+                                className="h-full bg-emerald-500 rounded-full transition-all"
+                                style={{ width: `${percentage}%` }}
+                              />
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+
+                  <div className="pt-2 border-t border-slate-100 flex justify-between items-center">
+                    <span className="text-sm font-semibold text-slate-900">Total Enrollments</span>
+                    <span className="text-sm font-bold text-emerald-600">
+                      {stats.activeEnrollments.toLocaleString()}
+                    </span>
+                  </div>
+                </div>
               ) : (
                 <div className="text-center py-6 text-slate-400">
                   <ClipboardList className="h-8 w-8 mx-auto mb-2" />
