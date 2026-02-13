@@ -282,6 +282,113 @@ export type InsertProgramSnapshot = z.infer<typeof insertProgramSnapshotSchema>;
 export type ProgramSnapshot = typeof programSnapshots.$inferSelect;
 
 // ============================================================
+// AMBIENT AI -- Call Recordings, Transcripts, SOAP Notes, Time Tracking
+// ============================================================
+
+export const callSessions = pgTable("call_sessions", {
+  id: serial("id").primaryKey(),
+  clinicianId: integer("clinician_id").notNull(),       // admin_users.id
+  practiceId: integer("practice_id"),                    // practices.id (optional)
+  patientReference: text("patient_reference"),           // encrypted -- e.g. patient name or MRN
+  patientReferenceHash: text("patient_reference_hash"),  // HMAC for search
+  programType: text("program_type"),                     // CCM, BHI, RPM, etc.
+  callStartedAt: timestamp("call_started_at").notNull(),
+  callEndedAt: timestamp("call_ended_at"),
+  durationSeconds: integer("duration_seconds"),
+  status: text("status").notNull().default("recording"), // recording | transcribing | generating | review | signed | amended
+  encryptionKeyId: text("encryption_key_id"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+export const insertCallSessionSchema = createInsertSchema(callSessions).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+  patientReferenceHash: true,
+  encryptionKeyId: true,
+});
+
+export type InsertCallSession = z.infer<typeof insertCallSessionSchema>;
+export type CallSession = typeof callSessions.$inferSelect;
+
+export const transcripts = pgTable("transcripts", {
+  id: serial("id").primaryKey(),
+  callSessionId: integer("call_session_id").notNull(),
+  content: text("content").notNull(),            // encrypted full transcript text
+  segments: text("segments"),                     // encrypted JSON: [{start, end, speaker, text}]
+  provider: text("provider"),                     // deepgram | aws_transcribe | manual
+  languageCode: text("language_code").default("en-US"),
+  confidenceScore: text("confidence_score"),       // overall confidence 0-1
+  encryptionKeyId: text("encryption_key_id"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+export const insertTranscriptSchema = createInsertSchema(transcripts).omit({
+  id: true,
+  createdAt: true,
+  encryptionKeyId: true,
+});
+
+export type InsertTranscript = z.infer<typeof insertTranscriptSchema>;
+export type Transcript = typeof transcripts.$inferSelect;
+
+export const soapNotes = pgTable("soap_notes", {
+  id: serial("id").primaryKey(),
+  callSessionId: integer("call_session_id").notNull(),
+  subjective: text("subjective").notNull(),       // encrypted
+  objective: text("objective").notNull(),          // encrypted
+  assessment: text("assessment").notNull(),        // encrypted
+  plan: text("plan").notNull(),                    // encrypted
+  status: text("status").notNull().default("draft"), // draft | reviewed | signed | amended
+  reviewedBy: integer("reviewed_by"),              // admin_users.id
+  reviewedAt: timestamp("reviewed_at"),
+  signedBy: integer("signed_by"),                  // admin_users.id
+  signedAt: timestamp("signed_at"),
+  aiModel: text("ai_model"),                       // model that generated the note
+  aiConfidence: text("ai_confidence"),             // confidence score
+  encryptionKeyId: text("encryption_key_id"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+export const insertSoapNoteSchema = createInsertSchema(soapNotes).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+  encryptionKeyId: true,
+  reviewedBy: true,
+  reviewedAt: true,
+  signedBy: true,
+  signedAt: true,
+});
+
+export type InsertSoapNote = z.infer<typeof insertSoapNoteSchema>;
+export type SoapNote = typeof soapNotes.$inferSelect;
+
+export const timeEntries = pgTable("time_entries", {
+  id: serial("id").primaryKey(),
+  callSessionId: integer("call_session_id"),       // optional link to a call
+  clinicianId: integer("clinician_id").notNull(),  // admin_users.id
+  practiceId: integer("practice_id"),
+  programType: text("program_type").notNull(),     // CCM, BHI, RPM, etc.
+  date: text("date").notNull(),                    // YYYY-MM-DD
+  durationMinutes: integer("duration_minutes").notNull(),
+  notes: text("notes"),                            // encrypted
+  encryptionKeyId: text("encryption_key_id"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+export const insertTimeEntrySchema = createInsertSchema(timeEntries).omit({
+  id: true,
+  createdAt: true,
+  encryptionKeyId: true,
+});
+
+export type InsertTimeEntry = z.infer<typeof insertTimeEntrySchema>;
+export type TimeEntry = typeof timeEntries.$inferSelect;
+
+// ============================================================
 // VALIDATION SCHEMAS
 // ============================================================
 

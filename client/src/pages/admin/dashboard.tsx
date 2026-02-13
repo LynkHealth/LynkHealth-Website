@@ -25,8 +25,12 @@ import {
   Stethoscope,
   Shield,
   Zap,
+  Mic,
+  Clock,
 } from "lucide-react";
 import type { ProgramSnapshot, Practice, ContactInquiry } from "@shared/schema";
+import CallsPage from "./calls";
+import TimeTrackingPage from "./time-tracking";
 
 const MONTHS = ["JAN", "FEB", "MAR", "APR", "MAY", "JUN", "JUL", "AUG", "SEP", "OCT", "NOV", "DEC"];
 const MONTH_NAMES: Record<string, string> = {
@@ -371,6 +375,8 @@ export default function AdminDashboard() {
 
   const sidebarItems = [
     { id: "dashboard", label: "Dashboard", icon: LayoutDashboard },
+    { id: "calls", label: "Call Recordings", icon: Mic },
+    { id: "time-tracking", label: "Time Tracking", icon: Clock },
     { id: "inquiries", label: "Inquiries", icon: Mail },
     { id: "practices", label: "Practices", icon: Building2 },
   ];
@@ -439,6 +445,8 @@ export default function AdminDashboard() {
             </Button>
             <h1 className="text-lg font-semibold text-slate-800">
               {activeTab === "dashboard" && "Clinic Dashboard"}
+              {activeTab === "calls" && "Ambient AI"}
+              {activeTab === "time-tracking" && "Time Tracking"}
               {activeTab === "inquiries" && "Contact Inquiries"}
               {activeTab === "practices" && "Partner Practices"}
             </h1>
@@ -740,6 +748,14 @@ export default function AdminDashboard() {
                     </CardContent>
                   </Card>
                 </div>
+              )}
+
+              {activeTab === "calls" && (
+                <CallsPage practices={practices.map((p) => ({ id: p.id, name: p.name }))} />
+              )}
+
+              {activeTab === "time-tracking" && (
+                <TimeTrackingPage practices={practices.map((p) => ({ id: p.id, name: p.name }))} />
               )}
 
               {activeTab === "practices" && (

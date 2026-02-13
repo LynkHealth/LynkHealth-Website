@@ -30,6 +30,7 @@ app.use(helmet({
       fontSrc: ["'self'", "https://fonts.gstatic.com"],
       imgSrc: ["'self'", "data:", "https:", "blob:"],
       connectSrc: ["'self'", "https://www.google-analytics.com", "https://api.secure.thoroughcare.com"],
+      mediaSrc: ["'self'", "blob:"],
       frameSrc: ["'none'"],
       objectSrc: ["'none'"],
       baseUri: ["'self'"],
@@ -65,9 +66,10 @@ app.use(rateLimit({
 // Cookie parser (for httpOnly session cookies -- HIPAA 164.312(d))
 app.use(cookieParser());
 
-// Request body size limits
-app.use(express.json({ limit: "1mb" }));
+// Request body size limits (50mb for audio uploads)
+app.use(express.json({ limit: "50mb" }));
 app.use(express.urlencoded({ extended: false, limit: "1mb" }));
+app.use(express.raw({ type: ["audio/*"], limit: "50mb" }));
 
 // Cache-control headers middleware for static assets
 app.use((req, res, next) => {
@@ -108,6 +110,8 @@ const PHI_ENDPOINTS = [
   "/api/contact-inquiries",
   "/api/admin/users",
   "/api/admin/audit-logs",
+  "/api/admin/calls",
+  "/api/admin/time-entries",
 ];
 
 app.use((req, res, next) => {

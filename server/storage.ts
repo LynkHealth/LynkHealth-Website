@@ -2,6 +2,7 @@ import {
   users, contactInquiries, nightCoverageInquiries, woundCareReferrals,
   adminUsers, adminSessions, practices, programSnapshots,
   auditLogs, loginAttempts, passwordHistory,
+  callSessions, transcripts, soapNotes, timeEntries,
   type User, type InsertUser,
   type ContactInquiry, type InsertContactInquiry,
   type NightCoverageInquiry, type InsertNightCoverageInquiry,
@@ -10,6 +11,10 @@ import {
   type Practice, type InsertPractice,
   type ProgramSnapshot, type InsertProgramSnapshot,
   type AuditLog, type LoginAttempt, type PasswordHistoryEntry,
+  type CallSession, type InsertCallSession,
+  type Transcript, type InsertTranscript,
+  type SoapNote, type InsertSoapNote,
+  type TimeEntry, type InsertTimeEntry,
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, and, desc, gte, lt } from "drizzle-orm";
@@ -65,6 +70,27 @@ export interface IStorage {
   getProgramSnapshots(practiceId?: number, programType?: string, month?: string, year?: number): Promise<ProgramSnapshot[]>;
   createProgramSnapshot(snapshot: InsertProgramSnapshot): Promise<ProgramSnapshot>;
   getAggregatedSnapshots(month: string, year: number): Promise<ProgramSnapshot[]>;
+
+  // Call Sessions (Ambient AI)
+  createCallSession(session: InsertCallSession): Promise<CallSession>;
+  getCallSession(id: number): Promise<CallSession | undefined>;
+  getCallSessions(filters?: { clinicianId?: number; practiceId?: number; programType?: string; status?: string }): Promise<CallSession[]>;
+  updateCallSession(id: number, updates: Partial<CallSession>): Promise<void>;
+
+  // Transcripts
+  createTranscript(transcript: InsertTranscript): Promise<Transcript>;
+  getTranscriptByCallSession(callSessionId: number): Promise<Transcript | undefined>;
+  updateTranscript(id: number, updates: Partial<Transcript>): Promise<void>;
+
+  // SOAP Notes
+  createSoapNote(note: InsertSoapNote): Promise<SoapNote>;
+  getSoapNoteByCallSession(callSessionId: number): Promise<SoapNote | undefined>;
+  updateSoapNote(id: number, updates: Partial<SoapNote>): Promise<void>;
+
+  // Time Entries
+  createTimeEntry(entry: InsertTimeEntry): Promise<TimeEntry>;
+  getTimeEntries(filters?: { clinicianId?: number; practiceId?: number; programType?: string; date?: string; month?: string; year?: number }): Promise<TimeEntry[]>;
+  deleteTimeEntry(id: number): Promise<void>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -361,6 +387,178 @@ export class DatabaseStorage implements IStorage {
     return await db.select().from(programSnapshots)
       .where(and(eq(programSnapshots.month, month), eq(programSnapshots.year, year)))
       .orderBy(programSnapshots.programType);
+  }
+
+  // ================================================================
+  // Call Sessions (Ambient AI -- PHI encrypted at rest)
+  // ================================================================
+
+  async createCallSession(session: InsertCallSession): Promise<CallSession> {
+    const encrypted = {
+      ...session,
+      patientReference: session.patientReference ? encryptField(session.patientReference) : null,
+      patientReferenceHash: session.patientReference ? hashForSearch(session.patientReference) : null,
+      encryptionKeyId: isEncryptionConfigured() ? getCurrentKeyId() : null,
+    };
+    const [row] = await db.insert(callSessions).values(encrypted).returning();
+    return this.decryptCallSession(row);
+  }
+
+  async getCallSession(id: number): Promise<CallSession | undefined> {
+    const [row] = await db.select().from(callSessions).where(eq(callSessions.id, id));
+    if (!row) return undefined;
+    return this.decryptCallSession(row);
+  }
+
+  async getCallSessions(filters?: { clinicianId?: number; practiceId?: number; programType?: string; status?: string }): Promise<CallSession[]> {
+    const conditions = [];
+    if (filters?.clinicianId) conditions.push(eq(callSessions.clinicianId, filters.clinicianId));
+    if (filters?.practiceId) conditions.push(eq(callSessions.practiceId, filters.practiceId));
+    if (filters?.programType) conditions.push(eq(callSessions.programType, filters.programType));
+    if (filters?.status) conditions.push(eq(callSessions.status, filters.status));
+
+    let rows;
+    if (conditions.length > 0) {
+      rows = await db.select().from(callSessions).where(and(...conditions)).orderBy(desc(callSessions.createdAt));
+    } else {
+      rows = await db.select().from(callSessions).orderBy(desc(callSessions.createdAt));
+    }
+    return rows.map((r) => this.decryptCallSession(r));
+  }
+
+  async updateCallSession(id: number, updates: Partial<CallSession>): Promise<void> {
+    const encrypted: any = { ...updates, updatedAt: new Date() };
+    if (updates.patientReference) {
+      encrypted.patientReference = encryptField(updates.patientReference);
+      encrypted.patientReferenceHash = hashForSearch(updates.patientReference);
+    }
+    await db.update(callSessions).set(encrypted).where(eq(callSessions.id, id));
+  }
+
+  private decryptCallSession(row: CallSession): CallSession {
+    return {
+      ...row,
+      patientReference: row.patientReference ? decryptField(row.patientReference) : row.patientReference,
+    };
+  }
+
+  // ================================================================
+  // Transcripts (PHI encrypted at rest)
+  // ================================================================
+
+  async createTranscript(transcript: InsertTranscript): Promise<Transcript> {
+    const encrypted = {
+      ...transcript,
+      content: encryptField(transcript.content),
+      segments: transcript.segments ? encryptField(transcript.segments) : null,
+      encryptionKeyId: isEncryptionConfigured() ? getCurrentKeyId() : null,
+    };
+    const [row] = await db.insert(transcripts).values(encrypted).returning();
+    return this.decryptTranscript(row);
+  }
+
+  async getTranscriptByCallSession(callSessionId: number): Promise<Transcript | undefined> {
+    const [row] = await db.select().from(transcripts).where(eq(transcripts.callSessionId, callSessionId));
+    if (!row) return undefined;
+    return this.decryptTranscript(row);
+  }
+
+  async updateTranscript(id: number, updates: Partial<Transcript>): Promise<void> {
+    const encrypted: any = { ...updates };
+    if (updates.content) encrypted.content = encryptField(updates.content);
+    if (updates.segments) encrypted.segments = encryptField(updates.segments);
+    await db.update(transcripts).set(encrypted).where(eq(transcripts.id, id));
+  }
+
+  private decryptTranscript(row: Transcript): Transcript {
+    return {
+      ...row,
+      content: decryptField(row.content),
+      segments: row.segments ? decryptField(row.segments) : row.segments,
+    };
+  }
+
+  // ================================================================
+  // SOAP Notes (PHI encrypted at rest)
+  // ================================================================
+
+  async createSoapNote(note: InsertSoapNote): Promise<SoapNote> {
+    const encrypted = {
+      ...note,
+      subjective: encryptField(note.subjective),
+      objective: encryptField(note.objective),
+      assessment: encryptField(note.assessment),
+      plan: encryptField(note.plan),
+      encryptionKeyId: isEncryptionConfigured() ? getCurrentKeyId() : null,
+    };
+    const [row] = await db.insert(soapNotes).values(encrypted).returning();
+    return this.decryptSoapNote(row);
+  }
+
+  async getSoapNoteByCallSession(callSessionId: number): Promise<SoapNote | undefined> {
+    const [row] = await db.select().from(soapNotes).where(eq(soapNotes.callSessionId, callSessionId));
+    if (!row) return undefined;
+    return this.decryptSoapNote(row);
+  }
+
+  async updateSoapNote(id: number, updates: Partial<SoapNote>): Promise<void> {
+    const encrypted: any = { ...updates, updatedAt: new Date() };
+    if (updates.subjective) encrypted.subjective = encryptField(updates.subjective);
+    if (updates.objective) encrypted.objective = encryptField(updates.objective);
+    if (updates.assessment) encrypted.assessment = encryptField(updates.assessment);
+    if (updates.plan) encrypted.plan = encryptField(updates.plan);
+    await db.update(soapNotes).set(encrypted).where(eq(soapNotes.id, id));
+  }
+
+  private decryptSoapNote(row: SoapNote): SoapNote {
+    return {
+      ...row,
+      subjective: decryptField(row.subjective),
+      objective: decryptField(row.objective),
+      assessment: decryptField(row.assessment),
+      plan: decryptField(row.plan),
+    };
+  }
+
+  // ================================================================
+  // Time Entries
+  // ================================================================
+
+  async createTimeEntry(entry: InsertTimeEntry): Promise<TimeEntry> {
+    const encrypted = {
+      ...entry,
+      notes: entry.notes ? encryptField(entry.notes) : null,
+      encryptionKeyId: isEncryptionConfigured() ? getCurrentKeyId() : null,
+    };
+    const [row] = await db.insert(timeEntries).values(encrypted).returning();
+    return this.decryptTimeEntry(row);
+  }
+
+  async getTimeEntries(filters?: { clinicianId?: number; practiceId?: number; programType?: string; date?: string; month?: string; year?: number }): Promise<TimeEntry[]> {
+    const conditions = [];
+    if (filters?.clinicianId) conditions.push(eq(timeEntries.clinicianId, filters.clinicianId));
+    if (filters?.practiceId) conditions.push(eq(timeEntries.practiceId, filters.practiceId));
+    if (filters?.programType) conditions.push(eq(timeEntries.programType, filters.programType));
+    if (filters?.date) conditions.push(eq(timeEntries.date, filters.date));
+
+    let rows;
+    if (conditions.length > 0) {
+      rows = await db.select().from(timeEntries).where(and(...conditions)).orderBy(desc(timeEntries.createdAt));
+    } else {
+      rows = await db.select().from(timeEntries).orderBy(desc(timeEntries.createdAt));
+    }
+    return rows.map((r) => this.decryptTimeEntry(r));
+  }
+
+  async deleteTimeEntry(id: number): Promise<void> {
+    await db.delete(timeEntries).where(eq(timeEntries.id, id));
+  }
+
+  private decryptTimeEntry(row: TimeEntry): TimeEntry {
+    return {
+      ...row,
+      notes: row.notes ? decryptField(row.notes) : row.notes,
+    };
   }
 }
 
