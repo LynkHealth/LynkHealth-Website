@@ -262,12 +262,12 @@ export default function ScanIntakeForm() {
                 </div>
               ) : (
                 <div className="space-y-3">
-                  <div className="relative">
-                    <img src={imagePreview} alt="Uploaded form" className="w-full rounded-lg border border-slate-200" />
+                  <div className="relative max-h-[600px] overflow-auto rounded-lg border border-slate-200">
+                    <img src={imagePreview} alt="Uploaded form" className="w-full rounded-lg" style={{ imageRendering: "auto" }} />
                     <Button
                       variant="destructive"
                       size="icon"
-                      className="absolute top-2 right-2 h-7 w-7"
+                      className="sticky top-2 float-right mr-2 h-7 w-7 z-10"
                       onClick={handleReset}
                     >
                       <X className="w-4 h-4" />
