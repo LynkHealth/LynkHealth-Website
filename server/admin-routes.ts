@@ -166,6 +166,10 @@ export async function registerAdminRoutes(app: Express) {
         return res.status(401).json({ success: false, message: "Invalid email or password" });
       }
 
+      if (user.status === "inactive") {
+        return res.status(403).json({ success: false, message: "This account has been deactivated. Contact your administrator." });
+      }
+
       if (user.lockedUntil && new Date(user.lockedUntil) > new Date()) {
         return res.status(429).json({ success: false, message: "Account temporarily locked. Please try again later." });
       }

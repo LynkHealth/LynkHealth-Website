@@ -12,13 +12,14 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Plus, Edit, Users, Shield, UserCheck, Building2, Key, ChevronDown, ChevronUp } from "lucide-react";
+import { Plus, Edit, Users, Shield, UserCheck, Building2, Key, ChevronDown, ChevronUp, UserX, UserCheck2 } from "lucide-react";
 
 interface AdminUser {
   id: number;
   email: string;
   name: string;
   role: string;
+  status: string;
   createdAt: string;
 }
 
@@ -172,6 +173,13 @@ export default function UserManagement() {
       toast({ title: "Failed to update permissions", description: err.message, variant: "destructive" });
     },
   });
+
+  const toggleUserStatus = (user: AdminUser) => {
+    const newStatus = user.status === "active" ? "inactive" : "active";
+    const action = newStatus === "inactive" ? "deactivate" : "reactivate";
+    if (!confirm(`Are you sure you want to ${action} ${user.name}?`)) return;
+    updateMutation.mutate({ id: user.id, data: { status: newStatus } });
+  };
 
   const openPracticeAssignments = async (user: AdminUser) => {
     setPracticeUser(user);
@@ -368,16 +376,22 @@ export default function UserManagement() {
                   <TableHead>Name</TableHead>
                   <TableHead>Email</TableHead>
                   <TableHead>Role</TableHead>
+                  <TableHead>Status</TableHead>
                   <TableHead>Created</TableHead>
                   <TableHead>Actions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {users.map(user => (
-                  <TableRow key={user.id}>
+                  <TableRow key={user.id} className={user.status === "inactive" ? "opacity-60" : ""}>
                     <TableCell className="font-medium">{user.name}</TableCell>
                     <TableCell className="text-slate-600 text-sm">{user.email}</TableCell>
                     <TableCell>{getRoleBadge(user.role)}</TableCell>
+                    <TableCell>
+                      <Badge className={user.status === "active" ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"}>
+                        {user.status === "active" ? "Active" : "Inactive"}
+                      </Badge>
+                    </TableCell>
                     <TableCell className="text-sm text-slate-500">{new Date(user.createdAt).toLocaleDateString()}</TableCell>
                     <TableCell>
                       <div className="flex gap-1">
@@ -390,6 +404,17 @@ export default function UserManagement() {
                         {hasCustomPermissions(user.role) && (
                           <Button variant="ghost" size="sm" title="Permissions" onClick={() => openPermissions(user)}>
                             <Key className="w-4 h-4" />
+                          </Button>
+                        )}
+                        {user.id !== currentUser?.id && (
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            title={user.status === "active" ? "Deactivate User" : "Reactivate User"}
+                            onClick={() => toggleUserStatus(user)}
+                            className={user.status === "active" ? "text-red-600 hover:text-red-700 hover:bg-red-50" : "text-green-600 hover:text-green-700 hover:bg-green-50"}
+                          >
+                            {user.status === "active" ? <UserX className="w-4 h-4" /> : <UserCheck2 className="w-4 h-4" />}
                           </Button>
                         )}
                       </div>

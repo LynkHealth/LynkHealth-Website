@@ -118,6 +118,7 @@ export const adminUsers = pgTable("admin_users", {
   name: text("name").notNull(),
   passwordHash: text("password_hash").notNull(),
   role: text("role").notNull().default("admin"),
+  status: text("status").notNull().default("active"),
   failedLoginAttempts: integer("failed_login_attempts").default(0),
   lockedUntil: timestamp("locked_until"),
   lastPasswordChange: timestamp("last_password_change"),
