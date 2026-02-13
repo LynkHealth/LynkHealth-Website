@@ -1,5 +1,5 @@
 import { Link, useLocation } from "wouter";
-import { Users, ClipboardList, LayoutDashboard, LogOut, Home, CheckSquare, Calendar, FileText, FormInput, Building2 } from "lucide-react";
+import { Users, ClipboardList, LayoutDashboard, LogOut, Home, CheckSquare, Calendar, FileText, FormInput, Building2, FileSpreadsheet } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { getAdminUser, hasPermission, clearAdminAuth, adminFetch, updateAdminUser } from "@/lib/admin-auth";
 import TimeTracker from "@/components/clinical/time-tracker";
@@ -29,6 +29,7 @@ const navItems = [
   { label: "Schedule", path: "/clinical/schedule", icon: Calendar, permission: "VIEW_SCHEDULE" },
   { label: "Templates", path: "/clinical/templates", icon: FileText, permission: "VIEW_TEMPLATES" },
   { label: "Forms", path: "/clinical/forms", icon: FormInput, permission: "VIEW_FORMS" },
+  { label: "ERA/EOB", path: "/clinical/era-eob", icon: FileSpreadsheet, permission: "VIEW_ERA_EOB" },
   { label: "Admin", path: "/admin", icon: LayoutDashboard, permission: "VIEW_DASHBOARD" },
 ];
 
