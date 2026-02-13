@@ -43,7 +43,7 @@ import Schedule from "@/pages/clinical/schedule";
 import CarePlanTemplates from "@/pages/clinical/templates";
 import UserManagement from "@/pages/clinical/users";
 import ClinicalForms from "@/pages/clinical/forms";
-import ScanIntakeForm from "@/pages/clinical/scan-form";
+
 
 function Router() {
   useScrollToTop();
@@ -64,7 +64,7 @@ function Router() {
           <Route path="/clinical/schedule" component={Schedule} />
           <Route path="/clinical/templates" component={CarePlanTemplates} />
           <Route path="/clinical/forms" component={ClinicalForms} />
-          <Route path="/clinical/scan-form" component={ScanIntakeForm} />
+
           <Route path="/clinical/users" component={UserManagement} />
           <Route path="/clinical">{() => { window.location.href = "/clinical/dashboard"; return null; }}</Route>
         </Switch>
