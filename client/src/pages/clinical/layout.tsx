@@ -1,5 +1,5 @@
 import { Link, useLocation } from "wouter";
-import { Users, ClipboardList, LayoutDashboard, LogOut, UserCog, Home, CheckSquare, Calendar, FileText, FormInput } from "lucide-react";
+import { Users, ClipboardList, LayoutDashboard, LogOut, UserCog, Home, CheckSquare, Calendar, FileText, FormInput, ScanLine } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { getAdminUser } from "@/lib/admin-auth";
 import { clearAdminAuth } from "@/lib/admin-auth";
@@ -14,6 +14,7 @@ const navItems = [
   { label: "Schedule", path: "/clinical/schedule", icon: Calendar },
   { label: "Templates", path: "/clinical/templates", icon: FileText },
   { label: "Forms", path: "/clinical/forms", icon: FormInput },
+  { label: "Scan Form", path: "/clinical/scan-form", icon: ScanLine },
   { label: "Users", path: "/clinical/users", icon: UserCog, roles: ["admin", "supervisor"] },
   { label: "Admin", path: "/admin", icon: LayoutDashboard, roles: ["admin"] },
 ];

@@ -1,4 +1,5 @@
 import type { Express, Request, Response, NextFunction } from "express";
+import express from "express";
 import { storage } from "./storage";
 import { adminAuth, requireRole } from "./admin-routes";
 import bcrypt from "bcryptjs";
@@ -13,6 +14,7 @@ import {
   insertBillingEvaluationFormSchema,
 } from "@shared/schema";
 import { z } from "zod";
+import { openai } from "./replit_integrations/image/client";
 
 export function registerClinicalRoutes(app: Express) {
 
@@ -1120,6 +1122,93 @@ export function registerClinicalRoutes(app: Express) {
     } catch (error) {
       console.error("Error updating billing evaluation form:", error);
       res.status(500).json({ error: "Failed to update form" });
+    }
+  });
+
+  // ============================================================
+  // Intake Form Scanner (AI Vision)
+  // ============================================================
+
+  const scanBodyParser = express.json({ limit: "20mb" });
+
+  app.post("/api/clinical/scan-intake-form", adminAuth, scanBodyParser, async (req: Request, res: Response) => {
+    try {
+      const { image } = req.body;
+      if (!image) {
+        return res.status(400).json({ error: "Image data (base64) is required" });
+      }
+
+      const response = await openai.chat.completions.create({
+        model: "gpt-4o",
+        messages: [
+          {
+            role: "system",
+            content: `You are a medical document reader specializing in extracting patient information from handwritten healthcare intake forms. 
+Extract all readable patient information from the form image. Return a JSON object with these fields (use null for any field you cannot read clearly):
+
+{
+  "firstName": "string or null",
+  "lastName": "string or null",
+  "dateOfBirth": "string in MM/DD/YYYY format or null",
+  "gender": "string (male/female/other) or null",
+  "phone": "string or null",
+  "email": "string or null",
+  "address": "string or null",
+  "city": "string or null",
+  "state": "string or null",
+  "zipCode": "string or null",
+  "emergencyContactName": "string or null",
+  "emergencyContactPhone": "string or null",
+  "insuranceType": "string or null",
+  "consentSigned": "boolean",
+  "consentDate": "string in MM/DD/YYYY format or null",
+  "notes": "string with any additional info from the form or null",
+  "confidence": "high/medium/low - your overall confidence in the reading accuracy",
+  "warnings": ["array of strings noting any fields that were difficult to read"]
+}
+
+Be precise. If handwriting is ambiguous, note it in warnings. Always try your best to read the text accurately.`
+          },
+          {
+            role: "user",
+            content: [
+              {
+                type: "text",
+                text: "Please read all the handwritten text on this healthcare intake form and extract the patient information."
+              },
+              {
+                type: "image_url",
+                image_url: {
+                  url: image.startsWith("data:") ? image : `data:image/jpeg;base64,${image}`,
+                }
+              }
+            ]
+          }
+        ],
+        max_completion_tokens: 2048,
+      });
+
+      const content = response.choices[0]?.message?.content || "";
+
+      let extractedData;
+      try {
+        const jsonMatch = content.match(/\{[\s\S]*\}/);
+        if (jsonMatch) {
+          extractedData = JSON.parse(jsonMatch[0]);
+        } else {
+          extractedData = JSON.parse(content);
+        }
+      } catch {
+        return res.status(422).json({ 
+          error: "Could not parse form data from the image",
+          rawResponse: content 
+        });
+      }
+
+      res.json({ success: true, data: extractedData });
+    } catch (error: any) {
+      console.error("Error scanning intake form:", error);
+      res.status(500).json({ error: "Failed to scan intake form" });
     }
   });
 }
