@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { KeyRound, CheckCircle, XCircle } from "lucide-react";
+import { KeyRound, CheckCircle, XCircle, Eye, EyeOff, Check, Circle } from "lucide-react";
 
 export default function ResetPassword() {
   const searchString = useSearch();
@@ -13,9 +13,19 @@ export default function ResetPassword() {
 
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
+  const [showNewPassword, setShowNewPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
+
+  const requirements = [
+    { label: "At least 12 characters", met: newPassword.length >= 12 },
+    { label: "One uppercase letter", met: /[A-Z]/.test(newPassword) },
+    { label: "One lowercase letter", met: /[a-z]/.test(newPassword) },
+    { label: "One number", met: /[0-9]/.test(newPassword) },
+    { label: "One special character", met: /[^A-Za-z0-9]/.test(newPassword) },
+  ];
 
   if (!token) {
     return (
@@ -116,34 +126,57 @@ export default function ResetPassword() {
             )}
             <div className="space-y-2">
               <Label htmlFor="newPassword">New Password</Label>
-              <Input
-                id="newPassword"
-                type="password"
-                value={newPassword}
-                onChange={(e) => setNewPassword(e.target.value)}
-                placeholder="Min 12 chars, upper, lower, number, special"
-                required
-              />
+              <div className="relative">
+                <Input
+                  id="newPassword"
+                  type={showNewPassword ? "text" : "password"}
+                  value={newPassword}
+                  onChange={(e) => setNewPassword(e.target.value)}
+                  placeholder="Min 12 chars, upper, lower, number, special"
+                  className="pr-10"
+                  required
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowNewPassword(!showNewPassword)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+                  tabIndex={-1}
+                >
+                  {showNewPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                </button>
+              </div>
             </div>
             <div className="space-y-2">
               <Label htmlFor="confirmPassword">Confirm New Password</Label>
-              <Input
-                id="confirmPassword"
-                type="password"
-                value={confirmPassword}
-                onChange={(e) => setConfirmPassword(e.target.value)}
-                placeholder="Re-enter your new password"
-                required
-              />
+              <div className="relative">
+                <Input
+                  id="confirmPassword"
+                  type={showConfirmPassword ? "text" : "password"}
+                  value={confirmPassword}
+                  onChange={(e) => setConfirmPassword(e.target.value)}
+                  placeholder="Re-enter your new password"
+                  className="pr-10"
+                  required
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+                  tabIndex={-1}
+                >
+                  {showConfirmPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                </button>
+              </div>
             </div>
-            <div className="text-xs text-muted-foreground space-y-1">
-              <p>Password requirements:</p>
-              <ul className="list-disc list-inside ml-2">
-                <li>At least 12 characters</li>
-                <li>One uppercase letter</li>
-                <li>One lowercase letter</li>
-                <li>One number</li>
-                <li>One special character</li>
+            <div className="text-xs space-y-1.5">
+              <p className="text-muted-foreground font-medium">Password requirements:</p>
+              <ul className="space-y-1 ml-1">
+                {requirements.map((req) => (
+                  <li key={req.label} className={`flex items-center gap-2 transition-colors ${req.met ? "text-green-600" : "text-muted-foreground"}`}>
+                    {req.met ? <Check className="w-3.5 h-3.5 flex-shrink-0" /> : <Circle className="w-3.5 h-3.5 flex-shrink-0" />}
+                    {req.label}
+                  </li>
+                ))}
               </ul>
             </div>
             <Button type="submit" className="w-full" disabled={loading}>
