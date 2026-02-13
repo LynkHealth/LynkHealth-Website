@@ -168,7 +168,7 @@ export interface IStorage {
   clearStaffTimeLogs(month: string, year: number): Promise<void>;
 
   // Dashboard Aggregates
-  getDashboardStats(userId?: number): Promise<{
+  getDashboardStats(userId?: number, practiceId?: number | null): Promise<{
     totalPatients: number;
     activeEnrollments: number;
     pendingTasks: number;
@@ -939,7 +939,7 @@ export class DatabaseStorage implements IStorage {
   // Dashboard Aggregates
   // ============================================================
 
-  async getDashboardStats(userId?: number): Promise<{
+  async getDashboardStats(userId?: number, practiceId?: number | null): Promise<{
     totalPatients: number;
     activeEnrollments: number;
     pendingTasks: number;
@@ -951,24 +951,39 @@ export class DatabaseStorage implements IStorage {
     const endOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1);
     const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
 
-    const [patientCount] = await db.select({ count: sql<number>`count(*)` }).from(patients).where(eq(patients.status, "active"));
-    const [enrollmentCount] = await db.select({ count: sql<number>`count(*)` }).from(programEnrollments).where(eq(programEnrollments.status, "enrolled"));
+    const patientConditions: any[] = [eq(patients.status, "active")];
+    if (practiceId) patientConditions.push(eq(patients.practiceId, practiceId));
+    const [patientCount] = await db.select({ count: sql<number>`count(*)` }).from(patients).where(and(...patientConditions));
 
-    const taskConditions = [
+    const enrollmentConditions: any[] = [eq(programEnrollments.status, "enrolled")];
+    if (practiceId) {
+      const patientIds = db.select({ id: patients.id }).from(patients).where(eq(patients.practiceId, practiceId));
+      enrollmentConditions.push(sql`${programEnrollments.patientId} IN (${patientIds})`);
+    }
+    const [enrollmentCount] = await db.select({ count: sql<number>`count(*)` }).from(programEnrollments).where(and(...enrollmentConditions));
+
+    const practicePatientIds = practiceId
+      ? db.select({ id: patients.id }).from(patients).where(eq(patients.practiceId, practiceId))
+      : null;
+
+    const taskConditions: any[] = [
       or(eq(clinicalTasks.status, "pending"), eq(clinicalTasks.status, "in_progress"))
     ];
     if (userId) taskConditions.push(eq(clinicalTasks.assignedTo, userId));
+    if (practicePatientIds) taskConditions.push(sql`${clinicalTasks.patientId} IN (${practicePatientIds})`);
     const [taskCount] = await db.select({ count: sql<number>`count(*)` }).from(clinicalTasks).where(and(...taskConditions));
 
-    const eventConditions = [
+    const eventConditions: any[] = [
       gte(calendarEvents.startTime, startOfDay),
       lte(calendarEvents.startTime, endOfDay),
     ];
     if (userId) eventConditions.push(eq(calendarEvents.userId, userId));
+    if (practicePatientIds) eventConditions.push(sql`${calendarEvents.patientId} IN (${practicePatientIds})`);
     const [eventCount] = await db.select({ count: sql<number>`count(*)` }).from(calendarEvents).where(and(...eventConditions));
 
-    const minuteConditions = [gte(timeLogs.createdAt, startOfMonth)];
+    const minuteConditions: any[] = [gte(timeLogs.createdAt, startOfMonth)];
     if (userId) minuteConditions.push(eq(timeLogs.userId, userId));
+    if (practicePatientIds) minuteConditions.push(sql`${timeLogs.patientId} IN (${practicePatientIds})`);
     const [minuteSum] = await db.select({ total: sql<number>`coalesce(sum(${timeLogs.durationSeconds}), 0)` }).from(timeLogs).where(and(...minuteConditions));
 
     return {

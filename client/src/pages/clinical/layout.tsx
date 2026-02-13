@@ -12,13 +12,68 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 
 interface Practice {
   id: number;
   name: string;
   active?: boolean;
   status?: string;
+  departments?: string;
+}
+
+const LYNK_PRACTICE_NAME = "Lynk Healthcare";
+
+interface PracticeOption {
+  key: string;
+  value: string;
+  label: string;
+  practiceId: number;
+  group?: string;
+}
+
+function buildPracticeOptions(practices: Practice[]): PracticeOption[] {
+  const options: PracticeOption[] = [];
+  const lynkPractice = practices.find(p => p.name === LYNK_PRACTICE_NAME);
+
+  for (const p of practices) {
+    if (p.status === "inactive") continue;
+    if (p.id === lynkPractice?.id) {
+      if (p.departments) {
+        try {
+          const depts = JSON.parse(p.departments) as string[];
+          for (const d of depts) {
+            if (d.startsWith("(NA)")) continue;
+            const cleanName = d.replace(/\s*\[.*?\]\s*$/, "");
+            options.push({
+              key: `dept:${p.id}:${d}`,
+              value: `dept:${p.id}:${d}`,
+              label: cleanName,
+              practiceId: p.id,
+              group: LYNK_PRACTICE_NAME,
+            });
+          }
+        } catch {}
+      }
+    } else {
+      options.push({
+        key: String(p.id),
+        value: p.id.toString(),
+        label: p.name,
+        practiceId: p.id,
+      });
+    }
+  }
+  return options.sort((a, b) => a.label.localeCompare(b.label));
+}
+
+function parsePracticeValue(value: string): number | null {
+  if (value === "all") return null;
+  if (value.startsWith("dept:")) {
+    const parts = value.split(":");
+    return parseInt(parts[1]);
+  }
+  return parseInt(value);
 }
 
 const navItems = [
@@ -47,12 +102,13 @@ export default function ClinicalLayout({ children }: { children: ReactNode }) {
     enabled: canSwitchPractice,
   });
 
+  const qc = useQueryClient();
   const practices = practicesData?.practices || [];
-  const activePractices = practices.filter(p => p.status !== "inactive");
 
-  const availablePractices = (userRole === "super_admin" || userRole === "admin")
-    ? activePractices
-    : activePractices.filter(p => user?.assignedPracticeIds?.includes(p.id));
+  const allOptions = buildPracticeOptions(practices);
+  const availableOptions = (userRole === "super_admin" || userRole === "admin")
+    ? allOptions
+    : allOptions.filter(opt => user?.assignedPracticeIds?.includes(opt.practiceId));
 
   const filteredNav = navItems.filter(item => {
     if (!item.permission) return true;
@@ -61,13 +117,17 @@ export default function ClinicalLayout({ children }: { children: ReactNode }) {
 
   const handlePracticeSwitch = async (value: string) => {
     setActivePracticeId(value);
-    const practiceId = value === "all" ? null : parseInt(value);
+    const practiceId = parsePracticeValue(value);
     try {
       await adminFetch("/api/admin/switch-practice", {
         method: "POST",
         body: JSON.stringify({ practiceId }),
       });
       updateAdminUser({ activePracticeId: practiceId });
+      qc.invalidateQueries({ queryKey: ["/api/clinical/dashboard/stats"] });
+      qc.invalidateQueries({ queryKey: ["/api/clinical/dashboard/recent-tasks"] });
+      qc.invalidateQueries({ queryKey: ["/api/clinical/dashboard/upcoming-events"] });
+      qc.invalidateQueries({ queryKey: ["/api/clinical/patients"] });
     } catch (error) {
       console.error("Failed to switch practice:", error);
     }
@@ -95,7 +155,7 @@ export default function ClinicalLayout({ children }: { children: ReactNode }) {
           <p className="text-xs text-slate-500 mt-0.5">Care Coordination</p>
         </div>
 
-        {canSwitchPractice && availablePractices.length > 0 && (
+        {canSwitchPractice && availableOptions.length > 0 && (
           <div className="px-3 py-2 border-b border-slate-200">
             <label className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider">Practice</label>
             <Select value={activePracticeId} onValueChange={handlePracticeSwitch}>
@@ -107,8 +167,8 @@ export default function ClinicalLayout({ children }: { children: ReactNode }) {
                 {(userRole === "super_admin" || userRole === "admin") && (
                   <SelectItem value="all">All Practices</SelectItem>
                 )}
-                {availablePractices.map(p => (
-                  <SelectItem key={p.id} value={p.id.toString()}>{p.name}</SelectItem>
+                {availableOptions.map(opt => (
+                  <SelectItem key={opt.key} value={opt.value}>{opt.label}</SelectItem>
                 ))}
               </SelectContent>
             </Select>

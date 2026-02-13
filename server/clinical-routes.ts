@@ -812,7 +812,8 @@ export function registerClinicalRoutes(app: Express) {
   app.get("/api/clinical/dashboard/stats", ...clinicalAuth, async (req: any, res) => {
     try {
       const userId = req.adminUser?.id;
-      const stats = await storage.getDashboardStats(userId);
+      const practiceId = req.practiceId || null;
+      const stats = await storage.getDashboardStats(userId, practiceId);
       res.json(stats);
     } catch (error) {
       console.error("Dashboard stats error:", error);
@@ -823,7 +824,13 @@ export function registerClinicalRoutes(app: Express) {
   app.get("/api/clinical/dashboard/recent-tasks", ...clinicalAuth, async (req: any, res) => {
     try {
       const userId = req.adminUser?.id;
-      const tasks = await storage.getTasks(userId);
+      const practiceId = req.practiceId || null;
+      let tasks = await storage.getTasks(userId);
+      if (practiceId) {
+        const { patients: practicePatients } = await storage.listPatients(practiceId, undefined, 1, 100000);
+        const practicePatientIds = new Set(practicePatients.map(p => p.id));
+        tasks = tasks.filter(t => !t.patientId || practicePatientIds.has(t.patientId));
+      }
       res.json(tasks.slice(0, 20));
     } catch (error) {
       res.status(500).json({ error: "Failed to get recent tasks" });
@@ -833,9 +840,15 @@ export function registerClinicalRoutes(app: Express) {
   app.get("/api/clinical/dashboard/upcoming-events", ...clinicalAuth, async (req: any, res) => {
     try {
       const userId = req.adminUser?.id;
+      const practiceId = req.practiceId || null;
       const now = new Date();
       const endOfWeek = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 7);
-      const events = await storage.getEvents(userId, now, endOfWeek);
+      let events = await storage.getEvents(userId, now, endOfWeek);
+      if (practiceId) {
+        const { patients: practicePatients } = await storage.listPatients(practiceId, undefined, 1, 100000);
+        const practicePatientIds = new Set(practicePatients.map(p => p.id));
+        events = events.filter(e => !e.patientId || practicePatientIds.has(e.patientId));
+      }
       res.json(events);
     } catch (error) {
       res.status(500).json({ error: "Failed to get upcoming events" });
