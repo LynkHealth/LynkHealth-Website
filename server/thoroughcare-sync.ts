@@ -9,8 +9,8 @@ import {
   fetchPractitioners,
 } from "./thoroughcare-client";
 import { db } from "./db";
-import { practices, programSnapshots, revenueSnapshots, revenueByCode, tcSyncLog, tcStaffTimeLogs, staffRoleOverrides } from "@shared/schema";
-import { eq, and } from "drizzle-orm";
+import { practices, programSnapshots, revenueSnapshots, revenueByCode, tcSyncLog, tcStaffTimeLogs, staffRoleOverrides, prnPatientStatus } from "@shared/schema";
+import { eq, and, sql, desc } from "drizzle-orm";
 
 const MONTHS = ["JAN", "FEB", "MAR", "APR", "MAY", "JUN", "JUL", "AUG", "SEP", "OCT", "NOV", "DEC"];
 
@@ -98,6 +98,9 @@ export async function runFullSync(month?: string, year?: number): Promise<SyncPr
 
     updateProgress("Snapshots", 80, "Building program snapshots...");
     await buildSnapshots(enrollmentData, timeData, targetMonth, targetYear, patientData);
+
+    updateProgress("PRN Status", 90, "Computing PRN status for patients...");
+    await computePrnStatus(patientData);
 
     updateProgress("Complete", 100, `Sync completed successfully`);
     currentSync.status = "completed";
@@ -188,6 +191,9 @@ export async function runHistoricalSync(totalMonths: number = 24): Promise<SyncP
       updateProgress("Historical Sync", monthPct + Math.round(monthProgressRange / monthRange.length / 2), `Month ${i + 1}/${monthRange.length}: Building snapshots for ${monthLabel}...`);
       await buildSnapshots(enrollmentData, timeData, month, year, patientData);
     }
+
+    updateProgress("PRN Status", 96, "Computing PRN status for patients...");
+    await computePrnStatus(patientData);
 
     updateProgress("Complete", 100, `Historical sync completed: ${totalMonths} months, ${totalTimeLogs} total time logs`);
     currentSync.status = "completed";
@@ -345,17 +351,21 @@ async function syncOrganizations(): Promise<OrgSyncResult> {
   return { tcOrgIds, orgToDbMap, lynkDeptToDbId };
 }
 
+const PRN_DEPT_NAMES = ["PRN", "PRN [16]"];
+
 interface PatientData {
   orgMap: Map<string, number>;
   deptMap: Map<string, string>;
   inactivePatients: Set<string>;
   lynkDeptToDbId: Map<string, number>;
+  prnPatients: Set<string>;
 }
 
 async function buildPatientOrgMap(tcOrgIds: number[], lynkDeptToDbId: Map<string, number>): Promise<PatientData> {
   const orgMap = new Map<string, number>();
   const deptMap = new Map<string, string>();
   const inactivePatients = new Set<string>();
+  const prnPatients = new Set<string>();
 
   for (let i = 0; i < tcOrgIds.length; i++) {
     const orgId = tcOrgIds[i];
@@ -368,7 +378,13 @@ async function buildPatientOrgMap(tcOrgIds: number[], lynkDeptToDbId: Map<string
         orgMap.set(patientId, orgId);
         const deptExt = patient.extension?.find((e: any) => e.url === "department");
         if (deptExt?.value) {
-          deptMap.set(patientId, deptExt.value);
+          const deptVal = deptExt.value;
+          const isPrn = PRN_DEPT_NAMES.some(p => deptVal === p || deptVal.startsWith("PRN"));
+          if (isPrn && orgId === LYNK_TC_ORG_ID) {
+            prnPatients.add(patientId);
+          } else {
+            deptMap.set(patientId, deptVal);
+          }
         }
         const flags = patient.extension?.find((e: any) => e.url === "flags")?.value || [];
         if (flags.includes("INACTIVE")) {
@@ -381,8 +397,8 @@ async function buildPatientOrgMap(tcOrgIds: number[], lynkDeptToDbId: Map<string
   }
 
   const deptCount = new Set(deptMap.values()).size;
-  updateProgress("Patients", 18, `Mapped ${orgMap.size} patients to ${tcOrgIds.length} organizations (${inactivePatients.size} inactive, ${deptCount} departments)`);
-  return { orgMap, deptMap, inactivePatients, lynkDeptToDbId };
+  updateProgress("Patients", 18, `Mapped ${orgMap.size} patients to ${tcOrgIds.length} organizations (${inactivePatients.size} inactive, ${prnPatients.size} PRN, ${deptCount} departments)`);
+  return { orgMap, deptMap, inactivePatients, lynkDeptToDbId, prnPatients };
 }
 
 interface ProgramStats {
@@ -952,6 +968,130 @@ async function buildSnapshots(
 
   updateProgress("Snapshots", 95, `Built per-practice and per-department program snapshots for ${month} ${year}`);
 }
+
+const PRN_THRESHOLD_DAYS = 90;
+
+async function computePrnStatus(patientData: PatientData): Promise<void> {
+  const { prnPatients, lynkDeptToDbId } = patientData;
+  const now = new Date();
+
+  const allPractices = await db.select().from(practices);
+  const tcIdToDbId = new Map<number, number>();
+  for (const p of allPractices) {
+    if (p.thoroughcareId && !p.tcDepartment) {
+      tcIdToDbId.set(p.thoroughcareId, p.id);
+    }
+  }
+
+  const lastContactRows = await db.select({
+    patientTcId: tcStaffTimeLogs.patientTcId,
+    practiceId: tcStaffTimeLogs.practiceId,
+    lastDate: sql<string>`max(${tcStaffTimeLogs.logDate})`,
+  }).from(tcStaffTimeLogs)
+    .where(sql`${tcStaffTimeLogs.patientTcId} IS NOT NULL`)
+    .groupBy(tcStaffTimeLogs.patientTcId, tcStaffTimeLogs.practiceId);
+
+  const patientLastContact = new Map<string, { lastDate: Date | null; practiceId: number }>();
+  const patientAllPractices = new Map<string, Map<number, string>>();
+
+  for (const row of lastContactRows) {
+    if (!row.patientTcId) continue;
+    const pid = row.patientTcId;
+    const practiceId = row.practiceId || 0;
+
+    if (!patientAllPractices.has(pid)) patientAllPractices.set(pid, new Map());
+    patientAllPractices.get(pid)!.set(practiceId, row.lastDate || "");
+
+    const existing = patientLastContact.get(pid);
+    const rowDate = row.lastDate ? new Date(row.lastDate) : null;
+    if (!existing || (rowDate && (!existing.lastDate || rowDate > existing.lastDate))) {
+      patientLastContact.set(pid, { lastDate: rowDate, practiceId });
+    }
+  }
+
+  await db.delete(prnPatientStatus);
+
+  const prnEntries: Array<{
+    patientTcId: string;
+    practiceId: number;
+    originalPracticeId: number | null;
+    isPrn: boolean;
+    prnReason: string;
+    lastContactDate: Date | null;
+    prnSince: Date | null;
+    autoFlagged: boolean;
+  }> = [];
+
+  const prnPracticeId = allPractices.find(p => p.name === "PRN")?.id || null;
+
+  Array.from(prnPatients).forEach(patientId => {
+    const contact = patientLastContact.get(patientId);
+    const practiceHistory = patientAllPractices.get(patientId);
+    
+    let originalPracticeId: number | null = null;
+    if (practiceHistory) {
+      let bestPractice = 0;
+      let bestDate = "";
+      practiceHistory.forEach((lastDate, pId) => {
+        if (pId === prnPracticeId) return;
+        if (lastDate > bestDate) {
+          bestDate = lastDate;
+          bestPractice = pId;
+        }
+      });
+      if (bestPractice > 0) originalPracticeId = bestPractice;
+    }
+
+    if (!originalPracticeId) {
+      const lynkParentId = tcIdToDbId.get(LYNK_TC_ORG_ID);
+      originalPracticeId = lynkParentId || 1;
+    }
+
+    prnEntries.push({
+      patientTcId: patientId,
+      practiceId: originalPracticeId,
+      originalPracticeId,
+      isPrn: true,
+      prnReason: "TC department: PRN (no contact 3+ months)",
+      lastContactDate: contact?.lastDate || null,
+      prnSince: contact?.lastDate || null,
+      autoFlagged: true,
+    });
+  });
+
+  patientLastContact.forEach((contact, patientId) => {
+    if (prnPatients.has(patientId)) return;
+    if (!contact.lastDate) return;
+
+    const daysSince = Math.floor((now.getTime() - contact.lastDate.getTime()) / (1000 * 60 * 60 * 24));
+    if (daysSince >= PRN_THRESHOLD_DAYS) {
+      prnEntries.push({
+        patientTcId: patientId,
+        practiceId: contact.practiceId,
+        originalPracticeId: contact.practiceId,
+        isPrn: true,
+        prnReason: `Auto-flagged: no contact for ${daysSince} days (threshold: ${PRN_THRESHOLD_DAYS})`,
+        lastContactDate: contact.lastDate,
+        prnSince: contact.lastDate,
+        autoFlagged: true,
+      });
+    }
+  });
+
+  if (prnEntries.length > 0) {
+    const BATCH_SIZE = 100;
+    for (let i = 0; i < prnEntries.length; i += BATCH_SIZE) {
+      const batch = prnEntries.slice(i, i + BATCH_SIZE);
+      await db.insert(prnPatientStatus).values(batch);
+    }
+  }
+
+  const tcFlagged = prnEntries.filter(e => prnPatients.has(e.patientTcId)).length;
+  const autoFlagged = prnEntries.length - tcFlagged;
+  console.log(`[TC Sync] PRN status: ${tcFlagged} TC-flagged, ${autoFlagged} auto-flagged (${PRN_THRESHOLD_DAYS}+ days), ${prnEntries.length} total`);
+  updateProgress("PRN Status", 95, `PRN: ${tcFlagged} TC-flagged, ${autoFlagged} auto-flagged, ${prnEntries.length} total`);
+}
+
 
 const CPT_RATES: Record<string, number> = {
   "99490": 6200, "99439": 4700, "99491": 8300, "99487": 9300, "99489": 7500,

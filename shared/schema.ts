@@ -946,6 +946,27 @@ export const insertTcStaffTimeLogSchema = createInsertSchema(tcStaffTimeLogs).om
 export type InsertTcStaffTimeLog = z.infer<typeof insertTcStaffTimeLogSchema>;
 export type TcStaffTimeLog = typeof tcStaffTimeLogs.$inferSelect;
 
+export const prnPatientStatus = pgTable("prn_patient_status", {
+  id: serial("id").primaryKey(),
+  patientTcId: text("patient_tc_id").notNull(),
+  practiceId: integer("practice_id").notNull(),
+  originalPracticeId: integer("original_practice_id"),
+  isPrn: boolean("is_prn").notNull().default(false),
+  prnReason: text("prn_reason"),
+  lastContactDate: timestamp("last_contact_date"),
+  prnSince: timestamp("prn_since"),
+  autoFlagged: boolean("auto_flagged").notNull().default(true),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const insertPrnPatientStatusSchema = createInsertSchema(prnPatientStatus).omit({
+  id: true,
+  updatedAt: true,
+});
+
+export type InsertPrnPatientStatus = z.infer<typeof insertPrnPatientStatusSchema>;
+export type PrnPatientStatus = typeof prnPatientStatus.$inferSelect;
+
 export const eraUploads = pgTable("era_uploads", {
   id: serial("id").primaryKey(),
   practiceId: integer("practice_id").notNull(),
