@@ -2625,6 +2625,10 @@ export default function AdminDashboard() {
       setLocation("/admin/login");
       return;
     }
+    if (user.role === "practice_admin" || user.role === "care_coordinator" || user.role === "enrollment_specialist") {
+      setLocation("/clinical/dashboard");
+      return;
+    }
     loadDashboard();
   }, [currentMonth, currentYear]);
 
@@ -2755,20 +2759,21 @@ export default function AdminDashboard() {
     setCurrentYear(newYear);
   };
 
-  const baseSidebarItems = [
-    { id: "dashboard", label: "Dashboard", icon: LayoutDashboard },
-    { id: "analytics", label: "Analytics", icon: BarChart3 },
-    { id: "billing", label: "Billing Codes", icon: Receipt },
-    { id: "invoices", label: "Invoices", icon: FileCheck },
-    { id: "inquiries", label: "Inquiries", icon: Mail },
-    { id: "practices", label: "Practices", icon: Building2 },
-    { id: "staffing", label: "Staffing", icon: Users },
-    { id: "era", label: "ERA/EOB", icon: FileSpreadsheet },
+  const allSidebarItems = [
+    { id: "dashboard", label: "Dashboard", icon: LayoutDashboard, roles: ["super_admin", "admin"] },
+    { id: "analytics", label: "Analytics", icon: BarChart3, roles: ["super_admin", "admin"] },
+    { id: "billing", label: "Billing Codes", icon: Receipt, roles: ["super_admin", "billing_specialist"] },
+    { id: "invoices", label: "Invoices", icon: FileCheck, roles: ["super_admin", "billing_specialist"] },
+    { id: "inquiries", label: "Inquiries", icon: Mail, roles: ["super_admin", "admin"] },
+    { id: "practices", label: "Practices", icon: Building2, roles: ["super_admin", "admin"] },
+    { id: "staffing", label: "Staffing", icon: Users, roles: ["super_admin", "admin"] },
+    { id: "era", label: "ERA/EOB", icon: FileSpreadsheet, roles: ["super_admin", "billing_specialist"] },
+    { id: "users", label: "User Mgmt", icon: UserCog, roles: ["super_admin"] },
   ];
 
-  const sidebarItems = user?.role === "super_admin"
-    ? [...baseSidebarItems, { id: "users", label: "User Mgmt", icon: UserCog }]
-    : baseSidebarItems;
+  const sidebarItems = allSidebarItems.filter(item =>
+    item.roles.includes(user?.role || "")
+  );
 
   const totalInquiries =
     inquiries.contactInquiries.length +

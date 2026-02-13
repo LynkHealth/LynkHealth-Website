@@ -44,7 +44,12 @@ export default function AdminLogin() {
         setCurrentPassword(password);
         setShowPasswordChange(true);
       } else {
-        setLocation("/admin");
+        const role = data.user?.role;
+        if (role === "practice_admin" || role === "care_coordinator" || role === "enrollment_specialist") {
+          setLocation("/clinical/dashboard");
+        } else {
+          setLocation("/admin");
+        }
       }
     } catch {
       setError("Unable to connect. Please try again.");
@@ -80,12 +85,17 @@ export default function AdminLogin() {
         setPasswordError(data.message || "Failed to change password");
         return;
       }
-      // Update token if returned
       if (data.token) {
         const user = JSON.parse(localStorage.getItem("lynk_admin_user") || "{}");
         setAdminAuth(data.token, user);
       }
-      setLocation("/admin");
+      const storedUser = JSON.parse(localStorage.getItem("lynk_admin_user") || "{}");
+      const role = storedUser?.role;
+      if (role === "practice_admin" || role === "care_coordinator" || role === "enrollment_specialist") {
+        setLocation("/clinical/dashboard");
+      } else {
+        setLocation("/admin");
+      }
     } catch {
       setPasswordError("Unable to connect. Please try again.");
     } finally {
