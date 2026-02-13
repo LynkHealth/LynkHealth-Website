@@ -29,7 +29,8 @@ import {
   HeartPulse,
 } from "lucide-react";
 import type { ProgramSnapshot, Practice, ContactInquiry, RevenueSnapshot, RevenueByCode, CptBillingCode } from "@shared/schema";
-import { DollarSign, TrendingUp, Receipt, Pencil, Check, Trash2, Plus, ChevronDown, ChevronUp, Download, BarChart3, FileCheck, Eye, Clock, CircleCheck, CircleX, Users, Upload, FileSpreadsheet, ArrowUpDown, AlertTriangle } from "lucide-react";
+import { DollarSign, TrendingUp, Receipt, Pencil, Check, Trash2, Plus, ChevronDown, ChevronUp, Download, BarChart3, FileCheck, Eye, Clock, CircleCheck, CircleX, Users, Upload, FileSpreadsheet, ArrowUpDown, AlertTriangle, UserCog } from "lucide-react";
+import UserManagement from "@/pages/clinical/users";
 import { LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from "recharts";
 
 const MONTHS = ["JAN", "FEB", "MAR", "APR", "MAY", "JUN", "JUL", "AUG", "SEP", "OCT", "NOV", "DEC"];
@@ -2754,7 +2755,7 @@ export default function AdminDashboard() {
     setCurrentYear(newYear);
   };
 
-  const sidebarItems = [
+  const baseSidebarItems = [
     { id: "dashboard", label: "Dashboard", icon: LayoutDashboard },
     { id: "analytics", label: "Analytics", icon: BarChart3 },
     { id: "billing", label: "Billing Codes", icon: Receipt },
@@ -2764,6 +2765,10 @@ export default function AdminDashboard() {
     { id: "staffing", label: "Staffing", icon: Users },
     { id: "era", label: "ERA/EOB", icon: FileSpreadsheet },
   ];
+
+  const sidebarItems = user?.role === "super_admin"
+    ? [...baseSidebarItems, { id: "users", label: "User Mgmt", icon: UserCog }]
+    : baseSidebarItems;
 
   const totalInquiries =
     inquiries.contactInquiries.length +
@@ -2844,6 +2849,7 @@ export default function AdminDashboard() {
               {activeTab === "practices" && "Partner Practices"}
               {activeTab === "staffing" && "Staffing & FTE Report"}
               {activeTab === "era" && "ERA/EOB Reconciliation"}
+              {activeTab === "users" && "User Management"}
             </h1>
           </div>
           {activeTab === "dashboard" && (
@@ -3407,6 +3413,8 @@ export default function AdminDashboard() {
               {activeTab === "staffing" && <StaffingTab practices={practices} currentMonth={currentMonth} currentYear={currentYear} lynkPracticeId={lynkPracticeId} departmentsByPractice={departmentsByPractice} />}
 
               {activeTab === "era" && <EraTab practices={practices} currentMonth={currentMonth} currentYear={currentYear} lynkPracticeId={lynkPracticeId} departmentsByPractice={departmentsByPractice} />}
+
+              {activeTab === "users" && <UserManagement />}
 
               {activeTab === "practices" && (() => {
                 const otherPractices = practices.filter(p => p.id !== lynkPracticeId);
