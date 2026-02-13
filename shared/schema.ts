@@ -234,6 +234,7 @@ export const practices = pgTable("practices", {
   name: text("name").notNull(),
   thoroughcareId: integer("thoroughcare_id"),
   thoroughcareAlias: text("thoroughcare_alias"),
+  tcDepartment: text("tc_department"),
   location: text("location"),
   npi: text("npi"),
   status: text("status").notNull().default("active"),
