@@ -26,12 +26,15 @@ import {
   Stethoscope,
   Shield,
   Zap,
+  Mic,
   HeartPulse,
 } from "lucide-react";
 import type { ProgramSnapshot, Practice, ContactInquiry, RevenueSnapshot, RevenueByCode, CptBillingCode } from "@shared/schema";
 import { DollarSign, TrendingUp, Receipt, Pencil, Check, Trash2, Plus, ChevronDown, ChevronUp, Download, BarChart3, FileCheck, Eye, Clock, CircleCheck, CircleX, Users, Upload, FileSpreadsheet, ArrowUpDown, AlertTriangle, UserCog } from "lucide-react";
 import UserManagement from "@/pages/clinical/users";
 import { LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from "recharts";
+import CallsPage from "./calls";
+import TimeTrackingPage from "./time-tracking";
 
 const MONTHS = ["JAN", "FEB", "MAR", "APR", "MAY", "JUN", "JUL", "AUG", "SEP", "OCT", "NOV", "DEC"];
 const MONTH_NAMES: Record<string, string> = {
@@ -2761,6 +2764,8 @@ export default function AdminDashboard() {
 
   const allSidebarItems = [
     { id: "dashboard", label: "Dashboard", icon: LayoutDashboard, roles: ["super_admin", "admin"] },
+    { id: "calls", label: "Call Recordings", icon: Mic, roles: ["super_admin", "admin"] },
+    { id: "time-tracking", label: "Time Tracking", icon: Clock, roles: ["super_admin", "admin"] },
     { id: "analytics", label: "Analytics", icon: BarChart3, roles: ["super_admin", "admin"] },
     { id: "billing", label: "Billing Codes", icon: Receipt, roles: ["super_admin", "billing_specialist"] },
     { id: "invoices", label: "Invoices", icon: FileCheck, roles: ["super_admin", "billing_specialist"] },
@@ -2847,6 +2852,8 @@ export default function AdminDashboard() {
             </Button>
             <h1 className="text-lg font-semibold text-slate-800">
               {activeTab === "dashboard" && "Clinic Dashboard"}
+              {activeTab === "calls" && "Ambient AI"}
+              {activeTab === "time-tracking" && "Time Tracking"}
               {activeTab === "analytics" && "Analytics & Trends"}
               {activeTab === "billing" && "Billing Codes & Rates"}
               {activeTab === "invoices" && "Invoice Management"}
@@ -3405,6 +3412,14 @@ export default function AdminDashboard() {
                     </CardContent>
                   </Card>
                 </div>
+              )}
+
+              {activeTab === "calls" && (
+                <CallsPage practices={practices.map((p) => ({ id: p.id, name: p.name }))} />
+              )}
+
+              {activeTab === "time-tracking" && (
+                <TimeTrackingPage practices={practices.map((p) => ({ id: p.id, name: p.name }))} />
               )}
 
               {activeTab === "billing" && (

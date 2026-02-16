@@ -12,11 +12,13 @@ import { db } from "./db";
 import { eq, and, desc, sql } from "drizzle-orm";
 import multer from "multer";
 import { parse835, mapCptToProgram } from "./era-parser";
-import { writeAuditLog, getAuditLogs, AuditAction, getClientIp } from "./audit";
+import { writeAuditLog, auditFromRequest, getAuditLogs, AuditAction, getClientIp } from "./audit";
 import { requirePermission, requireAnyPermission, Permission, hasPermission, getEffectivePermissions, clearPermissionCache, getRoleDefaultPermissions, getAllPermissions, getAssignablePermissions } from "./rbac";
 import { sendEmail, buildPasswordResetEmail } from "./email";
 import { getUserPracticeIds, setActivePractice, practiceContext, isUserAssignedToPractice } from "./practice-context";
 import { userPracticeAssignments, userPermissions } from "@shared/schema";
+import { transcribeAudio, transcribeManual, isTranscriptionConfigured } from "./transcription-service";
+import { generateSoapNote, createBlankSoapNote, isSoapGenerationConfigured } from "./soap-generator";
 
 const INACTIVITY_TIMEOUT_MS = 15 * 60 * 1000;
 const MAX_SESSION_LIFETIME_MS = 4 * 60 * 60 * 1000;
@@ -1250,6 +1252,7 @@ export async function registerAdminRoutes(app: Express) {
         });
       }
 
+
       await db.update(eraUploads)
         .set({ matchedClaims: matchedCount, unmatchedClaims: unmatchedCount })
         .where(eq(eraUploads.id, uploadRecord.id));
@@ -1396,6 +1399,633 @@ export async function registerAdminRoutes(app: Express) {
     }
   });
 
+  // ---------------------------------------------------------------
+  // AMBIENT AI -- Call Sessions & CareCo Import
+  // ---------------------------------------------------------------
+
+  // Get service configuration status
+  app.get("/api/admin/ambient/config", adminAuth, requirePermission(Permission.VIEW_CALLS), async (_req, res) => {
+    res.json({
+      success: true,
+      transcriptionAvailable: isTranscriptionConfigured(),
+      soapGenerationAvailable: isSoapGenerationConfigured(),
+    });
+  });
+
+  // Import a single call session with transcript + SOAP note from CareCo
+  app.post("/api/admin/calls/import", adminAuth, requirePermission(Permission.MANAGE_CALLS), async (req, res) => {
+    try {
+      const schema = z.object({
+        patientReference: z.string().optional(),
+        practiceId: z.number().optional(),
+        programType: z.string().optional(),
+        callDate: z.string().optional(),
+        durationMinutes: z.number().optional(),
+        transcript: z.string().optional(),
+        subjective: z.string().optional(),
+        objective: z.string().optional(),
+        assessment: z.string().optional(),
+        plan: z.string().optional(),
+      });
+      const validated = schema.parse(req.body);
+
+      const callDate = validated.callDate ? new Date(validated.callDate) : new Date();
+      const durationSeconds = validated.durationMinutes ? validated.durationMinutes * 60 : null;
+
+      const session = await storage.createCallSession({
+        clinicianId: req.adminUser!.id,
+        practiceId: validated.practiceId || null,
+        patientReference: validated.patientReference || null,
+        programType: validated.programType || null,
+        callStartedAt: callDate,
+        callEndedAt: durationSeconds ? new Date(callDate.getTime() + durationSeconds * 1000) : null,
+        durationSeconds,
+        status: "review",
+      });
+
+      let createdTranscript = null;
+      let createdSoapNote = null;
+
+      if (validated.transcript?.trim()) {
+        createdTranscript = await storage.createTranscript({
+          callSessionId: session.id,
+          content: validated.transcript,
+          segments: null,
+          provider: "careco",
+          languageCode: "en-US",
+          confidenceScore: null,
+        });
+      }
+
+      const hasSoap = validated.subjective || validated.objective || validated.assessment || validated.plan;
+      if (hasSoap) {
+        createdSoapNote = await storage.createSoapNote({
+          callSessionId: session.id,
+          subjective: validated.subjective || "",
+          objective: validated.objective || "",
+          assessment: validated.assessment || "",
+          plan: validated.plan || "",
+          status: "draft",
+          aiModel: "careco",
+          aiConfidence: null,
+        });
+      }
+
+      let timeEntry = null;
+      if (validated.durationMinutes && validated.programType) {
+        const dateStr = callDate.toISOString().split("T")[0];
+        timeEntry = await storage.createTimeEntry({
+          callSessionId: session.id,
+          clinicianId: req.adminUser!.id,
+          practiceId: validated.practiceId || null,
+          programType: validated.programType,
+          date: dateStr,
+          durationMinutes: validated.durationMinutes,
+          notes: null,
+        });
+      }
+
+      await writeAuditLog(auditFromRequest(req, {
+        action: AuditAction.CALL_SESSION_CREATED,
+        resourceType: "call_session",
+        resourceId: String(session.id),
+        outcome: "success",
+        phiAccessed: true,
+        details: {
+          source: "careco_import",
+          hasTranscript: !!createdTranscript,
+          hasSoapNote: !!createdSoapNote,
+          hasTimeEntry: !!timeEntry,
+          programType: validated.programType,
+        },
+      }));
+
+      res.json({ success: true, session, transcript: createdTranscript, soapNote: createdSoapNote, timeEntry });
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ success: false, message: "Invalid import data", errors: error.errors });
+      }
+      console.error("Import call error:", error);
+      res.status(500).json({ success: false, message: "Failed to import call" });
+    }
+  });
+
+  // Bulk import -- array of CareCo records
+  app.post("/api/admin/calls/import-bulk", adminAuth, requirePermission(Permission.MANAGE_CALLS), async (req, res) => {
+    try {
+      const schema = z.object({
+        records: z.array(z.object({
+          patientReference: z.string().optional(),
+          practiceId: z.number().optional(),
+          programType: z.string().optional(),
+          callDate: z.string().optional(),
+          durationMinutes: z.number().optional(),
+          transcript: z.string().optional(),
+          subjective: z.string().optional(),
+          objective: z.string().optional(),
+          assessment: z.string().optional(),
+          plan: z.string().optional(),
+        })).min(1).max(100),
+      });
+      const { records } = schema.parse(req.body);
+
+      const results: { index: number; sessionId: number; success: boolean; error?: string }[] = [];
+
+      for (let i = 0; i < records.length; i++) {
+        try {
+          const rec = records[i];
+          const callDate = rec.callDate ? new Date(rec.callDate) : new Date();
+          const durationSeconds = rec.durationMinutes ? rec.durationMinutes * 60 : null;
+
+          const session = await storage.createCallSession({
+            clinicianId: req.adminUser!.id,
+            practiceId: rec.practiceId || null,
+            patientReference: rec.patientReference || null,
+            programType: rec.programType || null,
+            callStartedAt: callDate,
+            callEndedAt: durationSeconds ? new Date(callDate.getTime() + durationSeconds * 1000) : null,
+            durationSeconds,
+            status: "review",
+          });
+
+          if (rec.transcript?.trim()) {
+            await storage.createTranscript({
+              callSessionId: session.id,
+              content: rec.transcript,
+              segments: null,
+              provider: "careco",
+              languageCode: "en-US",
+              confidenceScore: null,
+            });
+          }
+
+          const hasSoap = rec.subjective || rec.objective || rec.assessment || rec.plan;
+          if (hasSoap) {
+            await storage.createSoapNote({
+              callSessionId: session.id,
+              subjective: rec.subjective || "",
+              objective: rec.objective || "",
+              assessment: rec.assessment || "",
+              plan: rec.plan || "",
+              status: "draft",
+              aiModel: "careco",
+              aiConfidence: null,
+            });
+          }
+
+          if (rec.durationMinutes && rec.programType) {
+            await storage.createTimeEntry({
+              callSessionId: session.id,
+              clinicianId: req.adminUser!.id,
+              practiceId: rec.practiceId || null,
+              programType: rec.programType,
+              date: callDate.toISOString().split("T")[0],
+              durationMinutes: rec.durationMinutes,
+              notes: null,
+            });
+          }
+
+          results.push({ index: i, sessionId: session.id, success: true });
+        } catch (err: any) {
+          results.push({ index: i, sessionId: 0, success: false, error: err.message || "Failed" });
+        }
+      }
+
+      const imported = results.filter((r) => r.success).length;
+      const failed = results.filter((r) => !r.success).length;
+
+      await writeAuditLog(auditFromRequest(req, {
+        action: AuditAction.CALL_SESSION_CREATED,
+        resourceType: "call_session",
+        outcome: "success",
+        phiAccessed: true,
+        details: { source: "careco_bulk_import", total: records.length, imported, failed },
+      }));
+
+      res.json({ success: true, imported, failed, total: records.length, results });
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ success: false, message: "Invalid bulk import data", errors: error.errors });
+      }
+      console.error("Bulk import error:", error);
+      res.status(500).json({ success: false, message: "Failed to process bulk import" });
+    }
+  });
+
+  // List call sessions
+  app.get("/api/admin/calls", adminAuth, requirePermission(Permission.VIEW_CALLS), async (req, res) => {
+    try {
+      const filters: any = {};
+      if (req.query.clinicianId) filters.clinicianId = parseInt(req.query.clinicianId as string);
+      if (req.query.practiceId) filters.practiceId = parseInt(req.query.practiceId as string);
+      if (req.query.programType) filters.programType = req.query.programType;
+      if (req.query.status) filters.status = req.query.status;
+
+      const sessions = await storage.getCallSessions(filters);
+
+      await writeAuditLog(auditFromRequest(req, {
+        action: AuditAction.PHI_READ,
+        resourceType: "call_session",
+        outcome: "success",
+        phiAccessed: true,
+        details: { count: sessions.length, filters },
+      }));
+
+      res.json({ success: true, sessions });
+    } catch (error) {
+      console.error("List call sessions error:", error);
+      res.status(500).json({ success: false, message: "Failed to load call sessions" });
+    }
+  });
+
+  // Create a new call session (start recording)
+  app.post("/api/admin/calls", adminAuth, requirePermission(Permission.MANAGE_CALLS), async (req, res) => {
+    try {
+      const schema = z.object({
+        patientReference: z.string().optional(),
+        practiceId: z.number().optional(),
+        programType: z.string().optional(),
+      });
+      const validated = schema.parse(req.body);
+
+      const session = await storage.createCallSession({
+        clinicianId: req.adminUser!.id,
+        practiceId: validated.practiceId || null,
+        patientReference: validated.patientReference || null,
+        programType: validated.programType || null,
+        callStartedAt: new Date(),
+        status: "recording",
+      });
+
+      await writeAuditLog(auditFromRequest(req, {
+        action: AuditAction.CALL_SESSION_CREATED,
+        resourceType: "call_session",
+        resourceId: String(session.id),
+        outcome: "success",
+        phiAccessed: true,
+        details: { programType: validated.programType },
+      }));
+
+      res.json({ success: true, session });
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ success: false, message: "Invalid call session data", errors: error.errors });
+      }
+      console.error("Create call session error:", error);
+      res.status(500).json({ success: false, message: "Failed to create call session" });
+    }
+  });
+
+  // Get a single call session with transcript and SOAP note
+  app.get("/api/admin/calls/:id", adminAuth, requirePermission(Permission.VIEW_CALLS), async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const session = await storage.getCallSession(id);
+      if (!session) {
+        return res.status(404).json({ success: false, message: "Call session not found" });
+      }
+
+      const transcript = await storage.getTranscriptByCallSession(id);
+      const soapNote = await storage.getSoapNoteByCallSession(id);
+
+      await writeAuditLog(auditFromRequest(req, {
+        action: AuditAction.PHI_READ,
+        resourceType: "call_session",
+        resourceId: String(id),
+        outcome: "success",
+        phiAccessed: true,
+      }));
+
+      res.json({ success: true, session, transcript, soapNote });
+    } catch (error) {
+      console.error("Get call session error:", error);
+      res.status(500).json({ success: false, message: "Failed to load call session" });
+    }
+  });
+
+  // End a call session
+  app.put("/api/admin/calls/:id/end", adminAuth, requirePermission(Permission.MANAGE_CALLS), async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const session = await storage.getCallSession(id);
+      if (!session) {
+        return res.status(404).json({ success: false, message: "Call session not found" });
+      }
+
+      const callEndedAt = new Date();
+      const durationSeconds = Math.round((callEndedAt.getTime() - new Date(session.callStartedAt).getTime()) / 1000);
+
+      await storage.updateCallSession(id, { callEndedAt, durationSeconds, status: "transcribing" });
+
+      await writeAuditLog(auditFromRequest(req, {
+        action: AuditAction.CALL_SESSION_ENDED,
+        resourceType: "call_session",
+        resourceId: String(id),
+        outcome: "success",
+        phiAccessed: true,
+        details: { durationSeconds },
+      }));
+
+      res.json({ success: true, durationSeconds });
+    } catch (error) {
+      console.error("End call session error:", error);
+      res.status(500).json({ success: false, message: "Failed to end call session" });
+    }
+  });
+
+  // Upload audio and transcribe
+  app.post("/api/admin/calls/:id/transcribe", adminAuth, requirePermission(Permission.MANAGE_CALLS), async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const session = await storage.getCallSession(id);
+      if (!session) {
+        return res.status(404).json({ success: false, message: "Call session not found" });
+      }
+
+      const contentType = req.headers["content-type"] || "";
+
+      if (contentType.includes("application/json")) {
+        const { text } = z.object({ text: z.string().min(1) }).parse(req.body);
+        const result = transcribeManual(text);
+
+        const transcript = await storage.createTranscript({
+          callSessionId: id,
+          content: result.content,
+          segments: JSON.stringify(result.segments),
+          provider: result.provider,
+          languageCode: result.languageCode,
+          confidenceScore: String(result.confidenceScore),
+        });
+
+        await storage.updateCallSession(id, { status: "generating" });
+
+        await writeAuditLog(auditFromRequest(req, {
+          action: AuditAction.CALL_TRANSCRIBED,
+          resourceType: "transcript",
+          resourceId: String(transcript.id),
+          outcome: "success",
+          phiAccessed: true,
+          details: { provider: "manual", callSessionId: id },
+        }));
+
+        res.json({ success: true, transcript });
+      } else {
+        const chunks: Buffer[] = [];
+        req.on("data", (chunk: Buffer) => chunks.push(chunk));
+        req.on("end", async () => {
+          try {
+            const audioBuffer = Buffer.concat(chunks);
+            if (audioBuffer.length === 0) {
+              return res.status(400).json({ success: false, message: "No audio data received" });
+            }
+
+            const mimeType = contentType.split(";")[0] || "audio/webm";
+            const result = await transcribeAudio(audioBuffer, mimeType);
+
+            const transcript = await storage.createTranscript({
+              callSessionId: id,
+              content: result.content,
+              segments: JSON.stringify(result.segments),
+              provider: result.provider,
+              languageCode: result.languageCode,
+              confidenceScore: String(result.confidenceScore),
+            });
+
+            await storage.updateCallSession(id, { status: "generating" });
+
+            await writeAuditLog(auditFromRequest(req, {
+              action: AuditAction.CALL_TRANSCRIBED,
+              resourceType: "transcript",
+              resourceId: String(transcript.id),
+              outcome: "success",
+              phiAccessed: true,
+              details: { provider: result.provider, callSessionId: id, confidence: result.confidenceScore },
+            }));
+
+            res.json({ success: true, transcript });
+          } catch (error: any) {
+            console.error("Transcription error:", error);
+            await storage.updateCallSession(id, { status: "review" });
+            res.status(500).json({ success: false, message: error.message || "Transcription failed" });
+          }
+        });
+        return;
+      }
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ success: false, message: "Invalid transcription data", errors: error.errors });
+      }
+      console.error("Transcribe error:", error);
+      res.status(500).json({ success: false, message: "Transcription failed" });
+    }
+  });
+
+  // Generate SOAP note from transcript
+  app.post("/api/admin/calls/:id/generate-soap", adminAuth, requirePermission(Permission.MANAGE_CALLS), async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const session = await storage.getCallSession(id);
+      if (!session) return res.status(404).json({ success: false, message: "Call session not found" });
+
+      const transcript = await storage.getTranscriptByCallSession(id);
+      if (!transcript) return res.status(400).json({ success: false, message: "No transcript found. Transcribe the call first." });
+
+      let soapResult;
+      if (isSoapGenerationConfigured()) {
+        soapResult = await generateSoapNote(transcript.content, session.programType || undefined);
+      } else {
+        soapResult = createBlankSoapNote();
+      }
+
+      const soapNote = await storage.createSoapNote({
+        callSessionId: id,
+        subjective: soapResult.subjective,
+        objective: soapResult.objective,
+        assessment: soapResult.assessment,
+        plan: soapResult.plan,
+        status: "draft",
+        aiModel: soapResult.aiModel,
+        aiConfidence: soapResult.aiConfidence,
+      });
+
+      await storage.updateCallSession(id, { status: "review" });
+
+      await writeAuditLog(auditFromRequest(req, {
+        action: AuditAction.SOAP_NOTE_GENERATED,
+        resourceType: "soap_note",
+        resourceId: String(soapNote.id),
+        outcome: "success",
+        phiAccessed: true,
+        details: { callSessionId: id, aiModel: soapResult.aiModel },
+      }));
+
+      res.json({ success: true, soapNote });
+    } catch (error: any) {
+      console.error("SOAP generation error:", error);
+      res.status(500).json({ success: false, message: error.message || "SOAP note generation failed" });
+    }
+  });
+
+  // Update SOAP note (clinician edits)
+  app.put("/api/admin/calls/:id/soap", adminAuth, requirePermission(Permission.MANAGE_CALLS), async (req, res) => {
+    try {
+      const callId = parseInt(req.params.id);
+      const schema = z.object({ subjective: z.string(), objective: z.string(), assessment: z.string(), plan: z.string() });
+      const validated = schema.parse(req.body);
+
+      const soapNote = await storage.getSoapNoteByCallSession(callId);
+      if (!soapNote) return res.status(404).json({ success: false, message: "SOAP note not found" });
+
+      await storage.updateSoapNote(soapNote.id, {
+        subjective: validated.subjective, objective: validated.objective,
+        assessment: validated.assessment, plan: validated.plan,
+        status: "reviewed", reviewedBy: req.adminUser!.id, reviewedAt: new Date(),
+      });
+
+      await writeAuditLog(auditFromRequest(req, {
+        action: AuditAction.SOAP_NOTE_UPDATED,
+        resourceType: "soap_note",
+        resourceId: String(soapNote.id),
+        outcome: "success",
+        phiAccessed: true,
+        details: { callSessionId: callId },
+      }));
+
+      res.json({ success: true });
+    } catch (error) {
+      if (error instanceof z.ZodError) return res.status(400).json({ success: false, message: "Invalid SOAP note data", errors: error.errors });
+      console.error("Update SOAP note error:", error);
+      res.status(500).json({ success: false, message: "Failed to update SOAP note" });
+    }
+  });
+
+  // Sign SOAP note (finalize)
+  app.put("/api/admin/calls/:id/sign", adminAuth, requirePermission(Permission.MANAGE_CALLS), async (req, res) => {
+    try {
+      const callId = parseInt(req.params.id);
+      const soapNote = await storage.getSoapNoteByCallSession(callId);
+      if (!soapNote) return res.status(404).json({ success: false, message: "SOAP note not found" });
+
+      await storage.updateSoapNote(soapNote.id, { status: "signed", signedBy: req.adminUser!.id, signedAt: new Date() });
+      await storage.updateCallSession(callId, { status: "signed" });
+
+      await writeAuditLog(auditFromRequest(req, {
+        action: AuditAction.SOAP_NOTE_SIGNED,
+        resourceType: "soap_note",
+        resourceId: String(soapNote.id),
+        outcome: "success",
+        phiAccessed: true,
+        details: { callSessionId: callId, signedBy: req.adminUser!.email },
+      }));
+
+      res.json({ success: true });
+    } catch (error) {
+      console.error("Sign SOAP note error:", error);
+      res.status(500).json({ success: false, message: "Failed to sign SOAP note" });
+    }
+  });
+
+  // ---------------------------------------------------------------
+  // AMBIENT AI -- Time Tracking
+  // ---------------------------------------------------------------
+
+  app.get("/api/admin/time-entries", adminAuth, requirePermission(Permission.VIEW_TIME_ENTRIES), async (req, res) => {
+    try {
+      const filters: any = {};
+      if (req.query.clinicianId) filters.clinicianId = parseInt(req.query.clinicianId as string);
+      if (req.query.practiceId) filters.practiceId = parseInt(req.query.practiceId as string);
+      if (req.query.programType) filters.programType = req.query.programType;
+      if (req.query.date) filters.date = req.query.date;
+      const entries = await storage.getTimeEntries(filters);
+      res.json({ success: true, entries });
+    } catch (error) {
+      console.error("List time entries error:", error);
+      res.status(500).json({ success: false, message: "Failed to load time entries" });
+    }
+  });
+
+  app.post("/api/admin/time-entries", adminAuth, requirePermission(Permission.MANAGE_TIME_ENTRIES), async (req, res) => {
+    try {
+      const schema = z.object({
+        callSessionId: z.number().optional(),
+        practiceId: z.number().optional(),
+        programType: z.string().min(1),
+        date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
+        durationMinutes: z.number().min(1).max(480),
+        notes: z.string().optional(),
+      });
+      const validated = schema.parse(req.body);
+
+      const entry = await storage.createTimeEntry({
+        ...validated,
+        callSessionId: validated.callSessionId || null,
+        practiceId: validated.practiceId || null,
+        clinicianId: req.adminUser!.id,
+        notes: validated.notes || null,
+      });
+
+      await writeAuditLog(auditFromRequest(req, {
+        action: AuditAction.TIME_ENTRY_CREATED,
+        resourceType: "time_entry",
+        resourceId: String(entry.id),
+        outcome: "success",
+        details: { programType: validated.programType, minutes: validated.durationMinutes, date: validated.date },
+      }));
+
+      res.json({ success: true, entry });
+    } catch (error) {
+      if (error instanceof z.ZodError) return res.status(400).json({ success: false, message: "Invalid time entry data", errors: error.errors });
+      console.error("Create time entry error:", error);
+      res.status(500).json({ success: false, message: "Failed to create time entry" });
+    }
+  });
+
+  app.delete("/api/admin/time-entries/:id", adminAuth, requirePermission(Permission.MANAGE_TIME_ENTRIES), async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      await storage.deleteTimeEntry(id);
+      await writeAuditLog(auditFromRequest(req, {
+        action: AuditAction.TIME_ENTRY_DELETED,
+        resourceType: "time_entry",
+        resourceId: String(id),
+        outcome: "success",
+      }));
+      res.json({ success: true });
+    } catch (error) {
+      console.error("Delete time entry error:", error);
+      res.status(500).json({ success: false, message: "Failed to delete time entry" });
+    }
+  });
+
+  app.get("/api/admin/time-entries/report", adminAuth, requirePermission(Permission.VIEW_TIME_ENTRIES), async (req, res) => {
+    try {
+      const entries = await storage.getTimeEntries({
+        clinicianId: req.query.clinicianId ? parseInt(req.query.clinicianId as string) : undefined,
+        practiceId: req.query.practiceId ? parseInt(req.query.practiceId as string) : undefined,
+        programType: req.query.programType as string | undefined,
+      });
+
+      const byProgram: Record<string, { totalMinutes: number; count: number }> = {};
+      const byDate: Record<string, { totalMinutes: number; count: number }> = {};
+
+      for (const entry of entries) {
+        if (!byProgram[entry.programType]) byProgram[entry.programType] = { totalMinutes: 0, count: 0 };
+        byProgram[entry.programType].totalMinutes += entry.durationMinutes;
+        byProgram[entry.programType].count++;
+
+        if (!byDate[entry.date]) byDate[entry.date] = { totalMinutes: 0, count: 0 };
+        byDate[entry.date].totalMinutes += entry.durationMinutes;
+        byDate[entry.date].count++;
+      }
+
+      const totalMinutes = entries.reduce((sum, e) => sum + e.durationMinutes, 0);
+
+      res.json({ success: true, totalMinutes, totalEntries: entries.length, byProgram, byDate });
+    } catch (error) {
+      console.error("Time report error:", error);
+      res.status(500).json({ success: false, message: "Failed to generate time report" });
+    }
+  });
 }
 
 export async function seedBillingCodes() {

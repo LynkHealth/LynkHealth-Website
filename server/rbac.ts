@@ -24,6 +24,12 @@ export enum Permission {
   TRIGGER_SYNC = "TRIGGER_SYNC",
   MANAGE_PRACTICES = "MANAGE_PRACTICES",
 
+  // Ambient AI -- Call recordings & SOAP notes
+  VIEW_CALLS = "VIEW_CALLS",
+  MANAGE_CALLS = "MANAGE_CALLS",
+  VIEW_TIME_ENTRIES = "VIEW_TIME_ENTRIES",
+  MANAGE_TIME_ENTRIES = "MANAGE_TIME_ENTRIES",
+
   VIEW_AUDIT_LOGS = "VIEW_AUDIT_LOGS",
   MANAGE_USERS = "MANAGE_USERS",
 
@@ -97,6 +103,10 @@ const ROLE_DEFAULT_PERMISSIONS: Record<string, Permission[]> = {
     Permission.VIEW_INQUIRIES,
     Permission.VIEW_REFERRALS,
     Permission.VIEW_TC_SAMPLES,
+    Permission.VIEW_CALLS,
+    Permission.MANAGE_CALLS,
+    Permission.VIEW_TIME_ENTRIES,
+    Permission.MANAGE_TIME_ENTRIES,
     Permission.VIEW_ENROLLMENT,
     Permission.DROP_IN_ASSIGNED_PRACTICES,
   ],
