@@ -5,7 +5,7 @@ import { adminFetch } from "@/lib/admin-auth";
 import CallRecorder from "@/components/admin/CallRecorder";
 import {
   Mic, FileText, Clock, CheckCircle2, AlertCircle, Loader2,
-  ChevronLeft, Plus, Pen, Save, ArrowRight,
+  ChevronLeft, Plus, Pen, Save, ArrowRight, Upload, Download,
 } from "lucide-react";
 
 interface CallSession {
@@ -42,7 +42,7 @@ interface SoapNote {
   signedAt: string | null;
 }
 
-type ViewMode = "list" | "new-call" | "detail";
+type ViewMode = "list" | "new-call" | "import" | "import-bulk" | "detail";
 
 interface CallsPageProps {
   practices: { id: number; name: string }[];
@@ -100,6 +100,22 @@ export default function CallsPage({ practices }: CallsPageProps) {
 
   // Manual transcript state
   const [manualTranscript, setManualTranscript] = useState("");
+
+  // Import state
+  const [importPatient, setImportPatient] = useState("");
+  const [importProgram, setImportProgram] = useState("");
+  const [importPractice, setImportPractice] = useState<number | "">("");
+  const [importDate, setImportDate] = useState(() => new Date().toISOString().split("T")[0]);
+  const [importDuration, setImportDuration] = useState("");
+  const [importTranscript, setImportTranscript] = useState("");
+  const [importSubjective, setImportSubjective] = useState("");
+  const [importObjective, setImportObjective] = useState("");
+  const [importAssessment, setImportAssessment] = useState("");
+  const [importPlan, setImportPlan] = useState("");
+
+  // Bulk import state
+  const [bulkJson, setBulkJson] = useState("");
+  const [bulkResults, setBulkResults] = useState<{ imported: number; failed: number; total: number } | null>(null);
 
   useEffect(() => {
     loadSessions();
@@ -328,21 +344,123 @@ export default function CallsPage({ practices }: CallsPageProps) {
     setError(null);
   };
 
+  const resetImport = () => {
+    setImportPatient("");
+    setImportProgram("");
+    setImportPractice("");
+    setImportDate(new Date().toISOString().split("T")[0]);
+    setImportDuration("");
+    setImportTranscript("");
+    setImportSubjective("");
+    setImportObjective("");
+    setImportAssessment("");
+    setImportPlan("");
+    setBulkJson("");
+    setBulkResults(null);
+    setError(null);
+  };
+
+  const handleImportSingle = async () => {
+    setProcessing(true);
+    setError(null);
+    try {
+      const res = await adminFetch("/api/admin/calls/import", {
+        method: "POST",
+        body: JSON.stringify({
+          patientReference: importPatient || undefined,
+          programType: importProgram || undefined,
+          practiceId: importPractice || undefined,
+          callDate: importDate || undefined,
+          durationMinutes: importDuration ? parseInt(importDuration) : undefined,
+          transcript: importTranscript || undefined,
+          subjective: importSubjective || undefined,
+          objective: importObjective || undefined,
+          assessment: importAssessment || undefined,
+          plan: importPlan || undefined,
+        }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        // Show the imported record
+        setSelectedSession(data.session);
+        setTranscript(data.transcript);
+        setSoapNote(data.soapNote);
+        if (data.soapNote) {
+          setSoapForm({
+            subjective: data.soapNote.subjective,
+            objective: data.soapNote.objective,
+            assessment: data.soapNote.assessment,
+            plan: data.soapNote.plan,
+          });
+        }
+        setViewMode("detail");
+      } else {
+        setError(data.message);
+      }
+    } catch (err) {
+      setError("Failed to import record");
+    } finally {
+      setProcessing(false);
+    }
+  };
+
+  const handleBulkImport = async () => {
+    setProcessing(true);
+    setError(null);
+    setBulkResults(null);
+    try {
+      let records: any[];
+      try {
+        const parsed = JSON.parse(bulkJson);
+        records = Array.isArray(parsed) ? parsed : parsed.records || [parsed];
+      } catch {
+        setError("Invalid JSON format. Paste a JSON array of records.");
+        setProcessing(false);
+        return;
+      }
+
+      const res = await adminFetch("/api/admin/calls/import-bulk", {
+        method: "POST",
+        body: JSON.stringify({ records }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        setBulkResults({ imported: data.imported, failed: data.failed, total: data.total });
+      } else {
+        setError(data.message);
+      }
+    } catch (err) {
+      setError("Failed to process bulk import");
+    } finally {
+      setProcessing(false);
+    }
+  };
+
   // ============================
   // RENDER: Call List
   // ============================
   if (viewMode === "list") {
     return (
       <div className="space-y-4">
-        <div className="flex items-center justify-between">
+        <div className="flex items-center justify-between flex-wrap gap-2">
           <div>
             <h2 className="text-lg font-semibold text-slate-800">Call Recordings</h2>
-            <p className="text-sm text-slate-500">Record calls, generate transcripts, and create SOAP notes</p>
+            <p className="text-sm text-slate-500">Record calls, import from CareCo, and manage SOAP notes</p>
           </div>
-          <Button onClick={() => { resetNewCall(); setViewMode("new-call"); }} className="gap-2">
-            <Plus className="w-4 h-4" />
-            New Call
-          </Button>
+          <div className="flex gap-2">
+            <Button variant="outline" onClick={() => { resetImport(); setViewMode("import"); }} className="gap-2">
+              <Upload className="w-4 h-4" />
+              Import from CareCo
+            </Button>
+            <Button variant="outline" onClick={() => { resetImport(); setViewMode("import-bulk"); }} className="gap-2 text-xs">
+              <Download className="w-4 h-4" />
+              Bulk Import
+            </Button>
+            <Button onClick={() => { resetNewCall(); setViewMode("new-call"); }} className="gap-2">
+              <Plus className="w-4 h-4" />
+              New Call
+            </Button>
+          </div>
         </div>
 
         {loading ? (
@@ -354,11 +472,17 @@ export default function CallsPage({ practices }: CallsPageProps) {
             <CardContent className="py-12 text-center">
               <Mic className="w-12 h-12 text-slate-300 mx-auto mb-3" />
               <p className="text-slate-500">No call recordings yet.</p>
-              <p className="text-sm text-slate-400 mt-1">Start a new call to record, transcribe, and generate SOAP notes.</p>
-              <Button onClick={() => { resetNewCall(); setViewMode("new-call"); }} className="mt-4 gap-2">
-                <Plus className="w-4 h-4" />
-                Start First Call
-              </Button>
+              <p className="text-sm text-slate-400 mt-1">Import from CareCo or start a new call to record directly.</p>
+              <div className="flex gap-3 justify-center mt-4">
+                <Button variant="outline" onClick={() => { resetImport(); setViewMode("import"); }} className="gap-2">
+                  <Upload className="w-4 h-4" />
+                  Import from CareCo
+                </Button>
+                <Button onClick={() => { resetNewCall(); setViewMode("new-call"); }} className="gap-2">
+                  <Plus className="w-4 h-4" />
+                  New Call
+                </Button>
+              </div>
             </CardContent>
           </Card>
         ) : (
@@ -615,6 +739,301 @@ export default function CallsPage({ practices }: CallsPageProps) {
             )}
           </>
         )}
+      </div>
+    );
+  }
+
+  // ============================
+  // RENDER: Import from CareCo (Single)
+  // ============================
+  if (viewMode === "import") {
+    return (
+      <div className="space-y-4">
+        <div className="flex items-center gap-3">
+          <Button variant="ghost" size="sm" onClick={() => { resetImport(); setViewMode("list"); loadSessions(); }}>
+            <ChevronLeft className="w-4 h-4" />
+          </Button>
+          <h2 className="text-lg font-semibold text-slate-800">Import from CareCo</h2>
+        </div>
+
+        {error && (
+          <Card className="border-red-200 bg-red-50">
+            <CardContent className="p-3 flex items-center gap-2">
+              <AlertCircle className="w-4 h-4 text-red-600" />
+              <span className="text-sm text-red-800">{error}</span>
+              <Button variant="ghost" size="sm" className="ml-auto text-xs" onClick={() => setError(null)}>Dismiss</Button>
+            </CardContent>
+          </Card>
+        )}
+
+        <Card>
+          <CardHeader className="py-3 px-4">
+            <CardTitle className="text-base">Call Details</CardTitle>
+          </CardHeader>
+          <CardContent className="px-4 pb-4 space-y-3">
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+              <div>
+                <label className="text-sm font-medium text-slate-700 block mb-1">Patient Reference</label>
+                <input
+                  type="text"
+                  value={importPatient}
+                  onChange={(e) => setImportPatient(e.target.value)}
+                  placeholder="Patient name or MRN"
+                  className="w-full px-3 py-2 border border-slate-200 rounded-md text-sm"
+                />
+              </div>
+              <div>
+                <label className="text-sm font-medium text-slate-700 block mb-1">Program Type</label>
+                <select
+                  value={importProgram}
+                  onChange={(e) => setImportProgram(e.target.value)}
+                  className="w-full px-3 py-2 border border-slate-200 rounded-md text-sm bg-white"
+                >
+                  <option value="">Select program...</option>
+                  {PROGRAM_TYPES.map((pt) => (
+                    <option key={pt} value={pt}>{pt}</option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label className="text-sm font-medium text-slate-700 block mb-1">Call Date</label>
+                <input
+                  type="date"
+                  value={importDate}
+                  onChange={(e) => setImportDate(e.target.value)}
+                  className="w-full px-3 py-2 border border-slate-200 rounded-md text-sm"
+                />
+              </div>
+              <div>
+                <label className="text-sm font-medium text-slate-700 block mb-1">Duration (minutes)</label>
+                <input
+                  type="number"
+                  min="1"
+                  value={importDuration}
+                  onChange={(e) => setImportDuration(e.target.value)}
+                  placeholder="30"
+                  className="w-full px-3 py-2 border border-slate-200 rounded-md text-sm"
+                />
+              </div>
+            </div>
+            <div>
+              <label className="text-sm font-medium text-slate-700 block mb-1">Practice</label>
+              <select
+                value={importPractice}
+                onChange={(e) => setImportPractice(e.target.value ? Number(e.target.value) : "")}
+                className="w-full px-3 py-2 border border-slate-200 rounded-md text-sm bg-white"
+              >
+                <option value="">Select practice...</option>
+                {practices.map((p) => (
+                  <option key={p.id} value={p.id}>{p.name}</option>
+                ))}
+              </select>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="py-3 px-4">
+            <CardTitle className="text-base">Transcript (from CareCo)</CardTitle>
+          </CardHeader>
+          <CardContent className="px-4 pb-4">
+            <textarea
+              value={importTranscript}
+              onChange={(e) => setImportTranscript(e.target.value)}
+              placeholder="Paste the CareCo transcript here..."
+              rows={8}
+              className="w-full px-3 py-2 border border-slate-200 rounded-md text-sm resize-y"
+            />
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="py-3 px-4">
+            <CardTitle className="text-base">SOAP Note (from CareCo)</CardTitle>
+          </CardHeader>
+          <CardContent className="px-4 pb-4 space-y-3">
+            <div className="border-l-4 border-l-blue-500 pl-3">
+              <label className="text-xs font-semibold text-slate-500 uppercase tracking-wider block mb-1">Subjective</label>
+              <textarea
+                value={importSubjective}
+                onChange={(e) => setImportSubjective(e.target.value)}
+                placeholder="Patient's reported symptoms, complaints, history..."
+                rows={3}
+                className="w-full px-2 py-1 border border-slate-200 rounded text-sm resize-y"
+              />
+            </div>
+            <div className="border-l-4 border-l-green-500 pl-3">
+              <label className="text-xs font-semibold text-slate-500 uppercase tracking-wider block mb-1">Objective</label>
+              <textarea
+                value={importObjective}
+                onChange={(e) => setImportObjective(e.target.value)}
+                placeholder="Observable findings, vitals, exam results..."
+                rows={3}
+                className="w-full px-2 py-1 border border-slate-200 rounded text-sm resize-y"
+              />
+            </div>
+            <div className="border-l-4 border-l-orange-500 pl-3">
+              <label className="text-xs font-semibold text-slate-500 uppercase tracking-wider block mb-1">Assessment</label>
+              <textarea
+                value={importAssessment}
+                onChange={(e) => setImportAssessment(e.target.value)}
+                placeholder="Clinical impressions, diagnoses..."
+                rows={3}
+                className="w-full px-2 py-1 border border-slate-200 rounded text-sm resize-y"
+              />
+            </div>
+            <div className="border-l-4 border-l-purple-500 pl-3">
+              <label className="text-xs font-semibold text-slate-500 uppercase tracking-wider block mb-1">Plan</label>
+              <textarea
+                value={importPlan}
+                onChange={(e) => setImportPlan(e.target.value)}
+                placeholder="Treatment plan, medications, follow-up..."
+                rows={3}
+                className="w-full px-2 py-1 border border-slate-200 rounded text-sm resize-y"
+              />
+            </div>
+          </CardContent>
+        </Card>
+
+        <div className="flex gap-3">
+          <Button
+            onClick={handleImportSingle}
+            disabled={processing}
+            className="gap-2"
+            size="lg"
+          >
+            {processing ? <Loader2 className="w-5 h-5 animate-spin" /> : <Upload className="w-5 h-5" />}
+            Import Record
+          </Button>
+          <Button
+            variant="outline"
+            onClick={() => { resetImport(); setViewMode("list"); }}
+          >
+            Cancel
+          </Button>
+        </div>
+      </div>
+    );
+  }
+
+  // ============================
+  // RENDER: Bulk Import
+  // ============================
+  if (viewMode === "import-bulk") {
+    return (
+      <div className="space-y-4">
+        <div className="flex items-center gap-3">
+          <Button variant="ghost" size="sm" onClick={() => { resetImport(); setViewMode("list"); loadSessions(); }}>
+            <ChevronLeft className="w-4 h-4" />
+          </Button>
+          <h2 className="text-lg font-semibold text-slate-800">Bulk Import from CareCo</h2>
+        </div>
+
+        {error && (
+          <Card className="border-red-200 bg-red-50">
+            <CardContent className="p-3 flex items-center gap-2">
+              <AlertCircle className="w-4 h-4 text-red-600" />
+              <span className="text-sm text-red-800">{error}</span>
+              <Button variant="ghost" size="sm" className="ml-auto text-xs" onClick={() => setError(null)}>Dismiss</Button>
+            </CardContent>
+          </Card>
+        )}
+
+        {bulkResults && (
+          <Card className={bulkResults.failed > 0 ? "border-amber-200 bg-amber-50" : "border-green-200 bg-green-50"}>
+            <CardContent className="p-4">
+              <div className="flex items-center gap-2 mb-2">
+                <CheckCircle2 className={`w-5 h-5 ${bulkResults.failed > 0 ? "text-amber-600" : "text-green-600"}`} />
+                <span className="font-medium text-sm">
+                  Import complete: {bulkResults.imported} of {bulkResults.total} records imported
+                </span>
+              </div>
+              {bulkResults.failed > 0 && (
+                <p className="text-xs text-amber-700">{bulkResults.failed} records failed to import.</p>
+              )}
+              <Button
+                variant="outline"
+                size="sm"
+                className="mt-3"
+                onClick={() => { resetImport(); setViewMode("list"); loadSessions(); }}
+              >
+                View All Records
+              </Button>
+            </CardContent>
+          </Card>
+        )}
+
+        <Card>
+          <CardHeader className="py-3 px-4">
+            <CardTitle className="text-base">Paste JSON Data</CardTitle>
+          </CardHeader>
+          <CardContent className="px-4 pb-4 space-y-3">
+            <p className="text-xs text-slate-500">
+              Paste a JSON array of records from CareCo. Each record can include:
+              <code className="mx-1 text-xs bg-slate-100 px-1 rounded">patientReference</code>,
+              <code className="mx-1 text-xs bg-slate-100 px-1 rounded">programType</code>,
+              <code className="mx-1 text-xs bg-slate-100 px-1 rounded">callDate</code>,
+              <code className="mx-1 text-xs bg-slate-100 px-1 rounded">durationMinutes</code>,
+              <code className="mx-1 text-xs bg-slate-100 px-1 rounded">transcript</code>,
+              <code className="mx-1 text-xs bg-slate-100 px-1 rounded">subjective</code>,
+              <code className="mx-1 text-xs bg-slate-100 px-1 rounded">objective</code>,
+              <code className="mx-1 text-xs bg-slate-100 px-1 rounded">assessment</code>,
+              <code className="mx-1 text-xs bg-slate-100 px-1 rounded">plan</code>
+            </p>
+            <details className="text-xs">
+              <summary className="cursor-pointer text-blue-600 hover:text-blue-800 font-medium">Show example JSON</summary>
+              <pre className="mt-2 bg-slate-50 p-3 rounded-lg overflow-x-auto text-slate-700">{`[
+  {
+    "patientReference": "John Smith",
+    "programType": "CCM",
+    "callDate": "2026-02-15",
+    "durationMinutes": 25,
+    "transcript": "Full call transcript text here...",
+    "subjective": "Patient reports improved blood pressure...",
+    "objective": "BP 128/82, HR 72, weight stable at 185 lbs...",
+    "assessment": "Hypertension - well controlled on current regimen...",
+    "plan": "Continue current medications. Follow up in 30 days..."
+  },
+  {
+    "patientReference": "Jane Doe",
+    "programType": "BHI",
+    "callDate": "2026-02-14",
+    "durationMinutes": 18,
+    "transcript": "Another transcript...",
+    "subjective": "...",
+    "objective": "...",
+    "assessment": "...",
+    "plan": "..."
+  }
+]`}</pre>
+            </details>
+            <textarea
+              value={bulkJson}
+              onChange={(e) => setBulkJson(e.target.value)}
+              placeholder='[{"patientReference": "...", "programType": "CCM", ...}]'
+              rows={12}
+              className="w-full px-3 py-2 border border-slate-200 rounded-md text-sm font-mono resize-y"
+            />
+          </CardContent>
+        </Card>
+
+        <div className="flex gap-3">
+          <Button
+            onClick={handleBulkImport}
+            disabled={processing || !bulkJson.trim()}
+            className="gap-2"
+            size="lg"
+          >
+            {processing ? <Loader2 className="w-5 h-5 animate-spin" /> : <Download className="w-5 h-5" />}
+            {processing ? "Importing..." : "Import All Records"}
+          </Button>
+          <Button
+            variant="outline"
+            onClick={() => { resetImport(); setViewMode("list"); }}
+          >
+            Cancel
+          </Button>
+        </div>
       </div>
     );
   }

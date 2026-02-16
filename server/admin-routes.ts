@@ -742,6 +742,220 @@ export async function registerAdminRoutes(app: Express) {
     });
   });
 
+  // ---------------------------------------------------------------
+  // IMPORT FROM CARECO (single record or bulk)
+  // ---------------------------------------------------------------
+
+  // Import a single call session with transcript + SOAP note from CareCo
+  app.post("/api/admin/calls/import", adminAuth, requirePermission(Permission.MANAGE_CALLS), async (req, res) => {
+    try {
+      const schema = z.object({
+        patientReference: z.string().optional(),
+        practiceId: z.number().optional(),
+        programType: z.string().optional(),
+        callDate: z.string().optional(),           // ISO date or YYYY-MM-DD
+        durationMinutes: z.number().optional(),
+        transcript: z.string().optional(),          // full transcript text
+        subjective: z.string().optional(),
+        objective: z.string().optional(),
+        assessment: z.string().optional(),
+        plan: z.string().optional(),
+      });
+      const validated = schema.parse(req.body);
+
+      const callDate = validated.callDate ? new Date(validated.callDate) : new Date();
+      const durationSeconds = validated.durationMinutes ? validated.durationMinutes * 60 : null;
+
+      // Create the call session
+      const session = await storage.createCallSession({
+        clinicianId: req.adminUser!.id,
+        practiceId: validated.practiceId || null,
+        patientReference: validated.patientReference || null,
+        programType: validated.programType || null,
+        callStartedAt: callDate,
+        callEndedAt: durationSeconds ? new Date(callDate.getTime() + durationSeconds * 1000) : null,
+        durationSeconds,
+        status: "review",
+      });
+
+      let createdTranscript = null;
+      let createdSoapNote = null;
+
+      // Import transcript if provided
+      if (validated.transcript?.trim()) {
+        createdTranscript = await storage.createTranscript({
+          callSessionId: session.id,
+          content: validated.transcript,
+          segments: null,
+          provider: "careco",
+          languageCode: "en-US",
+          confidenceScore: null,
+        });
+      }
+
+      // Import SOAP note if any section provided
+      const hasSoap = validated.subjective || validated.objective || validated.assessment || validated.plan;
+      if (hasSoap) {
+        createdSoapNote = await storage.createSoapNote({
+          callSessionId: session.id,
+          subjective: validated.subjective || "",
+          objective: validated.objective || "",
+          assessment: validated.assessment || "",
+          plan: validated.plan || "",
+          status: "draft",
+          aiModel: "careco",
+          aiConfidence: null,
+        });
+      }
+
+      // Auto-create time entry if duration provided
+      let timeEntry = null;
+      if (validated.durationMinutes && validated.programType) {
+        const dateStr = callDate.toISOString().split("T")[0];
+        timeEntry = await storage.createTimeEntry({
+          callSessionId: session.id,
+          clinicianId: req.adminUser!.id,
+          practiceId: validated.practiceId || null,
+          programType: validated.programType,
+          date: dateStr,
+          durationMinutes: validated.durationMinutes,
+          notes: null,
+        });
+      }
+
+      await writeAuditLog(auditFromRequest(req, {
+        action: AuditAction.CALL_SESSION_CREATED,
+        resourceType: "call_session",
+        resourceId: String(session.id),
+        outcome: "success",
+        phiAccessed: true,
+        details: {
+          source: "careco_import",
+          hasTranscript: !!createdTranscript,
+          hasSoapNote: !!createdSoapNote,
+          hasTimeEntry: !!timeEntry,
+          programType: validated.programType,
+        },
+      }));
+
+      res.json({
+        success: true,
+        session,
+        transcript: createdTranscript,
+        soapNote: createdSoapNote,
+        timeEntry,
+      });
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ success: false, message: "Invalid import data", errors: error.errors });
+      }
+      console.error("Import call error:", error);
+      res.status(500).json({ success: false, message: "Failed to import call" });
+    }
+  });
+
+  // Bulk import -- array of CareCo records
+  app.post("/api/admin/calls/import-bulk", adminAuth, requirePermission(Permission.MANAGE_CALLS), async (req, res) => {
+    try {
+      const schema = z.object({
+        records: z.array(z.object({
+          patientReference: z.string().optional(),
+          practiceId: z.number().optional(),
+          programType: z.string().optional(),
+          callDate: z.string().optional(),
+          durationMinutes: z.number().optional(),
+          transcript: z.string().optional(),
+          subjective: z.string().optional(),
+          objective: z.string().optional(),
+          assessment: z.string().optional(),
+          plan: z.string().optional(),
+        })).min(1).max(100),
+      });
+      const { records } = schema.parse(req.body);
+
+      const results: { index: number; sessionId: number; success: boolean; error?: string }[] = [];
+
+      for (let i = 0; i < records.length; i++) {
+        try {
+          const rec = records[i];
+          const callDate = rec.callDate ? new Date(rec.callDate) : new Date();
+          const durationSeconds = rec.durationMinutes ? rec.durationMinutes * 60 : null;
+
+          const session = await storage.createCallSession({
+            clinicianId: req.adminUser!.id,
+            practiceId: rec.practiceId || null,
+            patientReference: rec.patientReference || null,
+            programType: rec.programType || null,
+            callStartedAt: callDate,
+            callEndedAt: durationSeconds ? new Date(callDate.getTime() + durationSeconds * 1000) : null,
+            durationSeconds,
+            status: "review",
+          });
+
+          if (rec.transcript?.trim()) {
+            await storage.createTranscript({
+              callSessionId: session.id,
+              content: rec.transcript,
+              segments: null,
+              provider: "careco",
+              languageCode: "en-US",
+              confidenceScore: null,
+            });
+          }
+
+          const hasSoap = rec.subjective || rec.objective || rec.assessment || rec.plan;
+          if (hasSoap) {
+            await storage.createSoapNote({
+              callSessionId: session.id,
+              subjective: rec.subjective || "",
+              objective: rec.objective || "",
+              assessment: rec.assessment || "",
+              plan: rec.plan || "",
+              status: "draft",
+              aiModel: "careco",
+              aiConfidence: null,
+            });
+          }
+
+          if (rec.durationMinutes && rec.programType) {
+            await storage.createTimeEntry({
+              callSessionId: session.id,
+              clinicianId: req.adminUser!.id,
+              practiceId: rec.practiceId || null,
+              programType: rec.programType,
+              date: callDate.toISOString().split("T")[0],
+              durationMinutes: rec.durationMinutes,
+              notes: null,
+            });
+          }
+
+          results.push({ index: i, sessionId: session.id, success: true });
+        } catch (err: any) {
+          results.push({ index: i, sessionId: 0, success: false, error: err.message || "Failed" });
+        }
+      }
+
+      const imported = results.filter((r) => r.success).length;
+      const failed = results.filter((r) => !r.success).length;
+
+      await writeAuditLog(auditFromRequest(req, {
+        action: AuditAction.CALL_SESSION_CREATED,
+        resourceType: "call_session",
+        outcome: "success",
+        phiAccessed: true,
+        details: { source: "careco_bulk_import", total: records.length, imported, failed },
+      }));
+
+      res.json({ success: true, imported, failed, total: records.length, results });
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ success: false, message: "Invalid bulk import data", errors: error.errors });
+      }
+      console.error("Bulk import error:", error);
+      res.status(500).json({ success: false, message: "Failed to process bulk import" });
+    }
+  });
+
   // List call sessions
   app.get("/api/admin/calls", adminAuth, requirePermission(Permission.VIEW_CALLS), async (req, res) => {
     try {
