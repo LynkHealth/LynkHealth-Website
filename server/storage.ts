@@ -1414,10 +1414,10 @@ export class DatabaseStorage implements IStorage {
       revMap.set(key, existing);
     }
 
-    const totalMinutesMap = new Map<string, number>();
+    const totalEncountersMap = new Map<string, number>();
     for (const s of staffRows) {
       const key = `${s.practiceId}|${s.department || ""}|${s.programType}`;
-      totalMinutesMap.set(key, (totalMinutesMap.get(key) || 0) + (Number(s.totalMinutes) || 0));
+      totalEncountersMap.set(key, (totalEncountersMap.get(key) || 0) + (Number(s.logCount) || 0));
     }
 
     const allocatedRevKeys = new Set<string>();
@@ -1425,9 +1425,9 @@ export class DatabaseStorage implements IStorage {
       const key = `${s.practiceId}|${s.department || ""}|${s.programType}`;
       allocatedRevKeys.add(key);
       const rev = revMap.get(key);
-      const totalMins = totalMinutesMap.get(key) || 1;
-      const staffMins = Number(s.totalMinutes) || 0;
-      const proportion = staffMins / totalMins;
+      const totalEnc = totalEncountersMap.get(key) || 1;
+      const staffEnc = Number(s.logCount) || 0;
+      const proportion = staffEnc / totalEnc;
       const estimatedRevenue = rev ? Math.round(rev.revenue * proportion) : 0;
       const estimatedClaims = rev ? Math.round(rev.claims * proportion) : 0;
       return {
