@@ -156,6 +156,16 @@ export async function fetchClaimsForPeriod(
   );
 }
 
+export async function fetchAllClaims(
+  onProgress?: (page: number, total: number) => void
+): Promise<any[]> {
+  return fetchAllPages(
+    "/v1/Claim",
+    {},
+    onProgress
+  );
+}
+
 export async function fetchPractitioners(): Promise<any[]> {
   return fetchAllPages("/v1/Practitioner");
 }

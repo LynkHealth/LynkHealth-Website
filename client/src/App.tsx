@@ -30,17 +30,56 @@ import FQHCsPage from "@/pages/who-we-work-with/fqhcs";
 import SNFPage from "@/pages/who-we-work-with/snf";
 import HomeHealthPage from "@/pages/who-we-work-with/home-health";
 import AdminLogin from "@/pages/admin/login";
+import AdminForgotPassword from "@/pages/admin/forgot-password";
+import AdminResetPassword from "@/pages/admin/reset-password";
 import AdminDashboard from "@/pages/admin/dashboard";
+import ClinicalLayout from "@/pages/clinical/layout";
+import ClinicalDashboard from "@/pages/clinical/dashboard";
+import PatientList from "@/pages/clinical/patients";
+import PatientChart from "@/pages/clinical/patient-chart";
+import Worklists from "@/pages/clinical/worklists";
+import TaskManagement from "@/pages/clinical/tasks";
+import Schedule from "@/pages/clinical/schedule";
+import CarePlanTemplates from "@/pages/clinical/templates";
+import UserManagement from "@/pages/clinical/users";
+import ClinicalForms from "@/pages/clinical/forms";
+import ClinicalEraEob from "@/pages/clinical/era-eob";
+
 
 function Router() {
   useScrollToTop();
   const [location] = useLocation();
   const isAdmin = location.startsWith("/admin");
+  const isClinical = location.startsWith("/clinical");
+
+  if (isClinical) {
+    return (
+      <ClinicalLayout>
+        <Switch>
+          <Route path="/clinical/dashboard" component={ClinicalDashboard} />
+          <Route path="/clinical/patients" component={PatientList} />
+          <Route path="/clinical/patients/:id" component={PatientChart} />
+          <Route path="/clinical/worklists" component={Worklists} />
+          <Route path="/clinical/worklists/:programType" component={Worklists} />
+          <Route path="/clinical/tasks" component={TaskManagement} />
+          <Route path="/clinical/schedule" component={Schedule} />
+          <Route path="/clinical/templates" component={CarePlanTemplates} />
+          <Route path="/clinical/forms" component={ClinicalForms} />
+          <Route path="/clinical/era-eob" component={ClinicalEraEob} />
+
+          <Route path="/clinical/users" component={UserManagement} />
+          <Route path="/clinical">{() => { window.location.href = "/clinical/dashboard"; return null; }}</Route>
+        </Switch>
+      </ClinicalLayout>
+    );
+  }
 
   if (isAdmin) {
     return (
       <Switch>
         <Route path="/admin/login" component={AdminLogin} />
+        <Route path="/admin/forgot-password" component={AdminForgotPassword} />
+        <Route path="/admin/reset-password" component={AdminResetPassword} />
         <Route path="/admin" component={AdminDashboard} />
         <Route path="/admin/:rest*" component={AdminDashboard} />
       </Switch>

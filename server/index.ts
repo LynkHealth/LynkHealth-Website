@@ -20,9 +20,11 @@ app.use((req, res, next) => {
   next();
 });
 
+const isDev = process.env.NODE_ENV !== "production";
+
 // Security headers via helmet
 app.use(helmet({
-  contentSecurityPolicy: {
+  contentSecurityPolicy: isDev ? false : {
     directives: {
       defaultSrc: ["'self'"],
       scriptSrc: ["'self'", "'unsafe-inline'", "https://www.googletagmanager.com", "https://www.google-analytics.com"],
@@ -34,14 +36,18 @@ app.use(helmet({
       frameSrc: ["'none'"],
       objectSrc: ["'none'"],
       baseUri: ["'self'"],
+      frameAncestors: ["'self'"],
     },
   },
   crossOriginEmbedderPolicy: false,
-  hsts: {
+  crossOriginOpenerPolicy: isDev ? false : { policy: "same-origin" as const },
+  crossOriginResourcePolicy: isDev ? false : undefined,
+  hsts: isDev ? false : {
     maxAge: 31536000,
     includeSubDomains: true,
     preload: true,
   },
+  frameguard: isDev ? false : { action: "sameorigin" as const },
 }));
 
 // CORS configuration

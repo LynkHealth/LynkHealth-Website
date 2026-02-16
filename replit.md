@@ -1,68 +1,31 @@
 # Lynk Health - Healthcare Care Coordination Platform
 
 ## Overview
-Lynk Health is a comprehensive healthcare care coordination platform for Medicare patients with chronic conditions, offering nurse-led services like Chronic Care Management (CCM), Remote Patient Monitoring (RPM), and Behavioral Health Integration (BHI). The platform includes a marketing website with contact functionality, detailed service information, and a revenue calculator. Its vision is national expansion, delivering high-quality, local nurse-led care that fosters authentic patient connections, improves outcomes, generates significant annual savings per patient, and achieves high retention rates.
+Lynk Health is a comprehensive healthcare care coordination platform for Medicare patients with chronic conditions. It offers nurse-led services such as Chronic Care Management (CCM), Remote Patient Monitoring (RPM), and Behavioral Health Integration (BHI). The platform includes a marketing website with contact functionality, service details, and a revenue calculator. The project aims for national expansion by providing high-quality, local nurse-led care to improve patient outcomes, generate significant annual savings per patient, and achieve high retention rates.
 
 ## User Preferences
 Preferred communication style: Simple, everyday language.
 
 ## System Architecture
-### UI/UX Decisions
-The platform features a professional healthcare design using shadcn/ui, CSS custom properties with HSL color system, Inter font, and Font Awesome/Lucide React icons. The color scheme primarily uses blue, teal, and a strategic golden amber accent for CTAs and key achievements. The design emphasizes clear navigation with core pages for services, an "About" section with leadership, and a revenue calculator.
+The platform features a professional healthcare design utilizing shadcn/ui, CSS custom properties with HSL color system, and strategic golden amber accents. The frontend is built with React 18, TypeScript, Wouter for routing, Tailwind CSS, Vite, TanStack Query for state management, and React Hook Form with Zod for form handling. The backend uses Node.js with Express.js and TypeScript, connecting to a PostgreSQL database on Neon Database managed with Drizzle ORM. Session management is handled by `connect-pg-simple`.
 
-### Technical Implementations
-The frontend is built with React 18 and TypeScript, using Wouter for routing, Tailwind CSS with shadcn/ui for styling, Vite for building, TanStack Query for state management, and React Hook Form with Zod for form handling. Client-side validation with Zod provides real-time error messaging and toast notifications. The backend uses Node.js with Express.js and TypeScript (ES modules). It connects to a PostgreSQL database hosted on Neon Database, managed with Drizzle ORM. Session management is handled by `connect-pg-simple`.
+Key features include a consolidated contact form, a blog post management system, integration of industry statistics and Medicare billing codes, a leadership team section, and a "Who We Work With" section. The platform also offers an "Overnight On-Call Coverage" service.
 
-### Feature Specifications
-Key features include a consolidated contact form, a blog post management system, integration of authentic industry statistics and Medicare billing codes, and a leadership team section. Testimonials are replaced with compliance-friendly marketing focusing on aggregate results. The platform also includes a new "Who We Work With" section targeting various healthcare specialties and an "Overnight On-Call Coverage" service with dedicated pages and forms.
+An admin dashboard provides data aggregation from ThoroughCare API, including practice data, program enrollment snapshots, and inquiry management. It supports full and historical syncs of patient, enrollment, and time log data from ThoroughCare. The admin dashboard also manages CPT billing codes, allowing for inline editing, adding, and deleting codes, with support for different effective years and per-practice custom rates.
 
-### Admin Dashboard & ThoroughCare Integration
-A hidden admin dashboard is accessible via the copyright symbol (©) in the footer, leading to `/admin/login`. Admin credentials are stored in the database (`admin_users` table). The dashboard aggregates data from ThoroughCare API and displays:
-- **Practice data**: Organizations with departments and aliases synced from ThoroughCare
-- **Program snapshots**: CCM, PCM, BHI, RPM, RTM enrollment counts with time bucket breakdowns
-- **Inquiry management**: Contact form submissions, night coverage inquiries, wound care referrals
+A clinical care coordination platform, accessible via `/clinical/*` routes, offers a comprehensive workflow for nurses and care managers. This includes a clinical dashboard, patient management with detailed patient charts, program-specific worklists, task management, scheduling, and care plan template management. It also features a persistent time tracking timer and user management with role-based access control (RBAC). The clinical data model comprises 16 interconnected tables.
 
-**ThoroughCare API Integration** (`server/thoroughcare-client.ts`, `server/thoroughcare-sync.ts`):
-- OAuth2 client credentials flow with token caching (credentials in Replit Secrets)
-- Rate-limited API client (10 req/sec) with automatic pagination (1000 records/page)
-- Full sync pulls: Organizations → Patients (build org map + department map) → Enrollments → Time Logs → Program Snapshots
-- Patient API uses `managingOrganization=Organization/{id}` format to correctly map patients to practices
-- Patient department extracted from extension `url: "department"` for location-level breakdowns
-- Snapshots stored at both org-level (department=null) and department-level for multi-location practices
-- Real-time sync progress tracking via `/api/admin/tc/status` polling
-- Sync triggered via admin dashboard button or POST to `/api/admin/tc/sync`
-- **Historical sync**: `runHistoricalSync()` via POST `/api/admin/tc/sync-historical` pulls 24 months of time log data in one operation (~4 min, ~130K time logs). Reuses org/patient/enrollment/CarePlan data once, then loops months for time logs + snapshots.
-- Data volumes: ~7 practices, ~14,786 patients, ~3,578 enrollments, ~1,842 time logs/month
-- Per-practice and per-department/location filtering available in admin dashboard via dual dropdown selectors
-- Department dropdown appears only when a multi-location practice is selected (e.g., MEA with 9 locations, your clinic with 7)
+Invoice management is integrated into the admin dashboard, enabling the generation and review of monthly practice invoices. Invoices use practice-specific billing rates and follow a status-based workflow. Staffing and FTE reports, derived from ThoroughCare time log data, are available in the admin dashboard, providing insights into staff hours, FTE calculations, and per-program breakdowns. ERA/EOB reconciliation allows for uploading and parsing 835 files to match CPT codes against billing rates and identify variances.
 
-### System Design Choices
-The architecture emphasizes robust validation and error handling. SEO strategy focuses on national reach and service quality. A comprehensive cache management system ensures users always see the latest content after deployments while optimizing performance through aggressive caching of static assets, using a service worker and build-time timestamp injection. HTTP cache headers are carefully configured for various asset types to balance freshness and performance.
+The system implements a multi-tenant architecture with 6-role RBAC (Super Admin, Admin, Care Coordinator, Enrollment Specialist, Billing Specialist, Practice Admin). Each role has default permissions with per-user cherry-pickable overrides stored in the `user_permissions` table. Practice assignments are managed via `user_practice_assignments`, and session-level practice context is tracked via `activePracticeId` on `admin_sessions`. Practice context middleware (`server/practice-context.ts`) is applied to all `/api/clinical/*` routes, enforcing practice-scoped data access. Super admin and admin roles have all-practice access; other roles are restricted to assigned practices. Patient data operations enforce practice ownership verification. Permission cache uses 30-second TTL; clear on permission updates.
 
-## Production Deployment - CRITICAL
+The system incorporates robust HIPAA compliance controls, including audit logging, the multi-tenant RBAC system described above, AES-256-GCM field-level encryption for PHI/PII, strong authentication policies (password complexity, expiry, lockout), secure session management (httpOnly/Secure/SameSite cookies, inactivity timeout), and transmission security (HTTPS, HSTS, helmet CSP, CORS, rate limiting). PHI-safe logging redacts sensitive data from response bodies. Admin role is excluded from all financial permissions (billing, invoices, ERA/EOB, revenue).
 
-**Cache Management Build Process:**
-The standard `npm run build` does NOT run the required cache timestamp injection. For production deployments, you MUST use:
-
-```bash
-./build.sh
-```
-
-Or configure your Replit deployment to use `./build.sh` as the build command.
-
-**Why this matters:**
-- The service worker (`sw.js`) is generated from a template at build time
-- Without running the injection script, users won't see updates after deployments
-- The build script ensures unique cache versions per deployment
-
-**Files involved:**
-- `client/public/sw.template.js` - Service worker template
-- `scripts/inject-build-timestamp.js` - Build-time injection script
-- `build.sh` - Production build wrapper (use this!)
+The system design prioritizes robust validation, error handling, and SEO. A comprehensive cache management system ensures performance and content freshness through aggressive static asset caching, service workers, and build-time timestamp injection.
 
 ## External Dependencies
-- **Database**: `@neondatabase/serverless` (Neon Database), `drizzle-orm`.
-- **Frontend State & Validation**: `@tanstack/react-query`, `@hookform/resolvers`, `zod`.
-- **Routing**: `wouter`.
-- **UI/Styling**: `@radix-ui/*`, `tailwindcss`, `lucide-react`, `class-variance-authority`, `shadcn/ui`.
-- **Development Tools**: `vite`, `typescript`, `eslint`.
+- **Database**: Neon Database (`@neondatabase/serverless`), `drizzle-orm`
+- **Frontend State & Validation**: `TanStack Query` (`@tanstack/react-query`), `React Hook Form` (`@hookform/resolvers`), `zod`
+- **Routing**: `wouter`
+- **UI/Styling**: `@radix-ui/*`, `tailwindcss`, `lucide-react`, `class-variance-authority`, `shadcn/ui`
+- **Development Tools**: `vite`, `typescript`, `eslint`
